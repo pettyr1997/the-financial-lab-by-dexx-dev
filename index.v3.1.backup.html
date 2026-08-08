@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#07151c" />
+  <meta name="description" content="The Financial Lab by Dexx — turn every paycheck into a clear financial experiment." />
+  <link rel="manifest" href="manifest.webmanifest" />
+  <link rel="icon" href="icons/icon.svg" type="image/svg+xml" />
+  <link rel="apple-touch-icon" href="icons/icon-192.png" />
+  <link rel="stylesheet" href="styles.css" />
+  <title>The Financial Lab by Dexx</title>
+</head>
+<body>
+  <div id="splash" class="splash" aria-live="polite">
+    <img src="icons/icon.svg" class="splash-logo" alt="Financial Lab logo" />
+    <p class="kicker">THE FINANCIAL LAB BY DEXX</p>
+    <h1>Analysis initializing</h1>
+    <div class="checks" id="checks"></div>
+    <p class="complete hidden" id="complete"><strong>Analysis complete.</strong><br>Welcome back to the Lab.</p>
+  </div>
+
+  <div id="app" class="app hidden">
+    <header class="topbar">
+      <a class="brand" href="#dashboard" data-go="dashboard" aria-label="Financial Lab dashboard">
+        <img src="icons/icon.svg" alt="" />
+        <span><strong>Financial Lab</strong><small>by Dexx</small></span>
+      </a>
+      <div class="top-actions">
+        <button id="themeToggle" class="icon-btn" aria-label="Toggle color theme">◐</button>
+        <button class="profile-btn" data-go="dexx" aria-label="Open Dexx">D</button>
+      </div>
+    </header>
+
+    <main>
+      <section id="dashboard" class="view active" aria-labelledby="dashboardTitle">
+        <div class="dashboard-heading">
+          <div><p class="kicker">LABORATORY DASHBOARD</p><h1 id="dashboardTitle">Good <span id="dayPart">day</span>, <span id="researcherName">Robert</span>.</h1><p id="dashboardDate" class="muted"></p></div>
+          <span class="status-pill"><i></i> Lab online</span>
+        </div>
+
+        <section class="mission-card">
+          <div class="mission-copy"><p class="kicker">TODAY'S MISSION</p><h2 id="missionTitle">Build this week’s money plan.</h2><p id="missionText">Enter your next paycheck and bill so Dexx can sharpen your analysis.</p><button class="primary compact" data-go="friday">Start mission <span>→</span></button></div>
+          <div class="mission-art" aria-hidden="true"><span class="orbit"></span><img src="icons/icon.svg" alt="" /></div>
+        </section>
+
+        <div class="dashboard-grid">
+          <section class="health-card panel">
+            <div class="panel-heading"><div><p class="kicker">FINANCIAL HEALTH SCORE</p><h2>Your lab reading</h2></div><button class="text-btn" data-go="research">View analysis</button></div>
+            <div class="health-content">
+              <div class="score-ring" id="scoreRing"><div><strong id="healthScore">72</strong><small>/100</small></div></div>
+              <div class="score-copy"><span id="healthLabel" class="grade">STABLE</span><h3 id="healthHeadline">Your foundation is taking shape.</h3><p id="healthMessage">One focused action can improve your score this week.</p><div class="score-legend"><span>Needs focus</span><span>Strong</span></div></div>
+            </div>
+          </section>
+
+          <section class="observation-card panel">
+            <div class="dexx-mark">D</div><div><p class="kicker">DEXX'S OBSERVATION</p><h2 id="observationTitle">Clarity comes before control.</h2><p id="observationText">Your next best move is to complete Friday Lab. Once the numbers are visible, the pressure gets smaller.</p><button class="text-btn" data-go="dexx">Talk with Dexx →</button></div>
+          </section>
+        </div>
+
+        <section class="summary-section">
+          <div class="section-row"><div><p class="kicker">CURRENT READINGS</p><h2>Money at a glance</h2></div><button class="text-btn" data-go="research">Research center →</button></div>
+          <div class="summary-grid">
+            <article class="summary-card"><span class="summary-icon">$</span><p>Latest paycheck</p><strong id="summaryPaycheck">$0.00</strong><small id="paycheckNote">Awaiting first entry</small></article>
+            <article class="summary-card"><span class="summary-icon">↗</span><p>Weekly savings</p><strong id="summarySavings">$0.00</strong><small id="savingsNote">Set a savings target</small></article>
+            <article class="summary-card"><span class="summary-icon">▣</span><p>Upcoming bills</p><strong id="summaryBills">0</strong><small id="billsNote">Nothing scheduled</small></article>
+            <article class="summary-card"><span class="summary-icon">◎</span><p>Available after plan</p><strong id="summaryAvailable">$0.00</strong><small id="availableNote">Paycheck minus planned money</small></article>
+          </div>
+        </section>
+
+        <div class="dashboard-grid lower-grid">
+          <section class="panel bills-panel">
+            <div class="panel-heading"><div><p class="kicker">UPCOMING BILLS</p><h2>Next on the calendar</h2></div><button class="text-btn" data-go="friday">Manage</button></div>
+            <div id="upcomingBills" class="bill-list"></div>
+          </section>
+          <section class="panel progress-panel">
+            <div class="panel-heading"><div><p class="kicker">EXPERIMENT PROGRESS</p><h2>This week’s momentum</h2></div><button class="text-btn" data-go="experiments">Open</button></div>
+            <div class="experiment-meter"><div class="meter-top"><strong id="experimentPercent">0%</strong><span>weekly plan complete</span></div><div class="meter-track"><i id="experimentBar"></i></div></div>
+            <div id="experimentSteps" class="experiment-steps"></div>
+          </section>
+        </div>
+
+        <section class="quick-actions"><div class="section-row"><div><p class="kicker">QUICK ACTIONS</p><h2>Run an experiment</h2></div></div><div class="action-grid">
+          <button data-go="friday"><span>＋</span><strong>Add paycheck</strong><small>Update weekly income</small></button>
+          <button data-go="friday"><span>▣</span><strong>Add a bill</strong><small>Track what is due</small></button>
+          <button data-go="experiments"><span>◎</span><strong>Start a goal</strong><small>Prepare an experiment</small></button>
+          <button data-go="hall"><span>✦</span><strong>View discoveries</strong><small>Remember your progress</small></button>
+        </div></section>
+      </section>
+
+      <section id="friday" class="view">
+        <div class="page-heading"><p class="kicker">GUIDED WEEKLY PLANNING</p><h1>Friday Lab</h1><p>One paycheck. One plan. One confident next step.</p></div>
+        <div class="workspace-grid">
+          <form id="fridayForm" class="panel form-card">
+            <div class="panel-heading"><div><p class="kicker">WEEKLY INPUTS</p><h2>Run your analysis</h2></div></div>
+            <label>Paycheck amount <input id="paycheck" type="number" min="0" step="0.01" inputmode="decimal" placeholder="0.00" /></label>
+            <label>Next bill name <input id="billName" type="text" maxlength="60" placeholder="Example: Electric" /></label>
+            <label>Next bill due date <input id="billDate" type="date" /></label>
+            <label>Bill amount <input id="billAmount" type="number" min="0" step="0.01" inputmode="decimal" placeholder="0.00" /></label>
+            <label>Amount to save this week <input id="saveAmount" type="number" min="0" step="0.01" inputmode="decimal" placeholder="0.00" /></label>
+            <button type="submit" class="primary">Complete weekly analysis</button><p id="formStatus" class="status" role="status"></p>
+          </form>
+          <aside class="panel lab-note"><div class="dexx-mark">D</div><p class="kicker">LAB NOTE</p><h2>Use the real numbers.</h2><p>There is no judgment in the Lab. Accurate inputs create useful discoveries.</p><div class="formula"><span>Paycheck</span><b>− Bills − Savings</b><strong>= Available</strong></div></aside>
+        </div>
+      </section>
+
+      <section id="research" class="view"><div class="page-heading"><p class="kicker">RESEARCH CENTER</p><h1>Your financial picture</h1><p>Your saved weekly data remains on this device.</p></div><div class="summary-grid research-summary"><article class="summary-card"><p>Latest paycheck</p><strong id="latestPaycheck">$0.00</strong></article><article class="summary-card"><p>Weekly savings target</p><strong id="latestSavings">$0.00</strong></article><article class="summary-card"><p>Next bill amount</p><strong id="latestBillAmount">$0.00</strong></article><article class="summary-card"><p>Available after plan</p><strong id="latestAvailable">$0.00</strong></article></div></section>
+
+      <section id="experiments" class="view"><div class="page-heading"><p class="kicker">EXPERIMENTS</p><h1>Goals in progress</h1><p>Goal tracking is prepared for Sprint 2. Sprint 1 measures weekly setup progress.</p></div><article class="panel empty"><span>◎</span><h2>Your first experiment is almost ready.</h2><p>Complete Friday Lab to establish your baseline.</p><button class="primary compact" data-go="friday">Open Friday Lab</button></article></section>
+
+      <section id="hall" class="view"><div class="page-heading"><p class="kicker">HALL OF DISCOVERIES</p><h1>Discovery #000 — The Purpose</h1></div><article class="plaque"><p>Life moves fast. Bills pile up. Unexpected expenses happen. Sometimes it feels like everything arrives at once.</p><p><strong>The Financial Lab by Dexx was created to bring clarity when life feels overwhelming.</strong></p><p>This isn't about being perfect. It's about understanding your finances one step at a time.</p><p>Every paycheck is another opportunity.<br>Every budget is another experiment.<br>Every discovery moves you forward.</p><p class="welcome">Welcome to the Lab.</p></article></section>
+
+      <section id="dexx" class="view"><div class="page-heading"><p class="kicker">CHIEF FINANCIAL SCIENTIST</p><h1>Dexx</h1><p>Clear guidance without judgment.</p></div><article class="panel dexx-full"><div class="dexx-mark large">D</div><h2>Welcome back to the Lab.</h2><p id="dexxFullMessage">You do not have to solve everything today. Let’s look at what is in front of us and take the next step together.</p><button class="primary compact" data-go="friday">Run today’s analysis</button></article></section>
+    </main>
+
+    <nav class="bottom-nav" aria-label="Main navigation">
+      <button data-view="dashboard" class="active"><span>⌂</span><small>Home</small></button>
+      <button data-view="friday"><span>⌁</span><small>Friday Lab</small></button>
+      <button data-view="research"><span>▥</span><small>Research</small></button>
+      <button data-view="experiments"><span>◎</span><small>Experiments</small></button>
+      <button data-view="dexx"><span>D</span><small>Dexx</small></button>
+    </nav>
+  </div>
+  <script src="app.js"></script>
+</body>
+</html>
