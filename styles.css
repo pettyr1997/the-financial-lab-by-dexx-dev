@@ -55,3 +55,8 @@
   .bill-manager-form .manager-date-frequency > label{width:100%;min-width:0;}
   #managerBillDate,#managerBillFrequency{width:100%;max-width:100%;min-width:0;}
 }
+
+/* 4.0.5 — Dexx Bills Reserve Intelligence */
+.reserve-intel{margin-top:12px;padding:11px 12px;border:1px solid rgba(116,255,92,.28);border-radius:12px;background:rgba(116,255,92,.06);display:grid;gap:4px}
+.reserve-intel span{font-size:.72rem;font-weight:800;letter-spacing:.08em;color:#7cff62}
+.reserve-intel small{line-height:1.4;color:rgba(255,255,255,.72)}

@@ -1,5 +1,13 @@
-# Financial Lab 4.0.4 — Dynamic Bills Manager
+# Financial Lab 4.0.5 — Dexx Bills Reserve Intelligence
 
-The recurring-bill count in Financial Profile is now an estimate, not a limit. Bills Manager shows the real number saved and supports adding additional bills as needed. Dexx automatically updates the estimate upward when saved bills exceed it.
+This development release builds on 4.0.4 Dynamic Bills Manager.
 
-Includes the 4.0.3.1 iPhone Bills Manager layout hotfix.
+## What changed
+- Dexx now separates "money remaining" from TRUE safe-to-spend money.
+- Immediate bills are funded first.
+- Future bills in the reserve window are split across the paychecks remaining before each due date.
+- This paycheck protects its fair share of each upcoming bill instead of reserving every future bill in full.
+- Future-bill reserve is funded before savings and extra debt payments.
+- Dexx explains which future bills are being protected, how much to reserve now, and why.
+- Payday-plan history stores reserve targets and per-bill reserve details.
+- Existing Financial Profile, Dynamic Bills Manager, saved data, and mobile fixes remain intact.
