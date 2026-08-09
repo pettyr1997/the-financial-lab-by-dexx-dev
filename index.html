@@ -65,8 +65,8 @@
 <div class="form-grid"><label>Expected recurring bills<input id="recurringBillCount" min="0" max="99" type="number" value="9"/></label><label>Financial strategy<select id="financialStrategy"><option value="balanced">Balance savings, debt and cash flow</option><option value="savings">Focus on savings</option><option value="debt">Focus on debt payoff</option><option value="cashflow">Focus on cash flow</option></select></label></div>
 <div class="form-grid"><label>Default savings rate (%)<input id="profileSavingsRate" min="0" max="100" type="number" value="10"/></label><label>Upcoming-bill reserve window<select id="reserveDays"><option value="7">7 days after payday</option><option value="14">14 days after payday</option><option value="21">21 days after payday</option></select></label></div>
 <button class="primary" type="submit">SAVE FINANCIAL PROFILE</button><p class="status" id="profileStatus"></p></form>
-<section class="card bills-manager-card"><div class="section-head"><span>RECURRING BILLS MANAGER</span><b id="billManagerProgress">0 of 9 added</b></div>
-<p class="manager-copy">Enter each bill once. Dexx will automatically use the due date and frequency every payday.</p>
+<section class="card bills-manager-card"><div class="section-head"><span>RECURRING BILLS MANAGER</span><b id="billManagerProgress">0 bills saved</b></div>
+<p class="manager-copy">Enter each bill once. Dexx will automatically use the due date and frequency every payday.</p><p class="manager-estimate" id="billManagerEstimate">Your profile estimate helps Dexx plan, but it never limits how many bills you can save.</p>
 <form id="billManagerForm" class="bill-manager-form">
 <input id="managerBillId" type="hidden"/>
 <div class="form-grid"><label>Bill name<input id="managerBillName" maxlength="60" placeholder="Rent" required/></label><label>Amount<input id="managerBillAmount" inputmode="decimal" min="0" step="0.01" placeholder="$0.00" type="number" required/></label></div>
