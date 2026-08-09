@@ -43,7 +43,7 @@
 <p class="status" id="approvalStatus"></p>
 </section>
 <form class="card form-card" id="budgetForm">
-<div class="section-head"><span>1. CHECK DETAILS</span><b>Version 4.0.5</b></div>
+<div class="section-head"><span>1. CHECK DETAILS</span><b>Version 4.0.5.1</b></div>
 <div class="form-grid"><label>Paycheck amount<input id="paycheck" inputmode="decimal" min="0" placeholder="$0.00" step="0.01" type="number"/></label><label>Current available balance<input id="currentBalance" inputmode="decimal" min="0" placeholder="$0.00" step="0.01" type="number"/></label></div>
 <div class="form-grid"><label>Check date<input id="payDate" type="date"/></label><label>Next payday<input id="nextPayday" type="date"/></label></div>
 <div class="form-grid"><label>Savings goal (%)<input id="savingsRate" inputmode="numeric" max="100" min="0" step="1" type="number" value="10"/></label><label>Minimum savings<input id="saveAmount" inputmode="decimal" min="0" placeholder="$0.00" step="0.01" type="number"/></label></div>
@@ -54,7 +54,8 @@
 <div class="form-grid"><label>Frequency<select id="billFrequency"><option value="monthly">Monthly</option><option value="weekly">Weekly</option><option value="biweekly">Every 2 weeks</option><option value="once">One time</option></select></label><label class="toggle-label"><input id="billAutopay" type="checkbox"/> Autopay enabled</label></div>
 <button class="primary" type="submit">BUILD MY PAYDAY PLAN</button><p class="status" id="formStatus"></p>
 </form>
-<section class="card"><div class="section-head"><span>3. CONFIRM YOUR BILLS</span><button class="danger-link" id="clearBills">Clear</button></div><div class="bill-list" id="allBills"></div></section>
+<section class="card"><div class="section-head"><span>3. PAY NOW</span><button class="danger-link" id="clearBills">Clear</button></div><p class="manager-copy compact-copy">Bills due on or before your next payday.</p><div class="bill-list" id="allBills"></div></section>
+<section class="card prepare-card"><div class="section-head"><span>4. PREPARE NOW</span><b>Future-bill reserves</b></div><p class="manager-copy compact-copy">Dexx spreads farther-out bills across the paychecks remaining before each due date.</p><div class="prepare-list" id="prepareBills"></div></section>
 <section class="card experiment-card"><div class="section-head"><span>THIS WEEK'S EXPERIMENT</span><b id="experimentReward">+5 score</b></div><h2 id="experimentTitle">Build your first payday plan</h2><p id="experimentText">Add a paycheck and approve Dexx's recommendation.</p><div class="progress"><i id="experimentBar"></i></div><small id="experimentProgress">0% complete</small></section>
 <section class="card"><div class="section-head"><span>PAYCHECK PLAN HISTORY</span><button class="danger-link" id="clearHistory">Clear</button></div><div class="history-list" id="planHistory"></div></section>
 </section>

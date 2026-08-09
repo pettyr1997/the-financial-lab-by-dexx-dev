@@ -60,3 +60,16 @@
 .reserve-intel{margin-top:12px;padding:11px 12px;border:1px solid rgba(116,255,92,.28);border-radius:12px;background:rgba(116,255,92,.06);display:grid;gap:4px}
 .reserve-intel span{font-size:.72rem;font-weight:800;letter-spacing:.08em;color:#7cff62}
 .reserve-intel small{line-height:1.4;color:rgba(255,255,255,.72)}
+
+/* 4.0.5.1 — visible future-bill reserve pipeline */
+.compact-copy{margin-top:-4px;margin-bottom:18px}
+.prepare-list{display:grid;gap:10px}
+.prepare-row{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:15px 0;border-bottom:1px solid rgba(134,165,147,.18)}
+.prepare-row:last-child{border-bottom:0}
+.prepare-row>div:first-child{min-width:0;display:grid;gap:5px}
+.prepare-row strong{font-size:1rem}
+.prepare-row small{color:var(--muted);line-height:1.35}
+.prepare-amount{display:grid;justify-items:end;gap:3px;flex:0 0 auto}
+.prepare-amount span{font-size:.72rem;color:var(--muted);text-transform:uppercase;letter-spacing:.08em}
+.prepare-amount b{color:var(--green);font-size:1.05rem}
+@media(max-width:520px){.prepare-row{align-items:flex-start}.prepare-row small{font-size:.82rem}.prepare-amount b{font-size:1rem}}
