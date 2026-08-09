@@ -47,3 +47,11 @@
   .bill-manager-form .form-grid{grid-template-columns:1fr;}
   .manager-toggle{padding-top:.5rem;}
 }
+
+/* Version 4.0.3.1 — iPhone date/frequency hotfix */
+#managerBillDate{box-sizing:border-box;-webkit-min-logical-width:0;}
+@media(max-width:420px){
+  .bill-manager-form .manager-date-frequency{grid-template-columns:1fr;gap:0;}
+  .bill-manager-form .manager-date-frequency > label{width:100%;min-width:0;}
+  #managerBillDate,#managerBillFrequency{width:100%;max-width:100%;min-width:0;}
+}
