@@ -21,3 +21,29 @@
 
 /* Version 4.0.2 Recurring Bills Manager */
 .bills-manager-card{border-color:rgba(110,229,30,.35)}.manager-copy{color:var(--muted);line-height:1.5;margin:.35rem 0 1rem}.bill-manager-form{display:grid;gap:.15rem}.bill-manager-form label{display:block;color:#dce2de;font-size:13px;margin-bottom:14px}.bill-manager-form input,.bill-manager-form select{width:100%;margin-top:7px;background:#050806;border:1px solid #2d3832;color:#fff;border-radius:9px;padding:14px;font-size:16px}.manager-actions{display:grid;grid-template-columns:1fr auto;gap:9px;align-items:center}.secondary{border:1px solid #34423a;background:#0a100d;color:#fff;border-radius:9px;padding:13px 15px;font-weight:800}.managed-bills{display:grid;gap:10px;margin-top:16px}.managed-bill{border:1px solid #213329;background:#07100c;border-radius:13px;padding:13px}.managed-bill-main,.managed-bill-meta{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}.managed-bill-main div{display:flex;flex-direction:column;gap:4px}.managed-bill-main strong{font-size:16px}.managed-bill-main span,.managed-bill-meta{color:var(--muted);font-size:12px}.managed-bill-main b{font-size:18px;color:var(--green);white-space:nowrap}.managed-bill-meta{border-top:1px solid #1d2923;margin-top:10px;padding-top:10px;align-items:center}.managed-bill-meta div{display:flex;gap:6px}.managed-bill-meta button{border:0;background:#111914;color:var(--green);border-radius:7px;padding:7px 10px;font-weight:700}.manager-toggle{padding-top:1.8rem}@media(max-width:420px){.manager-actions{grid-template-columns:1fr}.managed-bill-meta{align-items:flex-start;flex-direction:column}.manager-toggle{padding-top:.5rem}}
+
+/* Version 4.0.3 — Recurring Bills Manager mobile layout fix */
+.bill-manager-form .form-grid{
+  grid-template-columns:minmax(0,1fr) minmax(0,1fr);
+  column-gap:12px;
+}
+.bill-manager-form .form-grid > label{min-width:0;max-width:100%;}
+.bill-manager-form input,
+.bill-manager-form select{
+  min-width:0;
+  max-width:100%;
+  display:block;
+}
+#managerBillDate,
+#managerBillFrequency{
+  width:100%;
+  min-width:0;
+}
+@media(max-width:420px){
+  .bill-manager-form .form-grid{grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px;}
+  .bill-manager-form input,.bill-manager-form select{padding:13px 12px;font-size:16px;}
+}
+@media(max-width:350px){
+  .bill-manager-form .form-grid{grid-template-columns:1fr;}
+  .manager-toggle{padding-top:.5rem;}
+}
