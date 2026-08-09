@@ -73,3 +73,10 @@
 .prepare-amount span{font-size:.72rem;color:var(--muted);text-transform:uppercase;letter-spacing:.08em}
 .prepare-amount b{color:var(--green);font-size:1.05rem}
 @media(max-width:520px){.prepare-row{align-items:flex-start}.prepare-row small{font-size:.82rem}.prepare-amount b{font-size:1rem}}
+
+/* 4.0.6 — Reserve Memory */
+.reserve-memory-summary{display:flex;justify-content:space-between;align-items:center;gap:14px;padding:14px 16px;margin:10px 0 14px;border:1px solid rgba(97,255,29,.28);border-radius:16px;background:rgba(97,255,29,.055)}
+.reserve-memory-summary strong{font-size:1.15rem;color:var(--green)}
+.reserve-memory-summary span{font-size:.76rem;line-height:1.25;color:var(--muted);text-align:right;max-width:58%}
+.reserve-held{display:inline-block;margin-left:6px;color:var(--green);font-style:normal;font-size:.62rem;border:1px solid rgba(97,255,29,.3);border-radius:999px;padding:2px 6px}
+@media(max-width:560px){.reserve-memory-summary{align-items:flex-start;flex-direction:column}.reserve-memory-summary span{max-width:none;text-align:left}}
