@@ -102,6 +102,150 @@ function reportObservationText(c){
   if(c.expenseTotal>0)return `You protected ${money(protectedTotal)}, recorded ${money(c.expenseTotal)} in spending, and still have ${money(c.safeToSpend)} truly safe to spend.`;
   return `You protected ${money(protectedTotal)} from this paycheck. No flexible spending is recorded yet, leaving ${money(c.safeToSpend)} truly safe to spend.`;
 }
+
+function approvedHistory(){
+  return Array.isArray(data.paycheckHistory)?data.paycheckHistory:[];
+}
+function pctChange(current,previous){
+  current=Number(current)||0;previous=Number(previous)||0;
+  if(previous===0){
+    if(current===0)return 0;
+    return null;
+  }
+  return ((current-previous)/Math.abs(previous))*100;
+}
+function trendArrow(diff){
+  if(Math.abs(diff)<0.005)return '→';
+  return diff>0?'↑':'↓';
+}
+function trendText(current,previous,mode='neutral'){
+  current=Number(current)||0;previous=Number(previous)||0;
+  const diff=current-previous;
+  const pct=pctChange(current,previous);
+  if(Math.abs(diff)<0.005)return {label:'STEADY',detail:`No change · ${money(current)}`,tone:'neutral',diff,pct:0};
+
+  let good;
+  if(mode==='lower-good')good=diff<0;
+  else if(mode==='higher-good')good=diff>0;
+  else good=null;
+
+  const pctText=pct===null?'new':`${Math.abs(pct).toFixed(0)}%`;
+  return {
+    label:`${trendArrow(diff)} ${money(Math.abs(diff))}`,
+    detail:`${pctText} ${diff>0?'higher':'lower'} than last approved check`,
+    tone:good===null?'neutral':(good?'good':'watch'),
+    diff,pct
+  };
+}
+function historyMetric(h,key){
+  if(!h)return 0;
+  if(key==='spent')return Number(h.spent||h.expenseTotal||0);
+  if(key==='protected')return Number(h.protected||0) || (Number(h.payNow||0)+Number(h.reserve||0)+Number(h.savings||0)+Number(h.debtPayment||0));
+  return Number(h[key]||0);
+}
+function biggestCategoryChange(currentExpenses,priorExpenses){
+  const a=reportCategoryTotals(currentExpenses||[]);
+  const b=reportCategoryTotals(priorExpenses||[]);
+  const map={};
+  a.forEach(([k,v])=>{map[k]=(map[k]||0)+v});
+  b.forEach(([k,v])=>{map[k]=(map[k]||0)-v});
+  const rows=Object.entries(map).sort((x,y)=>Math.abs(y[1])-Math.abs(x[1]));
+  return rows[0]||null;
+}
+function buildTrendInsight(current,previous,currentExpenses=[],previousExpenses=[]){
+  if(!current||!previous)return 'Once you approve at least two payday plans, Dexx will compare them and explain what changed.';
+
+  const spentNow=historyMetric(current,'spent'),spentPrev=historyMetric(previous,'spent');
+  const safeNow=historyMetric(current,'safeToSpend'),safePrev=historyMetric(previous,'safeToSpend');
+  const saveNow=historyMetric(current,'savings'),savePrev=historyMetric(previous,'savings');
+  const protectNow=historyMetric(current,'protected'),protectPrev=historyMetric(previous,'protected');
+  const parts=[];
+
+  const spendDiff=spentNow-spentPrev;
+  if(Math.abs(spendDiff)>=0.01){
+    parts.push(`You spent ${money(Math.abs(spendDiff))} ${spendDiff<0?'less':'more'} than the previous approved paycheck.`);
+  }else{
+    parts.push('Your flexible spending matched the previous approved paycheck.');
+  }
+
+  const safeDiff=safeNow-safePrev;
+  if(Math.abs(safeDiff)>=0.01){
+    parts.push(`Your safe-to-spend finished ${money(Math.abs(safeDiff))} ${safeDiff>0?'higher':'lower'}.`);
+  }
+
+  const saveDiff=saveNow-savePrev;
+  if(Math.abs(saveDiff)>=0.01){
+    parts.push(`Savings moved ${money(Math.abs(saveDiff))} ${saveDiff>0?'more':'less'} this check.`);
+  }
+
+  const protectDiff=protectNow-protectPrev;
+  if(Math.abs(protectDiff)>=0.01){
+    parts.push(`Protected money was ${money(Math.abs(protectDiff))} ${protectDiff>0?'higher':'lower'}.`);
+  }
+
+  const cat=biggestCategoryChange(currentExpenses,previousExpenses);
+  if(cat && Math.abs(cat[1])>=0.01){
+    parts.push(`${expenseCategoryLabel(cat[0])} changed the most, ${cat[1]>0?'up':'down'} ${money(Math.abs(cat[1]))}.`);
+  }
+
+  return parts.join(' ');
+}
+function renderTrends(c){
+  if(!$('trendSpending'))return;
+  const hist=approvedHistory();
+
+  if(hist.length<2){
+    $('trendWindowLabel').textContent='Need 2 plans';
+    ['trendSpending','trendSavings','trendSafe','trendProtected'].forEach(id=>$(id).textContent='—');
+    $('trendSpendingDetail').textContent='Approve another payday plan to compare.';
+    $('trendSavingsDetail').textContent='Approve another payday plan to compare.';
+    $('trendSafeDetail').textContent='Approve another payday plan to compare.';
+    $('trendProtectedDetail').textContent='Approve another payday plan to compare.';
+    $('trendInsight').textContent='Once you approve at least two payday plans, Dexx will compare them and explain what changed.';
+  }else{
+    const current=hist[hist.length-1],previous=hist[hist.length-2];
+    $('trendWindowLabel').textContent='Last 2 approved plans';
+
+    const spending=trendText(historyMetric(current,'spent'),historyMetric(previous,'spent'),'lower-good');
+    const savings=trendText(historyMetric(current,'savings'),historyMetric(previous,'savings'),'higher-good');
+    const safe=trendText(historyMetric(current,'safeToSpend'),historyMetric(previous,'safeToSpend'),'higher-good');
+    const protectedTrend=trendText(historyMetric(current,'protected'),historyMetric(previous,'protected'),'neutral');
+
+    const apply=(prefix,t)=>{
+      $(prefix).textContent=t.label;
+      $(prefix+'Detail').textContent=t.detail;
+      $(prefix).dataset.tone=t.tone;
+    };
+    apply('trendSpending',spending);
+    apply('trendSavings',savings);
+    apply('trendSafe',safe);
+    apply('trendProtected',protectedTrend);
+
+    // Current approved history doesn't yet save expense detail by category,
+    // so category commentary appears once future approvals carry snapshots.
+    const currentExpenses=current.expenses||[];
+    const previousExpenses=previous.expenses||[];
+    $('trendInsight').textContent=buildTrendInsight(current,previous,currentExpenses,previousExpenses);
+  }
+
+  $('trendHistoryCount').textContent=String(hist.length);
+  const host=$('trendHistory');host.replaceChildren();
+  if(!hist.length){
+    host.innerHTML='<div class="empty-copy">No approved paycheck cycles yet.</div>';
+  }else{
+    hist.slice(-6).reverse().forEach((h,idx)=>{
+      const row=document.createElement('article');
+      row.className='trend-history-row';
+      const spent=historyMetric(h,'spent');
+      const safe=historyMetric(h,'safeToSpend');
+      const savings=historyMetric(h,'savings');
+      const protectedAmount=historyMetric(h,'protected');
+      row.innerHTML=`<div><strong>${dateText(h.approvedAt||h.payDate,{month:'short',day:'numeric',year:'numeric'})}</strong><span>${money(h.paycheck||0)} paycheck</span></div><div class="trend-history-stats"><span>Protected ${money(protectedAmount)}</span><span>Spent ${money(spent)}</span><span>Saved ${money(savings)}</span><b>Safe ${money(safe)}</b></div>`;
+      host.append(row);
+    });
+  }
+}
+
 function renderReports(c){
   if(!$('reportPaycheck'))return;
 
@@ -180,6 +324,7 @@ function renderReports(c){
   $('reportSavings').textContent=money(goals.reduce((s,x)=>s+Number(x.saved||0),0));
   $('reportGoalCount').textContent=String(goals.length);
   $('reportDebtCount').textContent=String(debts.length);
+  renderTrends(c);
 }
 
 function renderExpenseManager(c){

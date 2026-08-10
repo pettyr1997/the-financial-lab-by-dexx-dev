@@ -1,28 +1,40 @@
-# Financial Lab 4.1.1 — Reports & Spending Analytics
+# Financial Lab 4.1.2 — Dexx Insights & Trends
 
-Built directly on the stable 4.1.0.7 Date Safety release.
+Built directly on stable 4.1.1 Reports & Spending Analytics.
 
 ## Added
-- New Reports Lab.
-- Current paycheck KPIs: Paycheck, Protected, Spent, Safe Left.
-- Where This Paycheck Went allocation bar.
-- Spending by Category using Expense Manager records.
-- Dexx report explaining the current cycle.
-- Paycheck Scorecard for protection, savings, debt, and spending.
-- Paycheck History from approved payday plans.
-- Big Picture totals for debt and savings.
+- New **Dexx Insights & Trends** section inside Reports Lab.
+- Compares the two most recent approved payday plans.
+- Tracks changes in:
+  - Flexible spending
+  - Savings
+  - TRUE Safe-to-Spend
+  - Protected money
+- Dexx explains what changed in plain language.
+- Recent-cycle trend history shows the last six approved plans.
+- Future approved plans now save richer analytics snapshots:
+  - Spending
+  - Protected money
+  - Pay-now amount
+  - Extra debt payment
+  - Expense category snapshots
+- Biggest spending-category movement can be surfaced once two enriched approvals exist.
+
+## Behavior
+- With fewer than two approved plans, Trends clearly says another approval is needed.
+- Existing older paycheck-history records continue to work.
+- Trend analytics are read-only and do not modify finances.
 
 ## Preserved
-- Direct Payday Plan control.
-- Date Safety engine.
-- Spending Memory.
-- Expense Manager.
-- Paycheck Cycle Binding.
-- Reserve Memory.
-- Savings Goals.
-- Debt Manager.
-- Bills Manager.
-- Front Door and stable navigation.
-- Existing local browser data.
-
-Reports are read-only. They do not modify balances or plan data.
+- 4.1.1 Reports Lab
+- 4.1.0.7 Date Safety
+- Direct Payday Plan control
+- Spending Memory
+- Expense Manager
+- Paycheck Cycle Binding
+- Reserve Memory
+- Savings Goals
+- Debt Manager
+- Bills Manager
+- Front Door
+- Existing local data

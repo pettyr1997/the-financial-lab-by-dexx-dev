@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 
-<html lang="en"><head><meta charset="utf-8"/><meta content="width=device-width,initial-scale=1,viewport-fit=cover" name="viewport"/><meta content="#050807" name="theme-color"/><meta content="Financial Lab powered by Dexx" name="description"/><link href="manifest.webmanifest" rel="manifest"/><link href="icons/icon.svg" rel="icon"/><link href="icons/icon-192.png" rel="apple-touch-icon"/><link href="styles.css?v=4.1.1" rel="stylesheet"/><title>Financial Lab — Powered by Dexx</title><meta content="4.1.1" name="financial-lab-version"/><meta name="financial-lab-release" content="4.0.3-bills-manager-layout-fix"/></head>
+<html lang="en"><head><meta charset="utf-8"/><meta content="width=device-width,initial-scale=1,viewport-fit=cover" name="viewport"/><meta content="#050807" name="theme-color"/><meta content="Financial Lab powered by Dexx" name="description"/><link href="manifest.webmanifest" rel="manifest"/><link href="icons/icon.svg" rel="icon"/><link href="icons/icon-192.png" rel="apple-touch-icon"/><link href="styles.css?v=4.1.2" rel="stylesheet"/><title>Financial Lab — Powered by Dexx</title><meta content="4.1.2" name="financial-lab-version"/><meta name="financial-lab-release" content="4.0.3-bills-manager-layout-fix"/></head>
 <body class="front-door-active">
 <div class="front-door" id="frontDoor">
   <div class="front-door-glow"></div>
@@ -212,6 +212,44 @@
     </div>
   </section>
 
+  <section class="card insights-card">
+    <div class="section-head"><span>DEXX INSIGHTS & TRENDS</span><b id="trendWindowLabel">Need 2 plans</b></div>
+
+    <div class="trend-grid">
+      <div>
+        <span>SPENDING TREND</span>
+        <strong id="trendSpending">—</strong>
+        <small id="trendSpendingDetail">Approve another payday plan to compare.</small>
+      </div>
+      <div>
+        <span>SAVINGS TREND</span>
+        <strong id="trendSavings">—</strong>
+        <small id="trendSavingsDetail">Approve another payday plan to compare.</small>
+      </div>
+      <div>
+        <span>SAFE-TO-SPEND</span>
+        <strong id="trendSafe">—</strong>
+        <small id="trendSafeDetail">Approve another payday plan to compare.</small>
+      </div>
+      <div>
+        <span>PROTECTED MONEY</span>
+        <strong id="trendProtected">—</strong>
+        <small id="trendProtectedDetail">Approve another payday plan to compare.</small>
+      </div>
+    </div>
+
+    <div class="dexx-trend-note">
+      <span>DEXX INSIGHT</span>
+      <p id="trendInsight">Once you approve at least two payday plans, Dexx will compare them and explain what changed.</p>
+    </div>
+
+    <div class="trend-list-wrap">
+      <div class="section-head mini"><span>RECENT CYCLES</span><b id="trendHistoryCount">0</b></div>
+      <div class="trend-history" id="trendHistory"></div>
+    </div>
+  </section>
+
+
   <section class="card">
     <div class="section-head"><span>PAYCHECK HISTORY</span><b id="reportHistoryCount">0 plans</b></div>
     <div class="report-history" id="reportHistory"></div>
@@ -234,7 +272,7 @@
   <div class="page-title"><p>START HERE</p><h1>How Financial Lab works.</h1></div>
 
   <section class="card walkthrough-hero">
-    <div class="section-head"><span>4.1.1 APP WALKTHROUGH</span><b>Powered by Dexx</b></div>
+    <div class="section-head"><span>4.1.2 APP WALKTHROUGH</span><b>Powered by Dexx</b></div>
     <p class="manager-copy">Financial Lab helps you decide what to do with each paycheck before the money gets spent. Cover what matters, prepare for what is coming, save on purpose, pay down debt intelligently, and know what is truly safe to spend.</p>
     <button class="primary" data-go="budget">START MY FRIDAY LAB</button>
   </section>
@@ -298,7 +336,7 @@
 <section class="view" id="dexx"><div class="dexx-header"><button data-go="laboratory">←</button><div><h1>DEXX</h1><p>Your Financial Scientist</p></div><img alt="" aria-hidden="true" class="dexx-chat-image" onerror="this.onerror=null;this.style.display='none'" src="dexx-character-clean.jpg"/></div><div class="chat"><div class="bubble" id="dexxReply">Hey Rob! 👋 I’m Dexx. How can I help you today?</div><button data-question="score">How can I improve my score? <span>›</span></button><button data-question="spending">Analyze my spending <span>›</span></button><button data-question="challenge">Give me a money challenge <span>›</span></button><button data-question="saving">Any tips for saving more? <span>›</span></button><form id="chatForm"><input id="chatInput" placeholder="Ask Dexx anything..."/><button type="submit">➤</button></form></div></section>
 </main>
 <nav class="bottom-nav"><button class="active" data-go="laboratory"><b>⚗</b><span>Laboratory</span></button><button data-go="budget"><b>▣</b><span>Budget Lab</span></button><button data-go="credit"><b>◇</b><span>Credit Lab</span></button><button data-go="savings"><b>▤</b><span>Savings Lab</span></button><button data-go="more"><b>•••</b><span>More</span></button></nav>
-</div><script src="app.js?v=4.1.1"></script>
+</div><script src="app.js?v=4.1.2"></script>
 <script>
 (function(){
   function wireBuildButton(){
