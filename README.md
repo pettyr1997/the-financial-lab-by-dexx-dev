@@ -1,31 +1,36 @@
-# Financial Lab 4.1.0.2 — Paycheck Cycle Binding
+# Financial Lab 4.1.0.3 — Navigation Recovery + Cycle Binding
 
-Built directly on 4.1.0.1 Spending Memory Integration Hotfix.
+Built from the stable 4.1.0.1 release.
+
+## Why this release exists
+4.1.0.2 introduced a navigation regression. 4.1.0.3 rolls back to the last build where all Lab links worked and reapplies only the minimum Spending Memory changes.
 
 ## Fixed
-- Every expense can now remember the exact paycheck cycle it belongs to.
-- Current-cycle spending is matched using a stable paycheck cycle ID instead of relying only on expense dates.
-- Rebuilding a plan no longer makes cycle-bound spending disappear.
-- Expenses saved before a paycheck cycle exists become **Pending Spending**.
-- Building the next Payday Plan automatically attaches Pending Spending to that paycheck cycle.
-- Spending Lab shows how much Pending Spending is waiting.
-- Existing older expense records still have a date-based fallback so prior data is not lost.
+- Restored the exact 4.1.0.1 navigation/event system.
+- No changes were made to `show()`, bottom navigation, Front Door routing, or data-go link handling.
+- Expenses can now carry a stable paycheck-cycle ID.
+- New expenses attach to the current paycheck cycle when one exists.
+- Expenses saved before a cycle exists remain unbound/pending.
+- Building a Payday Plan attaches unbound expenses to that exact paycheck cycle.
+- Current-cycle expense lookup uses cycle ID first, with date fallback for older records.
+- TRUE Safe-to-Spend continues to subtract expenses belonging to the active cycle.
 
 ## Expected test
-$120 paycheck
-- $12 savings
-- $20 Gas expense
-= $88 TRUE Safe-to-Spend
+With:
+- Paycheck $120
+- Savings $12
+- Gas expense $20
 
-The Payday Plan should show:
-- Spent this cycle: $20.00
-- TRUE Safe-to-Spend: $88.00
+Budget Lab should show:
+- Spent this cycle: $20
+- TRUE Safe-to-Spend: $88
 
 ## Preserved
-- Expense history/edit/delete
+- Front Door navigation isolation
+- All bottom navigation links
+- Expense Manager
 - Reserve Memory
 - Savings Goals
 - Debt Manager
 - Bills Manager
-- Front Door navigation isolation
 - Existing local browser data
