@@ -1,20 +1,22 @@
-# Financial Lab 4.0.8.1 — Start Here / App Walkthrough
+# Financial Lab 4.0.8.2 — Walkthrough Mobile Polish
 
-Built directly on 4.0.8 Savings Goals.
+Built directly on 4.0.8.1 Start Here / App Walkthrough.
 
-## Added
-- New Start Here tile under More.
-- Full in-app walkthrough explaining the Financial Lab system.
-- Five-step Friday payday routine.
-- Plain-language explanations of Pay Now, Bills Reserve, Reserve Memory, Savings Target, Debt Target, and TRUE Safe-to-Spend.
-- Explanation of why approving a Payday Plan matters.
-- First-time setup checklist.
-- Direct navigation buttons into each major Lab.
-- Mobile-first walkthrough design.
+## Fixed
+- Added extra top spacing so the Start Here page title is fully visible beneath the fixed header.
+- Rebuilt the First-Time Setup items as clean mobile cards.
+- Step numbers stay in their own circle on the left.
+- Titles and descriptions stack cleanly on the right.
+- Increased vertical spacing and line-height for easier reading.
+- Prevented long text from running together or overflowing on iPhone.
 
 ## Preserved
-- 4.0.8 Savings Goals and all savings strategies.
-- 4.0.7 Debt Manager and payoff strategies.
-- 4.0.6 Reserve Memory.
-- Bills Manager and future-bill intelligence.
+- Start Here walkthrough content and navigation.
+- Savings Goals 4.0.8.
+- Debt Manager.
+- Reserve Memory.
+- Bills Manager.
+- Payday Mode.
 - Existing saved browser data.
+
+Upload all files over the current DEV repository files.

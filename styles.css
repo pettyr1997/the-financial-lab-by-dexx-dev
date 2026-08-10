@@ -285,3 +285,133 @@
   .goal-card-head,.goal-meta{align-items:flex-start;flex-direction:column}
   .goal-card-head b{white-space:normal}
 }
+
+/* 4.0.8.1 — Start Here / App Walkthrough */
+.walkthrough-hero{border-color:rgba(97,255,29,.35)}
+.walkthrough-hero .primary{margin-top:12px}
+.walkthrough-steps{display:grid;gap:12px;margin-top:14px}
+.walkthrough-steps article{display:grid;grid-template-columns:42px 1fr;gap:14px;align-items:start;padding:14px;border:1px solid var(--line);border-radius:16px;background:#07100b}
+.walkthrough-steps article>span{display:grid;place-items:center;width:42px;height:42px;border-radius:50%;background:var(--green);color:#031006;font-weight:900}
+.walkthrough-steps strong{display:block;font-size:1rem;margin-bottom:4px}
+.walkthrough-steps p{margin:0;color:var(--muted);line-height:1.45}
+.walkthrough-labs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-top:12px}
+.walkthrough-labs article{border:1px solid var(--line);border-radius:16px;padding:16px;background:#07100b}
+.walkthrough-labs h3{margin:0 0 8px;font-size:1.02rem}
+.walkthrough-labs p{color:var(--muted);line-height:1.45;min-height:72px}
+.walkthrough-labs button{border:0;border-radius:10px;padding:10px 12px;background:#101a14;color:var(--green);font-weight:900;width:100%}
+.walkthrough-concepts{display:grid;gap:10px;margin-top:12px}
+.walkthrough-concepts article{padding:14px;border:1px solid var(--line);border-radius:14px;background:#07100b}
+.walkthrough-concepts strong{display:block;color:var(--green);margin-bottom:5px}
+.walkthrough-concepts p{margin:0;color:var(--muted);line-height:1.45}
+.walkthrough-concepts .true-spend{border-color:rgba(97,255,29,.45);background:rgba(97,255,29,.055)}
+.setup-checklist{display:grid;gap:10px;margin-top:12px}
+.setup-checklist button{display:grid;grid-template-columns:38px 1fr;gap:12px;text-align:left;align-items:center;width:100%;padding:13px;border:1px solid var(--line);border-radius:14px;background:#07100b;color:#fff}
+.setup-checklist button>span{display:grid;place-items:center;width:38px;height:38px;border-radius:50%;background:#101a14;color:var(--green);font-weight:900;border:1px solid rgba(97,255,29,.28)}
+.setup-checklist strong{display:block}
+.setup-checklist small{display:block;color:var(--muted);margin-top:3px;line-height:1.35}
+.walkthrough-tip{border-color:rgba(97,255,29,.35)}
+@media(max-width:640px){
+  .walkthrough-labs{grid-template-columns:1fr}
+  .walkthrough-labs p{min-height:0}
+  .walkthrough-steps article{grid-template-columns:38px 1fr}
+  .walkthrough-steps article>span{width:38px;height:38px}
+}
+
+/* 4.0.8.2 — Walkthrough Mobile Polish */
+
+/* Prevent the Start Here page title from hiding behind the sticky header */
+#start{
+  padding-top:28px;
+}
+#start .page-title{
+  padding-top:18px;
+  margin-top:0;
+}
+
+/* First-time setup cards: true mobile card layout */
+.setup-checklist{
+  display:grid;
+  gap:12px;
+  margin-top:14px;
+}
+.setup-checklist button{
+  display:grid;
+  grid-template-columns:44px minmax(0,1fr);
+  gap:14px;
+  align-items:start;
+  width:100%;
+  min-width:0;
+  padding:16px;
+  border:1px solid var(--line);
+  border-radius:16px;
+  background:#07100b;
+  color:#fff;
+  text-align:left;
+}
+.setup-checklist button>span{
+  display:grid;
+  place-items:center;
+  width:44px;
+  height:44px;
+  border-radius:50%;
+  background:#101a14;
+  color:var(--green);
+  font-weight:900;
+  border:1px solid rgba(97,255,29,.30);
+  flex:none;
+}
+.setup-checklist button>div{
+  min-width:0;
+  width:100%;
+}
+.setup-checklist strong{
+  display:block;
+  font-size:1rem;
+  line-height:1.25;
+  margin:1px 0 6px;
+  overflow-wrap:anywhere;
+}
+.setup-checklist small{
+  display:block;
+  color:var(--muted);
+  font-size:.79rem;
+  line-height:1.45;
+  overflow-wrap:anywhere;
+}
+
+@media(max-width:640px){
+  #start{
+    padding-top:42px !important;
+  }
+  #start .page-title{
+    padding-top:26px !important;
+    margin-bottom:18px !important;
+  }
+
+  .setup-checklist{
+    gap:14px;
+  }
+
+  .setup-checklist button{
+    grid-template-columns:42px minmax(0,1fr) !important;
+    padding:15px !important;
+    border-radius:16px !important;
+    min-height:92px;
+  }
+
+  .setup-checklist button>span{
+    width:42px !important;
+    height:42px !important;
+    font-size:.95rem;
+  }
+
+  .setup-checklist strong{
+    font-size:1rem !important;
+    line-height:1.28 !important;
+  }
+
+  .setup-checklist small{
+    font-size:.78rem !important;
+    line-height:1.45 !important;
+  }
+}
