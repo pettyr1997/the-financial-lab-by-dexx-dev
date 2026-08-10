@@ -43,7 +43,7 @@
 <p class="status" id="approvalStatus"></p>
 </section>
 <form class="card form-card" id="budgetForm">
-<div class="section-head"><span>1. CHECK DETAILS</span><b>Version 4.0.8</b></div>
+<div class="section-head"><span>1. CHECK DETAILS</span><b>Version 4.0.8.1</b></div>
 <div class="form-grid"><label>Paycheck amount<input id="paycheck" inputmode="decimal" min="0" placeholder="$0.00" step="0.01" type="number"/></label><label>Current available balance<input id="currentBalance" inputmode="decimal" min="0" placeholder="$0.00" step="0.01" type="number"/></label></div>
 <div class="form-grid"><label>Check date<input id="payDate" type="date"/></label><label>Next payday<input id="nextPayday" type="date"/></label></div>
 <div class="form-grid"><label>Savings goal (%)<input id="savingsRate" inputmode="numeric" max="100" min="0" step="1" type="number" value="10"/></label><label>Minimum savings<input id="saveAmount" inputmode="decimal" min="0" placeholder="$0.00" step="0.01" type="number"/></label></div>
@@ -96,7 +96,73 @@
 <div class="form-grid"><label>Priority<select id="savingsGoalPriority"><option value="high">High</option><option value="medium" selected>Medium</option><option value="low">Low</option></select></label><label>Goal type<select id="savingsGoalCategory"><option value="emergency">Emergency fund</option><option value="car">Car / repairs</option><option value="home">Home</option><option value="travel">Travel</option><option value="purchase">Purchase</option><option value="general" selected>General</option></select></label></div>
 <div class="manager-actions"><button class="primary" id="saveSavingsGoal" type="submit">SAVE SAVINGS GOAL</button><button class="secondary" hidden id="cancelSavingsEdit" type="button">CANCEL EDIT</button></div><p class="status" id="savingsGoalStatus"></p></form>
 <section class="card"><div class="section-head"><span>YOUR SAVINGS GOALS</span><b>Payday contributions update on approval</b></div><div class="savings-goals-list" id="savingsGoalsList"></div></section></section>
-<section class="view" id="more"><div class="page-title"><p>MORE</p><h1>Quick actions.</h1></div><div class="quick-grid"><button data-action="expense">＋<span>Add Expense</span></button><button data-action="income"><b>＋</b><span>Enter Check</span></button><button data-go="budget">▦<span>Friday Lab</span></button><button data-go="laboratory">▥<span>Reports</span></button><button data-go="dexx">☵<span>Ask Dexx</span></button><button data-go="profile">◎<span>Financial Profile</span></button></div></section>
+<section class="view" id="more"><div class="page-title"><p>MORE</p><h1>Quick actions.</h1></div><div class="quick-grid"><button data-action="expense">＋<span>Add Expense</span></button><button data-action="income"><b>＋</b><span>Enter Check</span></button><button data-go="budget">▦<span>Friday Lab</span></button><button data-go="laboratory">▥<span>Reports</span></button><button data-go="dexx">☵<span>Ask Dexx</span></button><button data-go="profile">◎<span>Financial Profile</span></button><button data-go="start">?<span>Start Here</span></button></div></section>
+
+<section class="view" id="start">
+  <div class="page-title"><p>START HERE</p><h1>How Financial Lab works.</h1></div>
+
+  <section class="card walkthrough-hero">
+    <div class="section-head"><span>4.0.8.1 APP WALKTHROUGH</span><b>Powered by Dexx</b></div>
+    <p class="manager-copy">Financial Lab helps you decide what to do with each paycheck before the money gets spent. Cover what matters, prepare for what is coming, save on purpose, pay down debt intelligently, and know what is truly safe to spend.</p>
+    <button class="primary" data-go="budget">START MY FRIDAY LAB</button>
+  </section>
+
+  <section class="card">
+    <div class="section-head"><span>YOUR FRIDAY ROUTINE</span><b>5 steps</b></div>
+    <div class="walkthrough-steps">
+      <article><span>1</span><div><strong>Enter your paycheck</strong><p>Open Budget Lab and enter your check amount, check date, and next payday.</p></div></article>
+      <article><span>2</span><div><strong>Review your bills</strong><p>Dexx checks what is due before the next payday and looks farther ahead for bills that need money protected now.</p></div></article>
+      <article><span>3</span><div><strong>Read Dexx’s recommendation</strong><p>Dexx separates Pay Now, Bills Reserve, Savings, Extra Debt, and TRUE Safe-to-Spend.</p></div></article>
+      <article><span>4</span><div><strong>Approve the payday plan</strong><p>Approval is when Reserve Memory and Savings Goals actually record the money you chose to protect.</p></div></article>
+      <article><span>5</span><div><strong>Spend from TRUE Safe-to-Spend</strong><p>This is what remains after protected bills, future reserves, savings, and planned debt money are accounted for.</p></div></article>
+    </div>
+  </section>
+
+  <section class="card">
+    <div class="section-head"><span>THE LABS</span><b>What each section does</b></div>
+    <div class="walkthrough-labs">
+      <article><h3>🧪 Laboratory</h3><p>Your home dashboard: Financial Health Score, missions, progress, savings, debt, and Dexx observations.</p><button data-go="laboratory">OPEN LABORATORY</button></article>
+      <article><h3>💵 Budget Lab</h3><p>The payday engine. Enter a check, review bills, see reserves, savings and debt recommendations, then approve the plan.</p><button data-go="budget">OPEN BUDGET LAB</button></article>
+      <article><h3>💳 Credit Lab</h3><p>Add each debt, track balances and minimums, and choose Balanced, Snowball, or Avalanche targeting.</p><button data-go="credit">OPEN CREDIT LAB</button></article>
+      <article><h3>💰 Savings Lab</h3><p>Create multiple savings goals and let Dexx prioritize by importance, deadline, or quickest goal to finish.</p><button data-go="savings">OPEN SAVINGS LAB</button></article>
+    </div>
+  </section>
+
+  <section class="card">
+    <div class="section-head"><span>IMPORTANT CONCEPTS</span><b>Know these numbers</b></div>
+    <div class="walkthrough-concepts">
+      <article><strong>Pay Now</strong><p>Bills that need to be funded before your next payday.</p></article>
+      <article><strong>Bills Reserve</strong><p>Money Dexx recommends protecting from this check for bills coming later. It is not spending money.</p></article>
+      <article><strong>Reserve Memory</strong><p>After you approve a plan, Dexx remembers what is already protected for each future bill so the next paycheck starts from the remaining amount, not zero.</p></article>
+      <article><strong>Savings Target</strong><p>The goal Dexx recommends for this paycheck’s savings amount based on your Savings Lab strategy.</p></article>
+      <article><strong>Debt Target</strong><p>The account Dexx recommends for extra debt money based on Balanced, Snowball, or Avalanche strategy.</p></article>
+      <article class="true-spend"><strong>TRUE Safe-to-Spend</strong><p>The number to watch. It is what remains after immediate bills, future obligations, savings, and planned debt money are protected.</p></article>
+    </div>
+  </section>
+
+  <section class="card">
+    <div class="section-head"><span>WHY APPROVAL MATTERS</span><b>Recommendation ≠ action</b></div>
+    <p class="manager-copy">You can rebuild a payday plan as many times as you want while testing numbers. Dexx does not treat recommendations as real until you tap <strong>Approve This Payday Plan</strong>. Approval writes Reserve Memory and Savings Goal contributions into your saved financial data.</p>
+  </section>
+
+  <section class="card">
+    <div class="section-head"><span>FIRST-TIME SETUP</span><b>Do this once</b></div>
+    <div class="setup-checklist">
+      <button data-go="profile"><span>1</span><div><strong>Complete Financial Profile</strong><small>Pay frequency, payday, savings rate, and reserve window.</small></div></button>
+      <button data-go="profile"><span>2</span><div><strong>Add recurring bills</strong><small>Rent, utilities, phone, WiFi, insurance, subscriptions, and more.</small></div></button>
+      <button data-go="credit"><span>3</span><div><strong>Add your debts</strong><small>Balances, minimums, APRs, and due dates.</small></div></button>
+      <button data-go="savings"><span>4</span><div><strong>Add savings goals</strong><small>Emergency fund, car repairs, vacation, or anything custom.</small></div></button>
+      <button data-go="budget"><span>5</span><div><strong>Run your first payday plan</strong><small>Let Dexx calculate what to pay, protect, save, and spend.</small></div></button>
+    </div>
+  </section>
+
+  <section class="card walkthrough-tip">
+    <div class="section-head"><span>DEXX TIP</span><b>Use it every payday</b></div>
+    <p>Financial Lab gets more useful when bills, debt balances, savings balances, and pay dates stay current. The routine is designed to take only a few minutes each payday.</p>
+    <button class="primary" data-go="budget">GO TO PAYDAY MODE</button>
+  </section>
+</section>
+
 <section class="view" id="dexx"><div class="dexx-header"><button data-go="laboratory">←</button><div><h1>DEXX</h1><p>Your Financial Scientist</p></div><img alt="" aria-hidden="true" class="dexx-chat-image" onerror="this.onerror=null;this.style.display='none'" src="dexx-character-clean.jpg"/></div><div class="chat"><div class="bubble" id="dexxReply">Hey Rob! 👋 I’m Dexx. How can I help you today?</div><button data-question="score">How can I improve my score? <span>›</span></button><button data-question="spending">Analyze my spending <span>›</span></button><button data-question="challenge">Give me a money challenge <span>›</span></button><button data-question="saving">Any tips for saving more? <span>›</span></button><form id="chatForm"><input id="chatInput" placeholder="Ask Dexx anything..."/><button type="submit">➤</button></form></div></section>
 </main>
 <nav class="bottom-nav"><button class="active" data-go="laboratory"><b>⚗</b><span>Laboratory</span></button><button data-go="budget"><b>▣</b><span>Budget Lab</span></button><button data-go="credit"><b>◇</b><span>Credit Lab</span></button><button data-go="savings"><b>▤</b><span>Savings Lab</span></button><button data-go="more"><b>•••</b><span>More</span></button></nav>
