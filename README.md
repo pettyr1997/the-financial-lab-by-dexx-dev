@@ -1,25 +1,31 @@
-# Financial Lab 4.1.0.1 — Spending Memory Integration Hotfix
+# Financial Lab 4.1.0.2 — Paycheck Cycle Binding
 
-Built directly on 4.1.0 Expense Manager + Spending Memory.
+Built directly on 4.1.0.1 Spending Memory Integration Hotfix.
 
 ## Fixed
-- Budget Lab now reads saved expenses from the actual paycheck cycle entered in Check Details.
-- Spending Lab and Budget Lab use the same paycheck-cycle dates.
-- Current-cycle expenses reliably subtract from TRUE Safe-to-Spend.
-- Expense save messaging no longer claims a safe-to-spend update when no active paycheck plan exists.
-- Payday Plan now shows a separate **Spent this cycle** line so the deduction is visible.
+- Every expense can now remember the exact paycheck cycle it belongs to.
+- Current-cycle spending is matched using a stable paycheck cycle ID instead of relying only on expense dates.
+- Rebuilding a plan no longer makes cycle-bound spending disappear.
+- Expenses saved before a paycheck cycle exists become **Pending Spending**.
+- Building the next Payday Plan automatically attaches Pending Spending to that paycheck cycle.
+- Spending Lab shows how much Pending Spending is waiting.
+- Existing older expense records still have a date-based fallback so prior data is not lost.
 
-## Test example
-$120.00 paycheck
-- $12.00 savings
-- $20.00 recorded expense
-= $88.00 TRUE Safe-to-Spend
+## Expected test
+$120 paycheck
+- $12 savings
+- $20 Gas expense
+= $88 TRUE Safe-to-Spend
+
+The Payday Plan should show:
+- Spent this cycle: $20.00
+- TRUE Safe-to-Spend: $88.00
 
 ## Preserved
-- Expense history/edit/delete.
-- Reserve Memory.
-- Savings Goals.
-- Debt Manager.
-- Bills Manager.
-- Front Door navigation isolation.
-- Existing local browser data.
+- Expense history/edit/delete
+- Reserve Memory
+- Savings Goals
+- Debt Manager
+- Bills Manager
+- Front Door navigation isolation
+- Existing local browser data

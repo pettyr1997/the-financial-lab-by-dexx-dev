@@ -10,20 +10,49 @@ const money=v=>new Intl.NumberFormat('en-US',{style:'currency',currency:'USD'}).
 const dateAtNoon=v=>v?new Date(`${v}T12:00:00`):null;
 const iso=d=>d.toISOString().slice(0,10);
 const clamp=(v,min,max)=>Math.min(max,Math.max(min,Number(v)||0));
-function load(){try{const old=JSON.parse(localStorage.getItem(STORAGE_KEY)||'{}');const migratedBills=Array.isArray(old.bills)?old.bills.map((b,i)=>({id:b.id||`bill-${i}-${Date.now()}`,name:b.name||'Bill',amount:Number(b.amount)||0,dueDate:b.dueDate||b.date||'',date:b.dueDate||b.date||'',priority:b.priority||'important',frequency:b.frequency||'monthly',autopay:!!b.autopay,paidOccurrences:Array.isArray(b.paidOccurrences)?b.paidOccurrences:(b.paid&&b.date?[b.date]:[])})):[];const migratedDebts=Array.isArray(old.debts)?old.debts.map((d,i)=>({id:d.id||`debt-${i}-${Date.now()}`,name:d.name||'Debt',balance:Math.max(0,Number(d.balance)||0),minimumPayment:Math.max(0,Number(d.minimumPayment??d.minimum??0)||0),dueDate:d.dueDate||d.date||'',apr:Math.max(0,Number(d.apr)||0),accountType:d.accountType||d.type||'credit-card'})):[];const migratedGoals=Array.isArray(old.savingsGoals)?old.savingsGoals.map((g,i)=>({id:g.id||`goal-${i}-${Date.now()}`,name:g.name||'Savings goal',target:Math.max(0,Number(g.target)||0),saved:Math.max(0,Number(g.saved)||0),priority:g.priority||'medium',targetDate:g.targetDate||'',category:g.category||'general'})):[];const migratedExpenses=Array.isArray(old.expenseRecords)?old.expenseRecords.map((x,i)=>({id:x.id||`expense-${i}-${Date.now()}`,name:x.name||x.merchant||'Expense',amount:Math.max(0,Number(x.amount)||0),category:x.category||'other',date:x.date||old.payDate||iso(new Date()),note:x.note||''})):((Number(old.expenses)||0)>0?[{id:`legacy-expense-${Date.now()}`,name:'Previous spending',amount:Math.max(0,Number(old.expenses)||0),category:'other',date:old.payDate||iso(new Date()),note:'Migrated from an earlier Financial Lab version'}]:[]);return {...DEFAULTS,...old,bills:migratedBills,debts:migratedDebts,expenseRecords:migratedExpenses,expenses:0,savingsGoals:migratedGoals,savingsStrategy:old.savingsStrategy||'priority',debtStrategy:old.debtStrategy||'balanced',paycheckHistory:Array.isArray(old.paycheckHistory)?old.paycheckHistory:[],reserveMemory:(old.reserveMemory&&typeof old.reserveMemory==='object'?old.reserveMemory:{}),missions:{...DEFAULTS.missions,...(old.missions||{})},profile:{...DEFAULTS.profile,...(old.profile||{})}}}catch{return structuredClone(DEFAULTS)}}
+function load(){try{const old=JSON.parse(localStorage.getItem(STORAGE_KEY)||'{}');const migratedBills=Array.isArray(old.bills)?old.bills.map((b,i)=>({id:b.id||`bill-${i}-${Date.now()}`,name:b.name||'Bill',amount:Number(b.amount)||0,dueDate:b.dueDate||b.date||'',date:b.dueDate||b.date||'',priority:b.priority||'important',frequency:b.frequency||'monthly',autopay:!!b.autopay,paidOccurrences:Array.isArray(b.paidOccurrences)?b.paidOccurrences:(b.paid&&b.date?[b.date]:[])})):[];const migratedDebts=Array.isArray(old.debts)?old.debts.map((d,i)=>({id:d.id||`debt-${i}-${Date.now()}`,name:d.name||'Debt',balance:Math.max(0,Number(d.balance)||0),minimumPayment:Math.max(0,Number(d.minimumPayment??d.minimum??0)||0),dueDate:d.dueDate||d.date||'',apr:Math.max(0,Number(d.apr)||0),accountType:d.accountType||d.type||'credit-card'})):[];const migratedGoals=Array.isArray(old.savingsGoals)?old.savingsGoals.map((g,i)=>({id:g.id||`goal-${i}-${Date.now()}`,name:g.name||'Savings goal',target:Math.max(0,Number(g.target)||0),saved:Math.max(0,Number(g.saved)||0),priority:g.priority||'medium',targetDate:g.targetDate||'',category:g.category||'general'})):[];const migratedExpenses=Array.isArray(old.expenseRecords)?old.expenseRecords.map((x,i)=>({id:x.id||`expense-${i}-${Date.now()}`,name:x.name||x.merchant||'Expense',amount:Math.max(0,Number(x.amount)||0),category:x.category||'other',date:x.date||old.payDate||iso(new Date()),note:x.note||'',cycleId:x.cycleId||'',pendingCycle:!!x.pendingCycle})):((Number(old.expenses)||0)>0?[{id:`legacy-expense-${Date.now()}`,name:'Previous spending',amount:Math.max(0,Number(old.expenses)||0),category:'other',date:old.payDate||iso(new Date()),note:'Migrated from an earlier Financial Lab version',cycleId:'',pendingCycle:true}]:[]);return {...DEFAULTS,...old,bills:migratedBills,debts:migratedDebts,expenseRecords:migratedExpenses,expenses:0,savingsGoals:migratedGoals,savingsStrategy:old.savingsStrategy||'priority',debtStrategy:old.debtStrategy||'balanced',paycheckHistory:Array.isArray(old.paycheckHistory)?old.paycheckHistory:[],reserveMemory:(old.reserveMemory&&typeof old.reserveMemory==='object'?old.reserveMemory:{}),missions:{...DEFAULTS.missions,...(old.missions||{})},profile:{...DEFAULTS.profile,...(old.profile||{})}}}catch{return structuredClone(DEFAULTS)}}
 let data=load();
 const priorityRank={essential:0,important:1,flexible:2};
 function billDefinitions(){return (Array.isArray(data.bills)?data.bills:[]).filter(b=>b.name||b.dueDate||b.date||Number(b.amount)).map((b,i)=>({id:b.id||`bill-${i}-${b.name||'bill'}`,name:b.name||'Bill',amount:Number(b.amount)||0,dueDate:b.dueDate||b.date||'',date:b.dueDate||b.date||'',priority:b.priority||'important',frequency:b.frequency||'monthly',autopay:!!b.autopay,paidOccurrences:Array.isArray(b.paidOccurrences)?b.paidOccurrences:[]}))}
 
 
 
-function expenseDefinitions(){return (Array.isArray(data.expenseRecords)?data.expenseRecords:[]).filter(x=>Number(x.amount)>0).map((x,i)=>({id:x.id||`expense-${i}`,name:x.name||'Expense',amount:Math.max(0,Number(x.amount)||0),category:x.category||'other',date:x.date||data.payDate||iso(new Date()),note:x.note||''}))}
+
+function paycheckCycleId(payDate,nextPayday){
+  const p=payDate||'',n=nextPayday||'';
+  return p&&n?`${p}__${n}`:'';
+}
+function activeCycleId(){return paycheckCycleId(data.payDate,data.nextPayday)}
+function bindPendingExpensesToActiveCycle(){
+  const id=activeCycleId();
+  if(!id)return 0;
+  let changed=0;
+  (Array.isArray(data.expenseRecords)?data.expenseRecords:[]).forEach(x=>{
+    if(x&&(!x.cycleId||x.pendingCycle)){
+      x.cycleId=id;
+      x.pendingCycle=false;
+      changed++;
+    }
+  });
+  return changed;
+}
+
+function expenseDefinitions(){return (Array.isArray(data.expenseRecords)?data.expenseRecords:[]).filter(x=>Number(x.amount)>0).map((x,i)=>({id:x.id||`expense-${i}`,name:x.name||'Expense',amount:Math.max(0,Number(x.amount)||0),category:x.category||'other',date:x.date||data.payDate||iso(new Date()),note:x.note||'',cycleId:x.cycleId||'',pendingCycle:!!x.pendingCycle}))}
 function expensesForCycle(start,end){
   const s=dateAtNoon(start),e=dateAtNoon(end);
   if(!s||!e)return expenseDefinitions();
-  return expenseDefinitions().filter(x=>{const d=dateAtNoon(x.date);return d&&d>=s&&d<=e}).sort((a,b)=>b.date.localeCompare(a.date))
+  const id=paycheckCycleId(iso(s),iso(e));
+  return expenseDefinitions().filter(x=>{
+    if(x.cycleId)return x.cycleId===id;
+    const d=dateAtNoon(x.date);
+    return d&&d>=s&&d<=e;
+  }).sort((a,b)=>b.date.localeCompare(a.date))
 }
 function currentCycleExpenses(){const start=data.payDate||iso(new Date()),end=data.nextPayday||iso(new Date(Date.now()+7*86400000));return expensesForCycle(start,end)}
+
+function pendingExpenses(){return expenseDefinitions().filter(x=>x.pendingCycle||!x.cycleId)}
+function pendingExpenseTotal(){return pendingExpenses().reduce((s,x)=>s+Number(x.amount||0),0)}
+
 function currentCycleExpenseTotal(){return currentCycleExpenses().reduce((s,x)=>s+Number(x.amount||0),0)}
 function expenseCategoryLabel(c){return ({gas:'Gas',groceries:'Groceries',food:'Food & dining',entertainment:'Entertainment',personal:'Personal',haircut:'Haircut',shopping:'Shopping',transportation:'Transportation',medical:'Medical',other:'Other'})[c]||'Other'}
 function spendingStatus(p){
@@ -37,12 +66,12 @@ function spendingStatus(p){
 function resetExpenseForm(){if(!$('expenseForm'))return;$('expenseId').value='';$('expenseName').value='';$('expenseAmount').value='';$('expenseCategory').value='other';$('expenseDate').value=iso(new Date());$('expenseNote').value='';$('saveExpense').textContent='SAVE EXPENSE';$('cancelExpenseEdit').hidden=true}
 function renderExpenseManager(c){
   const host=$('expenseList');if(!host)return;
-  const list=c.currentExpenses||currentCycleExpenses(),spent=list.reduce((s,x)=>s+x.amount,0),start=c.safeBeforeExpenses||0,remaining=c.safeToSpend||0;
+  const list=c.currentExpenses||currentCycleExpenses(),pending=pendingExpenses(),spent=list.reduce((s,x)=>s+x.amount,0),start=c.safeBeforeExpenses||0,remaining=c.safeToSpend||0;
   if($('expenseCycleLabel'))$('expenseCycleLabel').textContent=`${(c.expenseCycleStart||dateAtNoon(data.payDate)||new Date()).toLocaleDateString('en-US',{month:'short',day:'numeric'})} – ${(c.expenseCycleEnd||c.nextPay).toLocaleDateString('en-US',{month:'short',day:'numeric'})}`;
   if($('expenseStarting'))$('expenseStarting').textContent=money(start);
   if($('expenseSpent'))$('expenseSpent').textContent=money(spent);
   if($('expenseRemaining'))$('expenseRemaining').textContent=money(remaining);
-  if($('expenseDexxStatus'))$('expenseDexxStatus').textContent=spendingStatus(c);
+  if($('expenseDexxStatus'))$('expenseDexxStatus').textContent=spendingStatus(c);if($('pendingExpenseSummary'))$('pendingExpenseSummary').textContent=pending.length?`${pending.length} pending expense${pending.length===1?'':'s'} · ${money(pending.reduce((s,x)=>s+x.amount,0))} waiting for a paycheck cycle`:'No pending spending';
   const pct=start>0?Math.min(100,Math.round(spent/start*100)):0;
   if($('expenseMeter'))$('expenseMeter').style.width=`${pct}%`;
   if($('expenseMeterText'))$('expenseMeterText').textContent=start?`${pct}% used · ${money(remaining)} remaining`:'Build a payday plan to start tracking';
@@ -220,7 +249,7 @@ function recommendation(p){
   if(p.shortfall>0){const essentials=p.dueNowBills.filter(b=>b.priority==='essential').map(b=>b.name).slice(0,3).join(', ');return`This payday is ${money(p.shortfall)} short before future reserves. Protect ${essentials||'housing, utilities, transportation, and insurance'} first. Pause savings and extra debt payments if needed, reduce flexible spending to $0.00, and contact lower-priority billers before the due date.`}
   const why=reserveExplanation(p);
   if(p.reserveShortfall>0)return`Your immediate bills are covered, but this check cannot fully fund the ${money(p.reserveTarget)} future-bill reserve I recommend. Protect ${money(p.reserve)} now and keep flexible spending at ${money(p.safeToSpend)}. ${why} Savings and extra debt should stay behind this reserve until the gap is covered.`;
-  if(p.upcomingBills.length)return`Your immediate bills are covered. I recommend protecting ${money(p.reserve)} from this check for future bills before treating the rest as available. ${why} Then move ${money(p.savings)} to ${p.savingsGoalTarget?.name||'savings'}${p.debtPayment?`, send ${money(p.debtPayment)} to ${p.targetDebt?.name||'debt'}`:''}. You have already recorded ${money(p.expenseTotal)} in flexible expenses this cycle. Your TRUE safe-to-spend amount is ${money(p.safeToSpend)}.`;
+  if(p.upcomingBills.length)return`Your immediate bills are covered. I recommend protecting ${money(p.reserve)} from this check for future bills before treating the rest as available. ${why} Then move ${money(p.savings)} to ${p.savingsGoalTarget?.name||'savings'}${p.debtPayment?`, send ${money(p.debtPayment)} to ${p.targetDebt?.name||'debt'}`:''}. You have already recorded ${money(p.expenseTotal)} in flexible expenses attached to this paycheck cycle. Your TRUE safe-to-spend amount is ${money(p.safeToSpend)}.`;
   return`Pay ${money(p.payNow)} now. No future-bill reserve is needed inside your current look-ahead window, so move ${money(p.savings)} to ${p.savingsGoalTarget?.name||'savings'}${p.debtPayment?`, send ${money(p.debtPayment)} to ${p.targetDebt?.name||'debt'}`:''}, and keep flexible spending at or below ${money(p.safeToSpend)} until payday.`
 }
 function experiment(p){if(!p.paycheck)return{title:'Build your first payday plan',text:'Add a paycheck and approve Dexx’s recommendation.',progress:0};if(!data.approvedPlan)return{title:'Approve the experiment',text:`Review the plan and protect ${money(p.savings)} for savings.`,progress:35};const target=Math.max(20,Math.min(p.safeToSpend*.2,75));return{title:`No-spend boost: save an extra ${money(target)}`,text:`Stay under ${money(p.safeToSpend)} in flexible spending and review your bills by Wednesday.`,progress:data.missions.spending&&data.missions.bills?100:data.missions.spending||data.missions.bills?70:50}}
@@ -287,13 +316,13 @@ $('expenseForm')?.addEventListener('submit',e=>{
   const id=$('expenseId').value,name=$('expenseName').value.trim(),amount=clamp($('expenseAmount').value,0,1e9),category=$('expenseCategory').value,date=$('expenseDate').value,note=$('expenseNote').value.trim();
   if(!name||amount<=0||!date){$('expenseStatus').textContent='Add the expense name, amount, and date.';return}
   const existing=id?data.expenseRecords.find(x=>x.id===id):null;
-  const record={id:id||(crypto.randomUUID?crypto.randomUUID():`expense-${Date.now()}`),name,amount,category,date,note};
+  const activeId=activeCycleId(),boundId=existing?.cycleId||activeId||'',record={id:id||(crypto.randomUUID?crypto.randomUUID():`expense-${Date.now()}`),name,amount,category,date,note,cycleId:boundId,pendingCycle:!boundId};
   if(existing)Object.assign(existing,record);else data.expenseRecords.push(record);
   save();
-  const hasActivePlan=Number(data.paycheck)>0&&!!data.payDate&&!!data.nextPayday;
+  const hasCycle=!!boundId;
   $('expenseStatus').textContent=existing
-    ?(hasActivePlan?'Expense updated. Dexx recalculated TRUE Safe-to-Spend.':'Expense updated. Build your payday plan so Dexx can calculate its effect on TRUE Safe-to-Spend.')
-    :(hasActivePlan?'Expense recorded. Dexx updated your remaining TRUE Safe-to-Spend.':'Expense saved. Build your payday plan so Dexx can calculate how it affects TRUE Safe-to-Spend.');
+    ?(hasCycle?'Expense updated and kept with its paycheck cycle. Dexx recalculated TRUE Safe-to-Spend.':'Expense updated and remains Pending Spending until you build a payday plan.')
+    :(hasCycle?'Expense recorded and attached to this paycheck cycle. Dexx updated TRUE Safe-to-Spend.':'Expense saved as Pending Spending. Build your payday plan and Dexx will attach it to that paycheck cycle.');
   resetExpenseForm();
 });
 $('cancelExpenseEdit')?.addEventListener('click',()=>{resetExpenseForm();$('expenseStatus').textContent='Edit canceled.'});
@@ -304,7 +333,7 @@ document.addEventListener('click',e=>{
   if(del){const x=data.expenseRecords.find(v=>v.id===del.dataset.deleteExpense);if(x&&confirm(`Delete ${x.name} expense?`)){data.expenseRecords=data.expenseRecords.filter(v=>v.id!==x.id);save();$('expenseStatus').textContent=`${x.name} deleted. TRUE Safe-to-Spend was recalculated.`}}
 });
 
-$('budgetForm').addEventListener('submit',e=>{e.preventDefault();data.paycheck=clamp($('paycheck').value,0,1e9);data.currentBalance=clamp($('currentBalance').value,0,1e9);data.payDate=$('payDate').value;data.nextPayday=$('nextPayday').value;data.savingsRate=clamp($('savingsRate').value,0,100);data.saveAmount=clamp($('saveAmount').value,0,1e9);if(!debtDefinitions().length)data.debtAmount=clamp($('debtAmount').value,0,1e9);data.debtGoal=clamp($('debtGoal').value,0,1e9);const name=$('billName').value.trim(),date=$('billDate').value,amount=clamp($('billAmount').value,0,1e9);if(name||date||amount)data.bills.push({id:crypto.randomUUID?crypto.randomUUID():`bill-${Date.now()}`,name:name||'Upcoming bill',dueDate:date,date,amount,priority:$('billPriority').value,frequency:$('billFrequency').value,autopay:$('billAutopay').checked,paidOccurrences:[]});data.customSavings=null;data.customDebt=null;data.approvedPlan=null;data.missions.bills=data.bills.length>0;save();$('billName').value='';$('billDate').value='';$('billAmount').value='';$('billAutopay').checked=false;$('formStatus').textContent='Dexx rebuilt your payday plan. Review it above, then approve the experiment.'});
+$('budgetForm').addEventListener('submit',e=>{e.preventDefault();data.paycheck=clamp($('paycheck').value,0,1e9);data.currentBalance=clamp($('currentBalance').value,0,1e9);data.payDate=$('payDate').value;data.nextPayday=$('nextPayday').value;data.savingsRate=clamp($('savingsRate').value,0,100);data.saveAmount=clamp($('saveAmount').value,0,1e9);if(!debtDefinitions().length)data.debtAmount=clamp($('debtAmount').value,0,1e9);data.debtGoal=clamp($('debtGoal').value,0,1e9);const name=$('billName').value.trim(),date=$('billDate').value,amount=clamp($('billAmount').value,0,1e9);if(name||date||amount)data.bills.push({id:crypto.randomUUID?crypto.randomUUID():`bill-${Date.now()}`,name:name||'Upcoming bill',dueDate:date,date,amount,priority:$('billPriority').value,frequency:$('billFrequency').value,autopay:$('billAutopay').checked,paidOccurrences:[]});data.customSavings=null;data.customDebt=null;data.approvedPlan=null;data.missions.bills=data.bills.length>0;const boundPending=bindPendingExpensesToActiveCycle();save();$('billName').value='';$('billDate').value='';$('billAmount').value='';$('billAutopay').checked=false;$('formStatus').textContent=`Dexx rebuilt your payday plan. Review it above, then approve the experiment.${boundPending?` ${boundPending} pending expense${boundPending===1?'':'s'} attached to this paycheck cycle.`:''}`});
 $('billManagerForm')?.addEventListener('submit',e=>{e.preventDefault();const id=$('managerBillId').value,name=$('managerBillName').value.trim(),amount=clamp($('managerBillAmount').value,0,1e9),dueDate=$('managerBillDate').value;if(!name||!amount||!dueDate){$('billManagerStatus').textContent='Add the bill name, amount, and next due date.';return}const existing=id?data.bills.find(b=>b.id===id):null;const priorDue=existing?.dueDate||existing?.date||'';const record={id:id||(crypto.randomUUID?crypto.randomUUID():`bill-${Date.now()}`),name,amount,dueDate,date:dueDate,priority:$('managerBillPriority').value,frequency:$('managerBillFrequency').value,autopay:$('managerBillAutopay').checked,paidOccurrences:existing?.paidOccurrences||[]};if(existing){if(priorDue&&priorDue!==dueDate)clearReserveForBill(existing.id);Object.assign(existing,record)}else data.bills.push(record);if(!existing&&data.bills.length>Number(data.profile?.recurringBillCount||0)){data.profile=data.profile||structuredClone(DEFAULTS.profile);data.profile.recurringBillCount=data.bills.length}data.missions.bills=data.bills.length>0;data.approvedPlan=null;save();$('billManagerStatus').textContent=existing?'Bill updated. Dexx recalculated your payday plan.':'Bill saved. Dexx will use it automatically every payday.';resetBillManagerForm()});
 $('cancelBillEdit')?.addEventListener('click',()=>{resetBillManagerForm();$('billManagerStatus').textContent='Edit canceled.'});
 document.addEventListener('click',e=>{const edit=e.target.closest('[data-edit-bill]');if(edit){const b=data.bills.find(x=>x.id===edit.dataset.editBill);if(!b)return;$('managerBillId').value=b.id;$('managerBillName').value=b.name;$('managerBillAmount').value=b.amount;$('managerBillDate').value=b.dueDate||b.date||'';$('managerBillFrequency').value=b.frequency||'monthly';$('managerBillPriority').value=b.priority||'important';$('managerBillAutopay').checked=!!b.autopay;$('saveManagedBill').textContent='UPDATE BILL';$('cancelBillEdit').hidden=false;$('billManagerStatus').textContent=`Editing ${b.name}.`;if(location.hash!=='#profile')show('profile');setTimeout(()=>$('managerBillName').scrollIntoView({behavior:'smooth',block:'center'}),80)}const del=e.target.closest('[data-delete-bill]');if(del){const b=data.bills.find(x=>x.id===del.dataset.deleteBill);if(b&&confirm(`Delete ${b.name}?`)){clearReserveForBill(b.id);data.bills=data.bills.filter(x=>x.id!==b.id);data.approvedPlan=null;data.missions.bills=data.bills.length>0;save();$('billManagerStatus').textContent=`${b.name} deleted.`}}});
