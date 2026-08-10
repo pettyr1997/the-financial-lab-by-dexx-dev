@@ -43,7 +43,7 @@
 <p class="status" id="approvalStatus"></p>
 </section>
 <form class="card form-card" id="budgetForm">
-<div class="section-head"><span>1. CHECK DETAILS</span><b>Version 4.0.7.1</b></div>
+<div class="section-head"><span>1. CHECK DETAILS</span><b>Version 4.0.7.2</b></div>
 <div class="form-grid"><label>Paycheck amount<input id="paycheck" inputmode="decimal" min="0" placeholder="$0.00" step="0.01" type="number"/></label><label>Current available balance<input id="currentBalance" inputmode="decimal" min="0" placeholder="$0.00" step="0.01" type="number"/></label></div>
 <div class="form-grid"><label>Check date<input id="payDate" type="date"/></label><label>Next payday<input id="nextPayday" type="date"/></label></div>
 <div class="form-grid"><label>Savings goal (%)<input id="savingsRate" inputmode="numeric" max="100" min="0" step="1" type="number" value="10"/></label><label>Minimum savings<input id="saveAmount" inputmode="decimal" min="0" placeholder="$0.00" step="0.01" type="number"/></label></div>
@@ -77,7 +77,7 @@
 </form><div class="managed-bills" id="managedBills"></div></section>
 <section class="card"><div class="section-head"><span>PROFILE SUMMARY</span><b id="profileReady">Needs setup</b></div><div class="profile-summary" id="profileSummary"></div></section></section>
 <section class="view" id="credit"><div class="page-title"><p>CREDIT LAB</p><h1>Debt Manager.</h1></div>
-<section class="card debt-overview"><div class="section-head"><span>4.0.7.1 DEBT INTELLIGENCE</span><b id="debtManagerCount">0 accounts saved</b></div><p class="manager-copy">Save each debt once. Dexx will track balances and choose where extra debt money should go after bills, reserves, and savings are protected.</p>
+<section class="card debt-overview"><div class="section-head"><span>4.0.7.2 DEBT INTELLIGENCE</span><b id="debtManagerCount">0 accounts saved</b></div><p class="manager-copy">Save each debt once. Dexx will track balances and choose where extra debt money should go after bills, reserves, and savings are protected.</p>
 <div class="debt-kpis"><div><span>TOTAL DEBT</span><strong id="debtTotalManaged">$0.00</strong></div><div><span>MONTHLY MINIMUMS</span><strong id="debtMinimumTotal">$0.00</strong></div><div><span>DEXX TARGET</span><strong id="debtTargetName">Add an account</strong></div></div>
 <label class="strategy-field">Payoff strategy<select id="debtStrategy"><option value="balanced">Balanced</option><option value="snowball">Snowball</option><option value="avalanche">Avalanche</option></select><small id="debtStrategyCopy">Balanced · high APR + quick wins</small></label></section>
 <form class="card debt-manager-form" id="debtManagerForm"><div class="section-head"><span>ADD DEBT ACCOUNT</span><b>Saved locally</b></div><input id="managerDebtId" type="hidden"/>

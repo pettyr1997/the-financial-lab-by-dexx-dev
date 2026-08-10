@@ -189,3 +189,68 @@
     width:100%;
   }
 }
+
+/* 4.0.7.2 — Credit Lab Form Stack Hotfix */
+@media (max-width: 640px){
+  #debtManagerForm .form-grid,
+  .debt-manager-form .form-grid{
+    display:block !important;
+    grid-template-columns:1fr !important;
+    width:100% !important;
+  }
+
+  #debtManagerForm .form-grid > label,
+  .debt-manager-form .form-grid > label{
+    display:block !important;
+    width:100% !important;
+    max-width:100% !important;
+    margin:0 0 18px 0 !important;
+  }
+
+  #debtManagerForm input,
+  #debtManagerForm select,
+  .debt-manager-form input,
+  .debt-manager-form select{
+    display:block !important;
+    width:100% !important;
+    max-width:100% !important;
+    min-width:0 !important;
+    box-sizing:border-box !important;
+    margin-top:8px !important;
+    min-height:54px !important;
+    font-size:16px !important;
+  }
+
+  #debtManagerForm input[type="date"],
+  .debt-manager-form input[type="date"]{
+    width:100% !important;
+    min-width:100% !important;
+    max-width:100% !important;
+    -webkit-appearance:auto;
+    appearance:auto;
+  }
+
+  #debtManagerForm .manager-actions,
+  .debt-manager-form .manager-actions{
+    display:grid !important;
+    grid-template-columns:1fr !important;
+    width:100% !important;
+    gap:10px !important;
+  }
+
+  #debtManagerForm .manager-actions button,
+  .debt-manager-form .manager-actions button{
+    width:100% !important;
+  }
+
+  .debt-manager-form .section-head{
+    display:flex !important;
+    flex-direction:column !important;
+    align-items:flex-start !important;
+  }
+
+  .debt-manager-form .section-head b{
+    width:auto !important;
+    white-space:normal !important;
+  }
+}
