@@ -682,3 +682,6 @@ body.front-door-active .app-shell *{
 #expenseSpent{color:#fff}
 
 /* 4.1.0.3 — Navigation Recovery + Cycle Binding */
+
+/* 4.1.0.4 — Payday Build Recovery */
+#formStatus{min-height:1.5em}

@@ -1,12 +1,48 @@
-const CACHE='financial-lab-v4.1.0.3-navigation-recovery';
-const ASSETS=['./','./index.html','./styles.css','./app.js','./manifest.webmanifest','./icon.svg','./icon-192.png','./icon-512.png','./financial-lab-logo.jpg','./dexx-character-clean.jpg'];
-self.addEventListener('install',e=>e.waitUntil(caches.open(CACHE).then(c=>c.addAll(ASSETS)).then(()=>self.skipWaiting())));
-self.addEventListener('activate',e=>e.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k!==CACHE).map(k=>caches.delete(k)))).then(()=>self.clients.claim())));
-self.addEventListener('fetch',e=>{
-  if(e.request.method!=='GET') return;
-  if(e.request.mode==='navigate'){
-    e.respondWith(fetch(e.request).then(res=>{const copy=res.clone();caches.open(CACHE).then(c=>c.put('./index.html',copy));return res;}).catch(()=>caches.match('./index.html')));
+const CACHE='financial-lab-v4.1.0.4-payday-build-recovery';
+const ASSETS=['./','./index.html','./styles.css?v=4.1.0.4','./app.js?v=4.1.0.4','./manifest.webmanifest','./icon.svg','./icon-192.png','./icon-512.png','./financial-lab-logo.jpg','./dexx-character-clean.jpg'];
+
+self.addEventListener('install',event=>{
+  event.waitUntil(
+    caches.open(CACHE)
+      .then(cache=>cache.addAll(ASSETS))
+      .then(()=>self.skipWaiting())
+  );
+});
+
+self.addEventListener('activate',event=>{
+  event.waitUntil(
+    caches.keys()
+      .then(keys=>Promise.all(keys.filter(key=>key!==CACHE).map(key=>caches.delete(key))))
+      .then(()=>self.clients.claim())
+  );
+});
+
+async function networkFirst(request,fallback){
+  try{
+    const response=await fetch(request,{cache:'no-store'});
+    const cache=await caches.open(CACHE);
+    cache.put(request,response.clone());
+    return response;
+  }catch{
+    return (await caches.match(request)) || (fallback ? await caches.match(fallback) : Response.error());
+  }
+}
+
+self.addEventListener('fetch',event=>{
+  if(event.request.method!=='GET')return;
+  const url=new URL(event.request.url);
+
+  if(event.request.mode==='navigate'){
+    event.respondWith(networkFirst(event.request,'./index.html'));
     return;
   }
-  e.respondWith(caches.match(e.request).then(r=>r||fetch(e.request).then(res=>{const copy=res.clone();caches.open(CACHE).then(c=>c.put(e.request,copy));return res;})));
+
+  if(url.pathname.endsWith('/app.js') || url.pathname.endsWith('/styles.css')){
+    event.respondWith(networkFirst(event.request));
+    return;
+  }
+
+  event.respondWith(
+    caches.match(event.request).then(cached=>cached || networkFirst(event.request))
+  );
 });
