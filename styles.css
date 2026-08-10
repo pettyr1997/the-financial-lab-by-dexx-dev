@@ -677,3 +677,6 @@ body.front-door-active .app-shell *{
   .expense-row-main{flex-direction:column}
   .expense-row-main b{white-space:normal}
 }
+
+/* 4.1.0.1 — Spending Memory Integration Hotfix */
+#expenseSpent{color:#fff}
