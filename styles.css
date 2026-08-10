@@ -80,3 +80,29 @@
 .reserve-memory-summary span{font-size:.76rem;line-height:1.25;color:var(--muted);text-align:right;max-width:58%}
 .reserve-held{display:inline-block;margin-left:6px;color:var(--green);font-style:normal;font-size:.62rem;border:1px solid rgba(97,255,29,.3);border-radius:999px;padding:2px 6px}
 @media(max-width:560px){.reserve-memory-summary{align-items:flex-start;flex-direction:column}.reserve-memory-summary span{max-width:none;text-align:left}}
+
+/* 4.0.7 — Debt Manager */
+.debt-overview,.debt-manager-form{border-color:rgba(97,255,29,.28)}
+.debt-kpis{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:16px 0}
+.debt-kpis>div{padding:14px;border:1px solid var(--line);border-radius:16px;background:#07100b}
+.debt-kpis span{display:block;color:var(--muted);font-size:.65rem;font-weight:800;letter-spacing:.08em;margin-bottom:6px}
+.debt-kpis strong{display:block;font-size:1.08rem;overflow-wrap:anywhere}
+.strategy-field{display:block;margin-top:8px}
+.strategy-field select{margin-top:8px;width:100%}
+.strategy-field small{display:block;color:var(--muted);margin-top:8px}
+.managed-debts{display:grid;gap:12px}
+.managed-debt{position:relative;border:1px solid var(--line);border-radius:18px;padding:16px;background:#07100b}
+.dexx-target{display:inline-block;margin-bottom:10px;padding:5px 9px;border-radius:999px;background:rgba(97,255,29,.12);border:1px solid rgba(97,255,29,.3);color:var(--green);font-size:.62rem;font-weight:900;letter-spacing:.08em}
+.debt-card-head{display:flex;justify-content:space-between;gap:16px;align-items:flex-start}
+.debt-card-head strong{display:block;font-size:1.08rem}
+.debt-card-head span{display:block;color:var(--muted);font-size:.78rem;margin-top:4px}
+.debt-card-head b{color:var(--green);font-size:1.18rem;white-space:nowrap}
+.debt-card-meta{display:flex;justify-content:space-between;gap:12px;align-items:center;border-top:1px solid var(--line);margin-top:12px;padding-top:12px}
+.debt-card-meta>span{color:var(--muted);font-size:.76rem}
+.debt-card-meta div{display:flex;gap:8px;flex-wrap:wrap}
+.debt-card-meta button{border:0;border-radius:10px;padding:8px 10px;background:#101a14;color:var(--green);font-weight:800}
+.debt-card-meta .danger-link{color:#ff5353}
+@media(max-width:620px){
+  .debt-kpis{grid-template-columns:1fr}
+  .debt-card-head,.debt-card-meta{align-items:flex-start;flex-direction:column}
+}
