@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 
-<html lang="en"><head><meta charset="utf-8"/><meta content="width=device-width,initial-scale=1,viewport-fit=cover" name="viewport"/><meta content="#050807" name="theme-color"/><meta content="Financial Lab powered by Dexx" name="description"/><link href="manifest.webmanifest" rel="manifest"/><link href="icons/icon.svg" rel="icon"/><link href="icons/icon-192.png" rel="apple-touch-icon"/><link href="styles.css" rel="stylesheet"/><title>Financial Lab — Powered by Dexx</title><meta content="4.0.9.1" name="financial-lab-version"/><meta name="financial-lab-release" content="4.0.3-bills-manager-layout-fix"/></head>
+<html lang="en"><head><meta charset="utf-8"/><meta content="width=device-width,initial-scale=1,viewport-fit=cover" name="viewport"/><meta content="#050807" name="theme-color"/><meta content="Financial Lab powered by Dexx" name="description"/><link href="manifest.webmanifest" rel="manifest"/><link href="icons/icon.svg" rel="icon"/><link href="icons/icon-192.png" rel="apple-touch-icon"/><link href="styles.css" rel="stylesheet"/><title>Financial Lab — Powered by Dexx</title><meta content="4.1.0" name="financial-lab-version"/><meta name="financial-lab-release" content="4.0.3-bills-manager-layout-fix"/></head>
 <body class="front-door-active">
 <div class="front-door" id="frontDoor">
   <div class="front-door-glow"></div>
@@ -89,7 +89,7 @@
 <p class="status" id="approvalStatus"></p>
 </section>
 <form class="card form-card" id="budgetForm">
-<div class="section-head"><span>1. CHECK DETAILS</span><b>Version 4.0.9.1</b></div>
+<div class="section-head"><span>1. CHECK DETAILS</span><b>Version 4.1.0</b></div>
 <div class="form-grid"><label>Paycheck amount<input id="paycheck" inputmode="decimal" min="0" placeholder="$0.00" step="0.01" type="number"/></label><label>Current available balance<input id="currentBalance" inputmode="decimal" min="0" placeholder="$0.00" step="0.01" type="number"/></label></div>
 <div class="form-grid"><label>Check date<input id="payDate" type="date"/></label><label>Next payday<input id="nextPayday" type="date"/></label></div>
 <div class="form-grid"><label>Savings goal (%)<input id="savingsRate" inputmode="numeric" max="100" min="0" step="1" type="number" value="10"/></label><label>Minimum savings<input id="saveAmount" inputmode="decimal" min="0" placeholder="$0.00" step="0.01" type="number"/></label></div>
@@ -142,13 +142,46 @@
 <div class="form-grid"><label>Priority<select id="savingsGoalPriority"><option value="high">High</option><option value="medium" selected>Medium</option><option value="low">Low</option></select></label><label>Goal type<select id="savingsGoalCategory"><option value="emergency">Emergency fund</option><option value="car">Car / repairs</option><option value="home">Home</option><option value="travel">Travel</option><option value="purchase">Purchase</option><option value="general" selected>General</option></select></label></div>
 <div class="manager-actions"><button class="primary" id="saveSavingsGoal" type="submit">SAVE SAVINGS GOAL</button><button class="secondary" hidden id="cancelSavingsEdit" type="button">CANCEL EDIT</button></div><p class="status" id="savingsGoalStatus"></p></form>
 <section class="card"><div class="section-head"><span>YOUR SAVINGS GOALS</span><b>Payday contributions update on approval</b></div><div class="savings-goals-list" id="savingsGoalsList"></div></section></section>
+
+<section class="view" id="expense">
+  <div class="page-title"><p>SPENDING LAB</p><h1>Expense Manager.</h1></div>
+
+  <section class="card expense-overview">
+    <div class="section-head"><span>4.1.0 SPENDING MEMORY</span><b id="expenseCycleLabel">Current cycle</b></div>
+    <p class="manager-copy">Record flexible spending during the week. Dexx subtracts these expenses from TRUE Safe-to-Spend without touching money already protected for bills, reserves, savings, or debt.</p>
+    <div class="expense-kpis">
+      <div><span>STARTING SAFE-TO-SPEND</span><strong id="expenseStarting">$0.00</strong></div>
+      <div><span>SPENT THIS CYCLE</span><strong id="expenseSpent">$0.00</strong></div>
+      <div><span>REMAINING</span><strong id="expenseRemaining">$0.00</strong></div>
+    </div>
+    <div class="expense-meter-track"><i id="expenseMeter"></i></div>
+    <p class="expense-meter-text" id="expenseMeterText">Build a payday plan to start tracking</p>
+    <div class="dexx-spending-note"><span>DEXX OBSERVES</span><p id="expenseDexxStatus"></p></div>
+  </section>
+
+  <form class="card expense-manager-form" id="expenseForm">
+    <div class="section-head"><span>ADD EXPENSE</span><b>Saved locally</b></div>
+    <input id="expenseId" type="hidden"/>
+    <div class="form-grid"><label>Expense name<input id="expenseName" maxlength="60" placeholder="Gas" required/></label><label>Amount<input id="expenseAmount" inputmode="decimal" min="0" step="0.01" placeholder="$0.00" type="number" required/></label></div>
+    <div class="form-grid"><label>Category<select id="expenseCategory"><option value="gas">Gas</option><option value="groceries">Groceries</option><option value="food">Food & dining</option><option value="entertainment">Entertainment</option><option value="personal">Personal</option><option value="haircut">Haircut</option><option value="shopping">Shopping</option><option value="transportation">Transportation</option><option value="medical">Medical</option><option value="other" selected>Other</option></select></label><label>Date<input id="expenseDate" type="date" required/></label></div>
+    <label>Note <span class="optional-label">optional</span><input id="expenseNote" maxlength="100" placeholder="Fill-up, lunch, haircut…"/></label>
+    <div class="manager-actions"><button class="primary" id="saveExpense" type="submit">SAVE EXPENSE</button><button class="secondary" hidden id="cancelExpenseEdit" type="button">CANCEL EDIT</button></div>
+    <p class="status" id="expenseStatus"></p>
+  </form>
+
+  <section class="card">
+    <div class="section-head"><span>THIS PAYCHECK CYCLE</span><b>Spending reduces safe-to-spend</b></div>
+    <div class="expense-list" id="expenseList"></div>
+  </section>
+</section>
+
 <section class="view" id="more"><div class="page-title"><p>MORE</p><h1>Quick actions.</h1></div><div class="quick-grid"><button data-action="expense">＋<span>Add Expense</span></button><button data-action="income"><b>＋</b><span>Enter Check</span></button><button data-go="budget">▦<span>Friday Lab</span></button><button data-go="laboratory">▥<span>Reports</span></button><button data-go="dexx">☵<span>Ask Dexx</span></button><button data-go="profile">◎<span>Financial Profile</span></button><button data-go="start">?<span>Start Here</span></button><button id="frontDoorBtn">⌂<span>Front Door</span></button></div></section>
 
 <section class="view" id="start">
   <div class="page-title"><p>START HERE</p><h1>How Financial Lab works.</h1></div>
 
   <section class="card walkthrough-hero">
-    <div class="section-head"><span>4.0.9.1 APP WALKTHROUGH</span><b>Powered by Dexx</b></div>
+    <div class="section-head"><span>4.1.0 APP WALKTHROUGH</span><b>Powered by Dexx</b></div>
     <p class="manager-copy">Financial Lab helps you decide what to do with each paycheck before the money gets spent. Cover what matters, prepare for what is coming, save on purpose, pay down debt intelligently, and know what is truly safe to spend.</p>
     <button class="primary" data-go="budget">START MY FRIDAY LAB</button>
   </section>
