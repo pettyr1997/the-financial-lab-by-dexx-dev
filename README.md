@@ -1,19 +1,22 @@
-# Financial Lab 4.0.7 — Debt Manager
+# Financial Lab 4.0.7.1 — Credit Lab Mobile Polish
 
-Built on the stable 4.0.6 Reserve Memory release.
+Built directly on 4.0.7 Debt Manager.
 
-## Added
-- Credit Lab is now a real Debt Manager.
-- Save unlimited debt accounts with balance, minimum payment, due date, APR, and account type.
-- Choose Balanced, Snowball, or Avalanche payoff strategy.
-- Dexx automatically selects the best extra-payment target.
-- Payday Mode routes planned extra-debt money to that target after bills, reserves, and savings.
-- Record real debt payments from Credit Lab to reduce balances.
-- Edit and delete debt accounts.
-- Dashboard debt remaining now uses the managed debt total.
-- Legacy generic debt fields remain as a fallback if no debt accounts have been added.
+## Fixed
+- Debt account form now stacks cleanly on iPhone.
+- Inputs and selects use full-width mobile sizing.
+- More breathing room between Account name, Balance, Minimum payment, Due date, APR, and Account type.
+- Date and dropdown controls stay inside their own fields.
+- Credit Lab summary header wraps cleanly on small screens.
+- Save/Cancel actions stack cleanly on mobile.
 
-## Important
-Debt minimum payments are tracked and displayed, but 4.0.7 does not silently add them to Bills Manager. This avoids accidental double-counting. A later debt-intelligence update can explicitly connect minimum payments to the payday calendar.
+## Preserved
+- Balanced payoff targeting.
+- Snowball payoff targeting.
+- Avalanche payoff targeting.
+- Reserve Memory.
+- Bills Manager.
+- Payday Mode debt-target integration.
+- Existing saved browser data.
 
-Upload all files directly over the current DEV repository files.
+This is a UI-only hotfix. Debt payoff logic is unchanged.

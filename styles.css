@@ -106,3 +106,86 @@
   .debt-kpis{grid-template-columns:1fr}
   .debt-card-head,.debt-card-meta{align-items:flex-start;flex-direction:column}
 }
+
+/* 4.0.7.1 — Credit Lab Mobile Polish */
+.debt-manager-form .section-head{gap:12px;flex-wrap:wrap}
+.debt-manager-form .section-head b{white-space:nowrap}
+.debt-manager-form .form-grid{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) minmax(0,1fr);
+  gap:14px 16px;
+}
+.debt-manager-form .form-grid > label,
+.debt-manager-form label{
+  min-width:0;
+  display:block;
+  color:#dce2de;
+  font-size:13px;
+  font-weight:600;
+}
+.debt-manager-form input,
+.debt-manager-form select{
+  display:block;
+  width:100%;
+  min-width:0;
+  max-width:100%;
+  margin-top:8px;
+  background:#050806;
+  border:1px solid #2d3832;
+  color:#fff;
+  border-radius:11px;
+  padding:14px 13px;
+  font-size:16px;
+  line-height:1.2;
+  min-height:50px;
+}
+.debt-manager-form input[type="date"]{
+  -webkit-min-logical-width:0;
+  appearance:auto;
+}
+.debt-manager-form .manager-actions{
+  margin-top:4px;
+}
+.debt-overview .section-head{
+  align-items:flex-start;
+  gap:12px;
+  flex-wrap:wrap;
+}
+.debt-overview .section-head b{
+  white-space:nowrap;
+}
+.debt-kpis > div{
+  min-width:0;
+}
+.debt-kpis strong{
+  line-height:1.2;
+}
+.strategy-field select{
+  min-height:48px;
+  border-radius:11px;
+  background:#050806;
+  border:1px solid #2d3832;
+  color:#fff;
+  padding:0 12px;
+  font-size:16px;
+}
+@media(max-width:520px){
+  .debt-manager-form .form-grid{
+    grid-template-columns:1fr;
+    gap:0;
+  }
+  .debt-manager-form .form-grid > label{
+    margin-bottom:16px;
+  }
+  .debt-manager-form input,
+  .debt-manager-form select{
+    min-height:52px;
+  }
+  .debt-manager-form .manager-actions{
+    grid-template-columns:1fr;
+    gap:10px;
+  }
+  .debt-overview .section-head b{
+    width:100%;
+  }
+}
