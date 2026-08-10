@@ -1,22 +1,28 @@
-# Financial Lab 4.0.8.2 — Walkthrough Mobile Polish
+# Financial Lab 4.0.9 — The Front Door
 
-Built directly on 4.0.8.1 Start Here / App Walkthrough.
+Rebuilt on the stable 4.0.8.2 Walkthrough Mobile Polish release.
 
-## Fixed
-- Added extra top spacing so the Start Here page title is fully visible beneath the fixed header.
-- Rebuilt the First-Time Setup items as clean mobile cards.
-- Step numbers stay in their own circle on the left.
-- Titles and descriptions stack cleanly on the right.
-- Increased vertical spacing and line-height for easier reading.
-- Prevented long text from running together or overflowing on iPhone.
+## Added
+- New Financial Lab landing/home screen before entering the private app.
+- ENTER THE LAB path for returning users continuing with local device data.
+- JOIN THE LAB path for new users, which opens Start Here onboarding.
+- Dexx hero presentation and Financial Lab product promise.
+- Four-part product story: Plan, Protect, Grow, Spend.
+- Front Door shortcut under More.
+
+## Included from 4.0.8.2
+- Start Here header-spacing fix.
+- First-Time Setup mobile cards.
+- Improved walkthrough text wrapping and spacing.
+
+## Important
+4.0.9 is a front-end login/join experience, not real authentication yet. Financial data still lives in browser storage on the device. True email/password accounts, password recovery, secure cloud storage, and cross-device syncing require a backend/authentication service.
 
 ## Preserved
-- Start Here walkthrough content and navigation.
-- Savings Goals 4.0.8.
+- Savings Goals.
+- App Walkthrough.
 - Debt Manager.
 - Reserve Memory.
 - Bills Manager.
 - Payday Mode.
 - Existing saved browser data.
-
-Upload all files over the current DEV repository files.

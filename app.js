@@ -309,6 +309,20 @@ $('approvePlan').onclick=()=>{
 $('clearBills').onclick=()=>{if(confirm('Clear all saved bills?')){data.bills=[];data.reserveMemory={};data.billName='';data.billDate='';data.billAmount=0;data.approvedPlan=null;save()}};$('clearHistory').onclick=()=>{if(confirm('Clear paycheck plan history?')){data.paycheckHistory=[];data.approvedPlan=null;save()}};
 $('chatForm').addEventListener('submit',e=>{e.preventDefault();const text=$('chatInput').value.trim();if(!text)return;const c=calc();$('dexxReply').textContent=`Based on this payday, cover ${money(c.payNow)} now, protect ${money(c.reserve)} for upcoming bills, save ${money(c.savings)}${c.savingsGoalTarget?` toward ${c.savingsGoalTarget.name}`:''}, pay ${money(c.debtPayment)} toward ${c.targetDebt?.name||'debt'}, and limit flexible spending to ${money(c.safeToSpend)}.`;$('chatInput').value=''});
 document.querySelectorAll('[data-action]').forEach(b=>b.onclick=()=>{const type=b.dataset.action;if(type==='income'){show('budget');setTimeout(()=>$('paycheck').focus(),200);return}const raw=prompt('Expense amount');const val=clamp(raw,0,1e9);if(!val)return;data.expenses+=val;save();show('laboratory')});
-const initial=location.hash.slice(1);show(['laboratory','budget','profile','credit','savings','more','dexx'].includes(initial)?initial:'laboratory');render();if('serviceWorker'in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('./service-worker.js').catch(console.warn));
+
+function openFinancialLab(destination='laboratory'){
+  document.body.classList.remove('front-door-active');
+  show(destination);
+}
+function openFrontDoor(){
+  document.body.classList.add('front-door-active');
+  history.replaceState(null,'',location.pathname+location.search);
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+$('enterLabBtn')?.addEventListener('click',()=>openFinancialLab('laboratory'));
+$('joinLabBtn')?.addEventListener('click',()=>openFinancialLab('start'));
+$('frontDoorBtn')?.addEventListener('click',openFrontDoor);
+
+const initial=location.hash.slice(1);show(['laboratory','budget','profile','credit','savings','more','start','dexx'].includes(initial)?initial:'laboratory');render();if('serviceWorker'in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('./service-worker.js').catch(console.warn));
 
 $('profileForm')?.addEventListener('submit',e=>{e.preventDefault();data.researcherName=$('profileName').value.trim()||'Rob';data.profile={payFrequency:$('payFrequency').value,paydayDay:Number($('paydayDay').value),incomePattern:$('incomePattern').value,recurringBillCount:clamp($('recurringBillCount').value,0,99),financialStrategy:$('financialStrategy').value,reserveDays:clamp($('reserveDays').value,7,31)};data.savingsRate=clamp($('profileSavingsRate').value,0,100);save();$('profileStatus').textContent='Financial Profile saved. Dexx will use it for every payday plan.'});

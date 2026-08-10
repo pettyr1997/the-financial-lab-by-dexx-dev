@@ -415,3 +415,68 @@
     line-height:1.45 !important;
   }
 }
+
+/* 4.0.9 — The Front Door */
+.front-door{
+  position:fixed;
+  inset:0;
+  z-index:10000;
+  overflow:auto;
+  background:
+    radial-gradient(circle at 75% 28%,rgba(97,255,29,.13),transparent 28rem),
+    radial-gradient(circle at 18% 80%,rgba(97,255,29,.07),transparent 24rem),
+    #020504;
+  color:#fff;
+  padding:max(28px,env(safe-area-inset-top)) 20px max(28px,env(safe-area-inset-bottom));
+}
+body:not(.front-door-active) .front-door{display:none}
+body.front-door-active .app-shell{display:none}
+.front-door-glow{position:fixed;inset:0;pointer-events:none;background:linear-gradient(180deg,transparent 0 65%,rgba(97,255,29,.025))}
+.front-door-shell{position:relative;max-width:980px;margin:0 auto;min-height:100%;display:flex;flex-direction:column;justify-content:center}
+.front-brand{display:flex;align-items:center;justify-content:space-between;gap:18px;border-bottom:1px solid rgba(97,255,29,.16);padding-bottom:18px}
+.front-brand img{width:min(300px,62vw);height:auto;display:block}
+.front-brand>span{font-size:.68rem;letter-spacing:.22em;color:var(--muted);font-weight:900;white-space:nowrap}
+.front-hero{display:grid;grid-template-columns:minmax(0,1.08fr) minmax(280px,.92fr);gap:46px;align-items:center;padding:52px 0 34px}
+.front-kicker{margin:0 0 13px;color:var(--green);font-size:.74rem;font-weight:900;letter-spacing:.16em}
+.front-copy h1{font-size:clamp(3rem,7vw,5.8rem);line-height:.94;letter-spacing:-.055em;margin:0}
+.front-copy h1 span{color:var(--green)}
+.front-description{max-width:610px;margin:24px 0 0;color:#aab4ae;font-size:clamp(1rem,2vw,1.25rem);line-height:1.6}
+.front-actions{display:grid;gap:12px;margin-top:30px;max-width:570px}
+.front-actions button{width:100%;border-radius:16px;padding:17px 18px;text-align:left;display:flex;flex-direction:column;gap:3px}
+.front-actions strong{font-size:.92rem;letter-spacing:.045em}
+.front-actions small{font-size:.72rem;font-weight:600}
+.front-primary{border:1px solid var(--green);background:var(--green);color:#041006}
+.front-primary small{color:#19340d}
+.front-secondary{border:1px solid rgba(97,255,29,.38);background:#07100b;color:#fff}
+.front-secondary strong{color:var(--green)}
+.front-secondary small{color:var(--muted)}
+.front-auth-note{max-width:570px;margin:14px 0 0;font-size:.69rem;line-height:1.45;color:#6f7b74}
+.front-dexx{position:relative;align-self:end;min-height:430px;border:1px solid rgba(97,255,29,.20);border-radius:28px;overflow:hidden;background:linear-gradient(180deg,rgba(97,255,29,.08),rgba(5,8,7,.68))}
+.front-dexx:after{content:"";position:absolute;inset:auto 0 0;height:42%;background:linear-gradient(transparent,#030605)}
+.front-dexx img{position:absolute;width:100%;height:100%;object-fit:cover;object-position:center top;display:block}
+.front-dexx-badge{position:absolute;z-index:3;top:16px;left:16px;padding:7px 10px;border:1px solid rgba(97,255,29,.45);border-radius:999px;background:rgba(3,8,5,.78);color:var(--green);font-size:.61rem;font-weight:900;letter-spacing:.09em}
+.front-dexx-quote{position:absolute;z-index:3;left:20px;right:20px;bottom:20px;font-weight:800;font-size:1rem;line-height:1.35}
+.front-process{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;padding-top:22px;border-top:1px solid rgba(97,255,29,.14)}
+.front-process>div{padding:14px;border:1px solid #18251d;border-radius:14px;background:rgba(7,16,11,.72)}
+.front-process span{display:block;color:var(--green);font-size:.64rem;font-weight:900;letter-spacing:.1em}
+.front-process strong{display:block;margin:5px 0 2px;font-size:.83rem}
+.front-process small{display:block;color:var(--muted);font-size:.68rem;line-height:1.3}
+.front-tagline{text-align:center;margin:22px 0 0;color:#6f7b74;font-size:.62rem;font-weight:900;letter-spacing:.17em}
+
+@media(max-width:720px){
+  .front-door{padding-left:18px;padding-right:18px}
+  .front-brand{justify-content:center}
+  .front-brand>span{display:none}
+  .front-brand img{width:min(290px,72vw)}
+  .front-hero{grid-template-columns:1fr;gap:26px;padding:36px 0 28px}
+  .front-copy{text-align:left}
+  .front-copy h1{font-size:clamp(3rem,14vw,4.6rem)}
+  .front-description{font-size:1rem}
+  .front-dexx{min-height:330px;order:-1}
+  .front-process{grid-template-columns:repeat(2,1fr)}
+}
+@media(max-width:420px){
+  .front-dexx{min-height:290px}
+  .front-process{gap:8px}
+  .front-process>div{padding:11px}
+}
