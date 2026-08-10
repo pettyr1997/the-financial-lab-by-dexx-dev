@@ -254,3 +254,34 @@
     white-space:normal !important;
   }
 }
+
+/* 4.0.8 — Savings Goals */
+.savings-overview,.savings-goal-form{border-color:rgba(97,255,29,.28)}
+.savings-kpis{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:16px 0}
+.savings-kpis>div{padding:14px;border:1px solid var(--line);border-radius:16px;background:#07100b;min-width:0}
+.savings-kpis span{display:block;color:var(--muted);font-size:.65rem;font-weight:800;letter-spacing:.08em;margin-bottom:6px}
+.savings-kpis strong{display:block;font-size:1.08rem;line-height:1.2;overflow-wrap:anywhere}
+.savings-goals-list{display:grid;gap:12px}
+.savings-goal-card{border:1px solid var(--line);border-radius:18px;padding:16px;background:#07100b}
+.dexx-savings-target{display:inline-block;margin-bottom:10px;padding:5px 9px;border-radius:999px;background:rgba(97,255,29,.12);border:1px solid rgba(97,255,29,.3);color:var(--green);font-size:.62rem;font-weight:900;letter-spacing:.08em}
+.goal-card-head{display:flex;justify-content:space-between;gap:16px;align-items:flex-start}
+.goal-card-head strong{display:block;font-size:1.08rem}
+.goal-card-head span{display:block;color:var(--muted);font-size:.78rem;margin-top:4px;text-transform:capitalize}
+.goal-card-head b{color:var(--green);font-size:1.15rem;white-space:nowrap}
+.goal-card-head b small{font-size:.72rem;color:var(--muted)}
+.goal-progress{height:9px;background:#1b2820;border-radius:999px;overflow:hidden;margin:14px 0}
+.goal-progress i{display:block;height:100%;background:var(--green);border-radius:inherit}
+.goal-meta{display:flex;justify-content:space-between;align-items:center;gap:12px;border-top:1px solid var(--line);padding-top:12px}
+.goal-meta>span{color:var(--muted);font-size:.76rem}
+.goal-meta div{display:flex;gap:7px;flex-wrap:wrap}
+.goal-meta button{border:0;border-radius:10px;padding:8px 10px;background:#101a14;color:var(--green);font-weight:800}
+.goal-meta .danger-link{color:#ff5353}
+@media(max-width:640px){
+  .savings-kpis{grid-template-columns:1fr}
+  #savingsGoalForm .form-grid,.savings-goal-form .form-grid{display:block!important;grid-template-columns:1fr!important;width:100%!important}
+  #savingsGoalForm .form-grid>label,.savings-goal-form .form-grid>label{display:block!important;width:100%!important;max-width:100%!important;margin:0 0 18px!important}
+  #savingsGoalForm input,#savingsGoalForm select,.savings-goal-form input,.savings-goal-form select{display:block!important;width:100%!important;max-width:100%!important;min-width:0!important;box-sizing:border-box!important;margin-top:8px!important;min-height:54px!important;font-size:16px!important}
+  #savingsGoalForm input[type="date"],.savings-goal-form input[type="date"]{width:100%!important;min-width:100%!important;max-width:100%!important}
+  .goal-card-head,.goal-meta{align-items:flex-start;flex-direction:column}
+  .goal-card-head b{white-space:normal}
+}

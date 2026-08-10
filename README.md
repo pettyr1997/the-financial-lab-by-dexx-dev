@@ -1,21 +1,24 @@
-# Financial Lab 4.0.7.2 — Credit Lab Form Stack Hotfix
+# Financial Lab 4.0.8 — Savings Goals
 
-Built directly on 4.0.7.1.
+Built on the stable 4.0.7.2 Debt Manager release.
 
-## Fixed
-- Forces the entire Add Debt Account form into a true single-column layout on iPhone.
-- Account name, balance, minimum payment, due date, APR, and account type each receive full width.
-- Date inputs can no longer shrink into neighboring fields.
-- Save and Cancel buttons remain full width on mobile.
-- Credit Lab form labels have consistent vertical spacing.
+## Added
+- Savings Lab is now a real multi-goal Savings Manager.
+- Create unlimited goals with target amount, amount already saved, priority, target date, and category.
+- Savings strategies: Priority First, Nearest Deadline, and Quick Win.
+- Dexx automatically selects the active savings target.
+- Payday Mode names the savings goal receiving this payday's savings recommendation.
+- Savings goal balances increase only after the Payday Plan is approved.
+- Same-payday reapproval rolls back the prior savings contribution before replacing it.
+- Manual Add Money and Withdraw actions are available.
+- Goal progress, total saved, total targets, and remaining balances are visible in Savings Lab.
+- Dashboard savings shows actual saved goal balances once goals exist.
 
 ## Preserved
-- Balanced debt targeting.
-- Snowball debt targeting.
-- Avalanche debt targeting.
 - Reserve Memory.
+- Future-bill reserve intelligence.
 - Bills Manager.
-- Payday Mode debt-target integration.
-- Existing saved browser data.
+- Debt Manager and all payoff strategies.
+- Existing browser storage key and saved data.
 
-This is a UI-only hotfix. Debt logic is unchanged.
+Upload all files over the current DEV repository files.
