@@ -1,38 +1,37 @@
-# Financial Lab 4.1.0.4 — Payday Build Recovery
+# Financial Lab 4.1.0.5 — Build Button Bypass + DEV Cache Reset
 
-Built on 4.1.0.3 Navigation Recovery.
+Built from the stable 4.1.0.3 navigation base.
+
+## Root cause found
+The previous 4.1.0.4 package still contained the old Budget Lab submit handler. The intended fail-safe builder did not make it into the packaged `app.js`.
 
 ## Fixed
-- Rebuilt the **Build My Payday Plan** submit path as a dedicated fail-safe function.
-- The plan state is saved before the screen re-renders, so a display error can no longer silently cancel the build.
-- Added visible validation for paycheck amount, check date, and next payday.
-- Added visible error messages instead of silent button failure.
-- Preserved the existing Lab navigation and Front Door routing.
-- Preserved paycheck-cycle expense binding.
-- Existing expense cycle IDs now survive reload/migration.
+- **Build My Payday Plan** is now `type="button"` and no longer depends on HTML form submission.
+- The button directly calls `buildPaydayPlanDirect()`.
+- The old Budget Lab submit listener has been removed.
+- Validation messages appear directly beneath the button.
+- Plan data is written to localStorage before `render()` runs.
+- If rendering fails, the exact render error is shown instead of silently doing nothing.
+- Paycheck-cycle expense binding is preserved.
+- Navigation remains based on stable 4.1.0.3.
 
-## Cache recovery
-- `app.js` and `styles.css` now use versioned URLs.
-- Service worker now uses **network-first** delivery for app code/styles.
-- Old service-worker caches are removed on activation.
-- This prevents GitHub Pages/iPhone from mixing a new `index.html` with an older cached JavaScript file.
+## DEV cache reset
+- Existing service workers are automatically unregistered.
+- Existing Cache Storage entries are cleared.
+- `app.js` and `styles.css` use 4.1.0.5 cache-busting URLs.
+- This is intentional for the DEV build so iPhone Safari cannot keep mixing old JavaScript with new HTML.
 
-## Test order
-1. Open Budget Lab.
-2. Enter paycheck amount.
-3. Enter check date.
-4. Enter next payday.
-5. Tap **Build My Payday Plan**.
-6. Confirm the green/visible status message changes immediately.
-7. Confirm plan numbers update.
-8. Then test Budget → Credit → Savings → More navigation.
+## Test
+Enter:
+- Paycheck
+- Check date
+- Next payday
 
-## Preserved
-- Expense Manager / Spending Memory
-- Cycle binding
-- Reserve Memory
-- Savings Goals
-- Debt Manager
-- Bills Manager
-- Front Door navigation isolation
-- Existing local data
+Then tap **Build My Payday Plan**.
+
+You must now get one of three visible outcomes:
+1. Payday plan built successfully.
+2. A validation message telling you what is missing.
+3. A specific JavaScript/render error message.
+
+The button should no longer fail silently.
