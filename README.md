@@ -1,50 +1,44 @@
-# Financial Lab 4.1.0.6 — Direct Payday Control
+# Financial Lab 4.1.0.7 — Date Safety Hotfix
 
-Built from the stable 4.1.0.3 navigation/cycle-binding base.
+Built directly on the now-confirmed working 4.1.0.6 Direct Payday Control.
 
-## What this fixes
-The Build My Payday Plan control was visible but producing no status message at all. That means the tap was not reaching the payday builder.
+## Root cause confirmed
+4.1.0.6 proved the Payday Plan button works and the plan saves successfully.
 
-4.1.0.6 fixes the control itself:
+The remaining failure was:
+`Plan SAVED, but screen refresh failed: Invalid Date`
 
-- Build button is a real `type="button"` control.
-- Build button sits above neighboring elements with an explicit z-index.
-- Pointer/touch events are explicitly enabled.
-- An inline click fallback lives directly in `index.html`.
-- The inline fallback calls `window.FinancialLabBuildPaydayPlan()`.
-- The first tap immediately changes the status to `Button tapped…`.
-- If app.js failed to load, the page says **APP CODE DID NOT LOAD**.
-- If validation fails, the exact missing field is shown.
-- If calculation/rendering fails, the exact error is shown.
-- Plan data is saved before rendering.
-- Service workers and caches are disabled/cleared in DEV.
+That means legacy/malformed saved date data was crashing `render()`.
 
-## Important
-This release intentionally does NOT add new finance features. It is a diagnostic/recovery build focused only on making the Payday Plan control deterministic.
-
-## Test
-After deployment, look directly under Build My Payday Plan.
-
-Before tapping it should say:
-`Ready to build.`
-
-The instant you tap it, that line MUST change.
-
-That lets us distinguish:
-1. Tap/control failure
-2. app.js load failure
-3. validation failure
-4. render/calculation failure
-5. successful build
+## Fixed
+- Rebuilt the shared date parser so invalid dates return `null` instead of becoming JavaScript `Invalid Date` objects.
+- `iso()` can no longer throw on malformed dates.
+- Bill recurrence generation skips invalid bill due dates instead of crashing the whole app.
+- Invalid Savings Goal target dates behave like no deadline.
+- Invalid Debt due dates display `TBD`.
+- Invalid Bill due dates display `TBD`.
+- Invalid Expense dates display safely.
+- Financial Timeline filters invalid dates.
+- Paycheck date fields sanitize persisted values before displaying.
+- Existing expense `cycleId` values now survive migration/reload.
 
 ## Preserved
-- Stable Lab navigation
-- Front Door
-- Expense Manager
-- Spending Memory
-- Paycheck-cycle binding
-- Reserve Memory
-- Savings Goals
-- Debt Manager
-- Bills Manager
-- Existing local data
+- 4.1.0.6 direct Payday Plan button and visible diagnostics.
+- Stable navigation.
+- Expense Manager / Spending Memory.
+- Paycheck-cycle binding.
+- Reserve Memory.
+- Savings Goals.
+- Debt Manager.
+- Bills Manager.
+- Front Door.
+- Existing local data.
+
+## Expected test
+Build the same plan again.
+
+The plan should now render instead of showing `Invalid Date`.
+
+Then check:
+- Spent this cycle
+- TRUE Safe-to-Spend

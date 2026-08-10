@@ -1,5 +1,5 @@
-// Financial Lab 4.1.0.6 DEV
-// Service worker intentionally disabled while debugging payday controls.
+// Financial Lab 4.1.0.7 DEV
+// Service worker remains intentionally disabled during debugging.
 self.addEventListener('install',()=>self.skipWaiting());
 self.addEventListener('activate',event=>{
   event.waitUntil(
