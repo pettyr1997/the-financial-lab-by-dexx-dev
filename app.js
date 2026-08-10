@@ -6,12 +6,6 @@ const DEFAULTS = {
   missions:{spending:false,saving:false,bills:false,friday:false}, profile:{payFrequency:'weekly',paydayDay:5,incomePattern:'variable',recurringBillCount:9,financialStrategy:'balanced',reserveDays:14}, lastUpdated:''
 };
 const $=id=>document.getElementById(id);
-
-if('serviceWorker' in navigator){
-  navigator.serviceWorker.getRegistrations().then(regs=>regs.forEach(r=>r.unregister())).catch(()=>{});
-  if('caches' in window)caches.keys().then(keys=>Promise.all(keys.map(k=>caches.delete(k)))).catch(()=>{});
-}
-
 const money=v=>new Intl.NumberFormat('en-US',{style:'currency',currency:'USD'}).format(Number(v)||0);
 const dateAtNoon=v=>v?new Date(`${v}T12:00:00`):null;
 const iso=d=>d.toISOString().slice(0,10);
@@ -337,50 +331,45 @@ document.addEventListener('click',e=>{
 });
 
 
-function buildPaydayPlanDirect(){
+window.FinancialLabBuildPaydayPlan=function(){
   const status=$('formStatus');
+  const say=msg=>{if(status){status.textContent=msg;status.dataset.state='active';status.scrollIntoView({block:'nearest'});}};
   try{
-    if(status) status.textContent='Building payday plan…';
+    say('Button tapped — building your payday plan…');
 
     const paycheck=clamp($('paycheck')?.value,0,1e9);
     const currentBalance=clamp($('currentBalance')?.value,0,1e9);
     const payDate=$('payDate')?.value||'';
     const nextPayday=$('nextPayday')?.value||'';
-    const savingsRate=clamp($('savingsRate')?.value,0,100);
-    const saveAmount=clamp($('saveAmount')?.value,0,1e9);
-    const debtGoal=clamp($('debtGoal')?.value,0,1e9);
 
-    if(paycheck<=0){
-      if(status) status.textContent='Enter your paycheck amount first.';
-      return;
-    }
-    if(!payDate || !nextPayday){
-      if(status) status.textContent='Enter both the check date and next payday.';
-      return;
-    }
-    const p=dateAtNoon(payDate),n=dateAtNoon(nextPayday);
-    if(!p || !n || n<=p){
-      if(status) status.textContent='Next payday must be after the check date.';
-      return;
-    }
+    if(paycheck<=0){say('Enter your paycheck amount first.');return false}
+    if(!payDate){say('Enter your check date.');return false}
+    if(!nextPayday){say('Enter your next payday.');return false}
+
+    const pd=dateAtNoon(payDate),np=dateAtNoon(nextPayday);
+    if(!pd||!np){say('One of the payday dates is invalid.');return false}
+    if(np<=pd){say('Next payday must be after the check date.');return false}
 
     data.paycheck=paycheck;
     data.currentBalance=currentBalance;
     data.payDate=payDate;
     data.nextPayday=nextPayday;
-    data.savingsRate=savingsRate;
-    data.saveAmount=saveAmount;
-    if(!debtDefinitions().length && $('debtAmount')) data.debtAmount=clamp($('debtAmount').value,0,1e9);
-    data.debtGoal=debtGoal;
+    data.savingsRate=clamp($('savingsRate')?.value,0,100);
+    data.saveAmount=clamp($('saveAmount')?.value,0,1e9);
+    if(!debtDefinitions().length && $('debtAmount')){
+      data.debtAmount=clamp($('debtAmount').value,0,1e9);
+    }
+    data.debtGoal=clamp($('debtGoal')?.value,0,1e9);
 
-    // Only add a bill from the quick-add area when the user actually entered bill data.
     const billName=$('billName')?.value.trim()||'';
     const billDate=$('billDate')?.value||'';
     const billAmount=clamp($('billAmount')?.value,0,1e9);
-    if(billName || billDate || billAmount){
-      if(!billName || !billDate || billAmount<=0){
-        if(status) status.textContent='Finish the bill name, due date, and amount — or clear the Add a Bill fields.';
-        return;
+
+    // Add-a-bill is optional. If any one piece is entered, require all three.
+    if(billName||billDate||billAmount){
+      if(!billName||!billDate||billAmount<=0){
+        say('Finish the optional Add a Bill fields, or clear them before building.');
+        return false;
       }
       data.bills.push({
         id:crypto.randomUUID?crypto.randomUUID():`bill-${Date.now()}`,
@@ -406,32 +395,27 @@ function buildPaydayPlanDirect(){
 
     const attached=attachUnboundExpensesToActiveCycle();
 
-    // Persist without depending on render().
+    // Persist directly so build success never depends on render().
     data.lastUpdated=new Date().toISOString();
     localStorage.setItem(STORAGE_KEY,JSON.stringify(data));
 
-    if(status){
-      status.textContent=`Payday plan built successfully.${attached?` ${attached} pending expense${attached===1?'':'s'} attached to this paycheck cycle.`:''}`;
-    }
+    say(`Payday plan built successfully.${attached?` ${attached} pending expense${attached===1?'':'s'} attached.`:''}`);
 
-    // Render separately. If this fails, the plan is still saved and we surface the error.
     try{
       render();
-    }catch(renderErr){
-      console.error('Render after payday build failed:',renderErr);
-      if(status) status.textContent=`Payday plan saved, but the screen could not refresh: ${renderErr.message||renderErr}`;
+      // render can rewrite some fields, restore visible confirmation afterward
+      setTimeout(()=>say(`Payday plan built successfully.${attached?` ${attached} pending expense${attached===1?'':'s'} attached.`:''}`),0);
+    }catch(err){
+      console.error(err);
+      say(`Plan SAVED, but screen refresh failed: ${err.message||err}`);
     }
+    return true;
   }catch(err){
-    console.error('Payday build failed:',err);
-    if(status) status.textContent=`Payday build error: ${err.message||err}`;
+    console.error(err);
+    say(`BUILD ERROR: ${err.message||err}`);
+    return false;
   }
-}
-
-$('buildPaydayPlan')?.addEventListener('click',e=>{
-  e.preventDefault();
-  e.stopPropagation();
-  buildPaydayPlanDirect();
-});
+};
 
 $('billManagerForm')?.addEventListener('submit',e=>{e.preventDefault();const id=$('managerBillId').value,name=$('managerBillName').value.trim(),amount=clamp($('managerBillAmount').value,0,1e9),dueDate=$('managerBillDate').value;if(!name||!amount||!dueDate){$('billManagerStatus').textContent='Add the bill name, amount, and next due date.';return}const existing=id?data.bills.find(b=>b.id===id):null;const priorDue=existing?.dueDate||existing?.date||'';const record={id:id||(crypto.randomUUID?crypto.randomUUID():`bill-${Date.now()}`),name,amount,dueDate,date:dueDate,priority:$('managerBillPriority').value,frequency:$('managerBillFrequency').value,autopay:$('managerBillAutopay').checked,paidOccurrences:existing?.paidOccurrences||[]};if(existing){if(priorDue&&priorDue!==dueDate)clearReserveForBill(existing.id);Object.assign(existing,record)}else data.bills.push(record);if(!existing&&data.bills.length>Number(data.profile?.recurringBillCount||0)){data.profile=data.profile||structuredClone(DEFAULTS.profile);data.profile.recurringBillCount=data.bills.length}data.missions.bills=data.bills.length>0;data.approvedPlan=null;save();$('billManagerStatus').textContent=existing?'Bill updated. Dexx recalculated your payday plan.':'Bill saved. Dexx will use it automatically every payday.';resetBillManagerForm()});
 $('cancelBillEdit')?.addEventListener('click',()=>{resetBillManagerForm();$('billManagerStatus').textContent='Edit canceled.'});
@@ -518,6 +502,6 @@ $('enterLabBtn')?.addEventListener('click',e=>{e.preventDefault();openFinancialL
 $('joinLabBtn')?.addEventListener('click',e=>{e.preventDefault();openFinancialLab('start')});
 $('frontDoorBtn')?.addEventListener('click',e=>{e.preventDefault();openFrontDoor()});
 
-const initial=location.hash.slice(1);show(['laboratory','budget','profile','credit','savings','expense','more','start','dexx'].includes(initial)?initial:'laboratory');render();if('serviceWorker'in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('./service-worker.js').catch(console.warn));
+const initial=location.hash.slice(1);show(['laboratory','budget','profile','credit','savings','expense','more','start','dexx'].includes(initial)?initial:'laboratory');render();
 
 $('profileForm')?.addEventListener('submit',e=>{e.preventDefault();data.researcherName=$('profileName').value.trim()||'Rob';data.profile={payFrequency:$('payFrequency').value,paydayDay:Number($('paydayDay').value),incomePattern:$('incomePattern').value,recurringBillCount:clamp($('recurringBillCount').value,0,99),financialStrategy:$('financialStrategy').value,reserveDays:clamp($('reserveDays').value,7,31)};data.savingsRate=clamp($('profileSavingsRate').value,0,100);save();$('profileStatus').textContent='Financial Profile saved. Dexx will use it for every payday plan.'});

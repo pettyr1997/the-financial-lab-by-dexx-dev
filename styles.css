@@ -683,5 +683,23 @@ body.front-door-active .app-shell *{
 
 /* 4.1.0.3 — Navigation Recovery + Cycle Binding */
 
-/* 4.1.0.5 — Build Button Bypass */
-#formStatus{min-height:1.5em}
+/* 4.1.0.6 — Direct Payday Control */
+.payday-build-control{
+  position:relative!important;
+  z-index:50!important;
+  pointer-events:auto!important;
+  touch-action:manipulation!important;
+  -webkit-tap-highlight-color:rgba(110,229,30,.25);
+  min-height:58px!important;
+  cursor:pointer!important;
+}
+.payday-build-status{
+  display:block!important;
+  min-height:28px!important;
+  margin:12px 2px 0!important;
+  color:var(--green)!important;
+  font-weight:700!important;
+  line-height:1.4!important;
+  position:relative!important;
+  z-index:51!important;
+}
