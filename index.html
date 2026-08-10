@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 
-<html lang="en"><head><meta charset="utf-8"/><meta content="width=device-width,initial-scale=1,viewport-fit=cover" name="viewport"/><meta content="#050807" name="theme-color"/><meta content="Financial Lab powered by Dexx" name="description"/><link href="manifest.webmanifest" rel="manifest"/><link href="icons/icon.svg" rel="icon"/><link href="icons/icon-192.png" rel="apple-touch-icon"/><link href="styles.css?v=4.1.0.7" rel="stylesheet"/><title>Financial Lab — Powered by Dexx</title><meta content="4.1.0.7" name="financial-lab-version"/><meta name="financial-lab-release" content="4.0.3-bills-manager-layout-fix"/></head>
+<html lang="en"><head><meta charset="utf-8"/><meta content="width=device-width,initial-scale=1,viewport-fit=cover" name="viewport"/><meta content="#050807" name="theme-color"/><meta content="Financial Lab powered by Dexx" name="description"/><link href="manifest.webmanifest" rel="manifest"/><link href="icons/icon.svg" rel="icon"/><link href="icons/icon-192.png" rel="apple-touch-icon"/><link href="styles.css?v=4.1.1" rel="stylesheet"/><title>Financial Lab — Powered by Dexx</title><meta content="4.1.1" name="financial-lab-version"/><meta name="financial-lab-release" content="4.0.3-bills-manager-layout-fix"/></head>
 <body class="front-door-active">
 <div class="front-door" id="frontDoor">
   <div class="front-door-glow"></div>
@@ -175,13 +175,66 @@
   </section>
 </section>
 
-<section class="view" id="more"><div class="page-title"><p>MORE</p><h1>Quick actions.</h1></div><div class="quick-grid"><button data-action="expense">＋<span>Add Expense</span></button><button data-action="income"><b>＋</b><span>Enter Check</span></button><button data-go="budget">▦<span>Friday Lab</span></button><button data-go="laboratory">▥<span>Reports</span></button><button data-go="dexx">☵<span>Ask Dexx</span></button><button data-go="profile">◎<span>Financial Profile</span></button><button data-go="start">?<span>Start Here</span></button><button id="frontDoorBtn">⌂<span>Front Door</span></button></div></section>
+
+<section class="view" id="reports">
+  <div class="page-title"><p>REPORTS LAB</p><h1>Your money, explained.</h1></div>
+
+  <section class="card reports-hero">
+    <div class="section-head"><span>4.1.1 FINANCIAL INTELLIGENCE</span><b id="reportCycleLabel">Current paycheck</b></div>
+    <p class="manager-copy">Dexx turns your paycheck plan, protected money, expenses, savings, and debt into a clear report you can actually use.</p>
+    <div class="report-kpis">
+      <div><span>PAYCHECK</span><strong id="reportPaycheck">$0.00</strong></div>
+      <div><span>PROTECTED</span><strong id="reportProtected">$0.00</strong></div>
+      <div><span>SPENT</span><strong id="reportSpent">$0.00</strong></div>
+      <div><span>SAFE LEFT</span><strong id="reportSafe">$0.00</strong></div>
+    </div>
+    <div class="dexx-report-note"><span>DEXX REPORT</span><p id="reportObservation">Build a payday plan to unlock your report.</p></div>
+  </section>
+
+  <section class="card">
+    <div class="section-head"><span>WHERE THIS PAYCHECK WENT</span><b id="reportAllocationTotal">$0.00</b></div>
+    <div class="allocation-chart" id="allocationChart"></div>
+    <div class="report-legend" id="allocationLegend"></div>
+  </section>
+
+  <section class="card">
+    <div class="section-head"><span>SPENDING BY CATEGORY</span><b id="reportExpenseCount">0 expenses</b></div>
+    <div class="category-bars" id="categoryBars"></div>
+  </section>
+
+  <section class="card">
+    <div class="section-head"><span>PAYCHECK SCORECARD</span><b>Current cycle</b></div>
+    <div class="scorecard-grid">
+      <div><span>BILLS + RESERVES</span><strong id="scoreProtection">—</strong><small>Required money protected</small></div>
+      <div><span>SAVINGS</span><strong id="scoreSavings">—</strong><small>Savings moved forward</small></div>
+      <div><span>DEBT</span><strong id="scoreDebt">—</strong><small>Debt progress this check</small></div>
+      <div><span>SPENDING</span><strong id="scoreSpending">—</strong><small>Stayed inside safe-to-spend</small></div>
+    </div>
+  </section>
+
+  <section class="card">
+    <div class="section-head"><span>PAYCHECK HISTORY</span><b id="reportHistoryCount">0 plans</b></div>
+    <div class="report-history" id="reportHistory"></div>
+  </section>
+
+  <section class="card">
+    <div class="section-head"><span>BIG PICTURE</span><b>Live totals</b></div>
+    <div class="big-picture-grid">
+      <div><span>TOTAL DEBT</span><strong id="reportDebt">$0.00</strong></div>
+      <div><span>TOTAL SAVED</span><strong id="reportSavings">$0.00</strong></div>
+      <div><span>SAVINGS GOALS</span><strong id="reportGoalCount">0</strong></div>
+      <div><span>DEBT ACCOUNTS</span><strong id="reportDebtCount">0</strong></div>
+    </div>
+  </section>
+</section>
+
+<section class="view" id="more"><div class="page-title"><p>MORE</p><h1>Quick actions.</h1></div><div class="quick-grid"><button data-action="expense">＋<span>Add Expense</span></button><button data-action="income"><b>＋</b><span>Enter Check</span></button><button data-go="budget">▦<span>Friday Lab</span></button><button data-go="reports">▥<span>Reports</span></button><button data-go="dexx">☵<span>Ask Dexx</span></button><button data-go="profile">◎<span>Financial Profile</span></button><button data-go="start">?<span>Start Here</span></button><button id="frontDoorBtn">⌂<span>Front Door</span></button></div></section>
 
 <section class="view" id="start">
   <div class="page-title"><p>START HERE</p><h1>How Financial Lab works.</h1></div>
 
   <section class="card walkthrough-hero">
-    <div class="section-head"><span>4.1.0.7 APP WALKTHROUGH</span><b>Powered by Dexx</b></div>
+    <div class="section-head"><span>4.1.1 APP WALKTHROUGH</span><b>Powered by Dexx</b></div>
     <p class="manager-copy">Financial Lab helps you decide what to do with each paycheck before the money gets spent. Cover what matters, prepare for what is coming, save on purpose, pay down debt intelligently, and know what is truly safe to spend.</p>
     <button class="primary" data-go="budget">START MY FRIDAY LAB</button>
   </section>
@@ -245,7 +298,7 @@
 <section class="view" id="dexx"><div class="dexx-header"><button data-go="laboratory">←</button><div><h1>DEXX</h1><p>Your Financial Scientist</p></div><img alt="" aria-hidden="true" class="dexx-chat-image" onerror="this.onerror=null;this.style.display='none'" src="dexx-character-clean.jpg"/></div><div class="chat"><div class="bubble" id="dexxReply">Hey Rob! 👋 I’m Dexx. How can I help you today?</div><button data-question="score">How can I improve my score? <span>›</span></button><button data-question="spending">Analyze my spending <span>›</span></button><button data-question="challenge">Give me a money challenge <span>›</span></button><button data-question="saving">Any tips for saving more? <span>›</span></button><form id="chatForm"><input id="chatInput" placeholder="Ask Dexx anything..."/><button type="submit">➤</button></form></div></section>
 </main>
 <nav class="bottom-nav"><button class="active" data-go="laboratory"><b>⚗</b><span>Laboratory</span></button><button data-go="budget"><b>▣</b><span>Budget Lab</span></button><button data-go="credit"><b>◇</b><span>Credit Lab</span></button><button data-go="savings"><b>▤</b><span>Savings Lab</span></button><button data-go="more"><b>•••</b><span>More</span></button></nav>
-</div><script src="app.js?v=4.1.0.7"></script>
+</div><script src="app.js?v=4.1.1"></script>
 <script>
 (function(){
   function wireBuildButton(){

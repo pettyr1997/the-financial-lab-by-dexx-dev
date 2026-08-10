@@ -83,6 +83,105 @@ function spendingStatus(p){
   return `No flexible expenses recorded yet. Your current TRUE Safe-to-Spend is ${money(p.safeToSpend)}.`;
 }
 function resetExpenseForm(){if(!$('expenseForm'))return;$('expenseId').value='';$('expenseName').value='';$('expenseAmount').value='';$('expenseCategory').value='other';$('expenseDate').value=iso(new Date());$('expenseNote').value='';$('saveExpense').textContent='SAVE EXPENSE';$('cancelExpenseEdit').hidden=true}
+
+function reportCategoryTotals(expenses){
+  const totals={};
+  (expenses||[]).forEach(x=>{
+    const key=x.category||'other';
+    totals[key]=(totals[key]||0)+Number(x.amount||0);
+  });
+  return Object.entries(totals).sort((a,b)=>b[1]-a[1]);
+}
+function reportObservationText(c){
+  if(!c.paycheck)return 'Build a payday plan to unlock your report.';
+  const protectedTotal=(c.payNow||0)+(c.reserve||0)+(c.savings||0)+(c.debtPayment||0);
+  const used=c.safeBeforeExpenses>0?c.expenseTotal/c.safeBeforeExpenses:0;
+  if(c.overspent>0)return `You are ${money(c.overspent)} over this cycle’s TRUE Safe-to-Spend. Protected money remains separated, but Dexx recommends pausing flexible spending until the next payday.`;
+  if(c.shortfall>0)return `This paycheck is under pressure. ${money(c.shortfall)} of immediate bills is still unfunded. Protect essentials before adding more flexible spending.`;
+  if(used>=.8)return `You protected ${money(protectedTotal)} and have used ${Math.round(used*100)}% of this cycle’s flexible spending allowance. ${money(c.safeToSpend)} remains.`;
+  if(c.expenseTotal>0)return `You protected ${money(protectedTotal)}, recorded ${money(c.expenseTotal)} in spending, and still have ${money(c.safeToSpend)} truly safe to spend.`;
+  return `You protected ${money(protectedTotal)} from this paycheck. No flexible spending is recorded yet, leaving ${money(c.safeToSpend)} truly safe to spend.`;
+}
+function renderReports(c){
+  if(!$('reportPaycheck'))return;
+
+  const expenses=c.currentExpenses||[];
+  const protectedTotal=(c.payNow||0)+(c.reserve||0)+(c.savings||0)+(c.debtPayment||0);
+  const cycleStart=c.expenseCycleStart||dateAtNoon(data.payDate);
+  const cycleEnd=c.expenseCycleEnd||c.nextPay;
+
+  $('reportCycleLabel').textContent=`${dateText(cycleStart,{month:'short',day:'numeric'})} – ${dateText(cycleEnd,{month:'short',day:'numeric'})}`;
+  $('reportPaycheck').textContent=money(c.paycheck||0);
+  $('reportProtected').textContent=money(protectedTotal);
+  $('reportSpent').textContent=money(c.expenseTotal||0);
+  $('reportSafe').textContent=money(c.safeToSpend||0);
+  $('reportObservation').textContent=reportObservationText(c);
+
+  const allocation=[
+    ['Pay now',c.payNow||0,'a-pay'],
+    ['Bill reserve',c.reserve||0,'a-reserve'],
+    ['Savings',c.savings||0,'a-save'],
+    ['Extra debt',c.debtPayment||0,'a-debt'],
+    ['Spent',c.expenseTotal||0,'a-spent'],
+    ['Safe left',c.safeToSpend||0,'a-safe']
+  ];
+  const allocationTotal=allocation.reduce((s,x)=>s+x[1],0);
+  $('reportAllocationTotal').textContent=money(allocationTotal);
+  const chart=$('allocationChart'),legend=$('allocationLegend');
+  chart.replaceChildren();legend.replaceChildren();
+  allocation.filter(x=>x[1]>0).forEach(([name,value,cls])=>{
+    const part=document.createElement('i');
+    part.className=cls;
+    part.style.width=`${allocationTotal?Math.max(2,value/allocationTotal*100):0}%`;
+    chart.append(part);
+    const row=document.createElement('div');
+    row.innerHTML=`<span class="${cls}"></span><b>${name}</b><strong>${money(value)}</strong>`;
+    legend.append(row);
+  });
+  if(!chart.children.length)chart.innerHTML='<em class="empty-copy">Build a payday plan to see where your check goes.</em>';
+
+  const categories=reportCategoryTotals(expenses);
+  $('reportExpenseCount').textContent=`${expenses.length} expense${expenses.length===1?'':'s'}`;
+  const bars=$('categoryBars');bars.replaceChildren();
+  if(!categories.length){
+    bars.innerHTML='<div class="empty-copy">No spending recorded for this paycheck cycle.</div>';
+  }else{
+    const max=categories[0][1]||1;
+    categories.forEach(([key,value])=>{
+      const row=document.createElement('div');
+      row.className='category-row';
+      row.innerHTML=`<div class="category-row-head"><b>${expenseCategoryLabel(key)}</b><strong>${money(value)}</strong></div><div class="category-track"><i style="width:${Math.max(3,value/max*100)}%"></i></div>`;
+      bars.append(row);
+    });
+  }
+
+  $('scoreProtection').textContent=!c.paycheck?'—':(c.shortfall===0?'GOOD':'CHECK');
+  $('scoreSavings').textContent=!c.paycheck?'—':(c.savings>0?'GOOD':'CHECK');
+  $('scoreDebt').textContent=!debtDefinitions().length?'N/A':(c.debtPayment>0?'GOOD':'WATCH');
+  $('scoreSpending').textContent=!c.paycheck?'—':(c.overspent>0?'CHECK':'GOOD');
+
+  const history=Array.isArray(data.paycheckHistory)?[...data.paycheckHistory].reverse():[];
+  $('reportHistoryCount').textContent=`${history.length} plan${history.length===1?'':'s'}`;
+  const historyHost=$('reportHistory');historyHost.replaceChildren();
+  if(!history.length){
+    historyHost.innerHTML='<div class="empty-copy">Approve payday plans to build your history.</div>';
+  }else{
+    history.slice(0,12).forEach(h=>{
+      const row=document.createElement('article');
+      row.className='report-history-row';
+      const approvedDate=dateText(h.approvedAt,{month:'short',day:'numeric',year:'numeric'});
+      row.innerHTML=`<div><strong>${approvedDate}</strong><span>${money(h.paycheck||0)} paycheck</span></div><div class="history-mini"><span>Saved ${money(h.savings||0)} · Reserve ${money(h.reserve||0)}</span><b>Safe ${money(h.safeToSpend||0)}</b></div>`;
+      historyHost.append(row);
+    });
+  }
+
+  const debts=debtDefinitions(),goals=savingsGoalDefinitions();
+  $('reportDebt').textContent=money(debts.reduce((s,x)=>s+Number(x.balance||0),0));
+  $('reportSavings').textContent=money(goals.reduce((s,x)=>s+Number(x.saved||0),0));
+  $('reportGoalCount').textContent=String(goals.length);
+  $('reportDebtCount').textContent=String(debts.length);
+}
+
 function renderExpenseManager(c){
   const host=$('expenseList');if(!host)return;
   const list=c.currentExpenses||currentCycleExpenses(),spent=list.reduce((s,x)=>s+x.amount,0),start=c.safeBeforeExpenses||0,remaining=c.safeToSpend||0;
@@ -358,7 +457,7 @@ function renderDebtManager(){
 }
 
 function renderHistory(){const host=$('planHistory');if(!host)return;host.replaceChildren();const list=[...data.paycheckHistory].reverse().slice(0,6);if(!list.length){host.innerHTML='<div class="empty-copy">Approved plans will appear here.</div>';return}list.forEach(h=>{const row=document.createElement('article');row.className='history-row';row.innerHTML=`<div><strong>${money(h.paycheck)} payday</strong><small>${new Date(h.approvedAt).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})}</small></div><span>Saved ${money(h.savings)}${h.savingsContributions?.[0]?.name?` to ${h.savingsContributions[0].name}`:''} · Spend ${money(h.safeToSpend)}</span>`;host.append(row)})}
-function render(){const c=calc(),hour=new Date().getHours();$('greeting').textContent=`GOOD ${hour<12?'MORNING':hour<17?'AFTERNOON':'EVENING'}, ${(data.researcherName||'ROB').toUpperCase()} 👋`;$('healthScore').textContent=c.score;$('scoreRing').style.setProperty('--score',c.score);$('healthMessage').textContent=c.score>=80?'Your payday plan is fully protected.':c.score>=60?'Your plan is gaining strength.':'Complete Payday Mode to improve your score.';$('cashAvailable').textContent=money(c.safeToSpend);$('billsWeek').textContent=money(c.payNow);$('savingsTotal').textContent=money(savingsGoalDefinitions().length?totalGoalSavings():c.savings);$('debtRemaining').textContent=money(totalDebtBalance());$('missionCount').textContent=`${c.missionDone} / 4`;$('progressText').textContent=`${c.progress}%`;$('progressBar').style.width=`${c.progress}%`;$('dexxObservation').textContent=recommendation(c);const conf=confidence(c);if($('confidenceLabel'))$('confidenceLabel').textContent=conf.level;if($('confidenceText'))$('confidenceText').textContent=conf.text;if($('confidenceBar'))$('confidenceBar').style.width=`${conf.pct}%`;renderTimeline(c);renderProfile();renderDebtManager();renderSavingsManager();renderExpenseManager(c);if(debtDefinitions().length&&$('debtAmount')){$('debtAmount').value=totalDebtBalance();$('debtAmount').readOnly=true;$('debtAmount').title='Managed automatically from Credit Lab';}else if($('debtAmount')){$('debtAmount').readOnly=false;}document.querySelectorAll('[data-mission]').forEach(x=>x.checked=!!data.missions[x.dataset.mission]);billRows($('billList'),c.bills.filter(b=>!b.paid).slice(0,4));billRows($('allBills'),c.dueNowBills);prepareRows($('prepareBills'),c.upcomingBills);if($('reserveMemorySummary'))$('reserveMemorySummary').innerHTML=`<strong>${money(c.rememberedReserve)}</strong><span>already protected from approved payday plans</span>`;
+function render(){const c=calc(),hour=new Date().getHours();$('greeting').textContent=`GOOD ${hour<12?'MORNING':hour<17?'AFTERNOON':'EVENING'}, ${(data.researcherName||'ROB').toUpperCase()} 👋`;$('healthScore').textContent=c.score;$('scoreRing').style.setProperty('--score',c.score);$('healthMessage').textContent=c.score>=80?'Your payday plan is fully protected.':c.score>=60?'Your plan is gaining strength.':'Complete Payday Mode to improve your score.';$('cashAvailable').textContent=money(c.safeToSpend);$('billsWeek').textContent=money(c.payNow);$('savingsTotal').textContent=money(savingsGoalDefinitions().length?totalGoalSavings():c.savings);$('debtRemaining').textContent=money(totalDebtBalance());$('missionCount').textContent=`${c.missionDone} / 4`;$('progressText').textContent=`${c.progress}%`;$('progressBar').style.width=`${c.progress}%`;$('dexxObservation').textContent=recommendation(c);const conf=confidence(c);if($('confidenceLabel'))$('confidenceLabel').textContent=conf.level;if($('confidenceText'))$('confidenceText').textContent=conf.text;if($('confidenceBar'))$('confidenceBar').style.width=`${conf.pct}%`;renderTimeline(c);renderProfile();renderDebtManager();renderSavingsManager();renderExpenseManager(c);renderReports(c);if(debtDefinitions().length&&$('debtAmount')){$('debtAmount').value=totalDebtBalance();$('debtAmount').readOnly=true;$('debtAmount').title='Managed automatically from Credit Lab';}else if($('debtAmount')){$('debtAmount').readOnly=false;}document.querySelectorAll('[data-mission]').forEach(x=>x.checked=!!data.missions[x.dataset.mission]);billRows($('billList'),c.bills.filter(b=>!b.paid).slice(0,4));billRows($('allBills'),c.dueNowBills);prepareRows($('prepareBills'),c.upcomingBills);if($('reserveMemorySummary'))$('reserveMemorySummary').innerHTML=`<strong>${money(c.rememberedReserve)}</strong><span>already protected from approved payday plans</span>`;
   ['paycheck','currentBalance','saveAmount','debtAmount','debtGoal','savingsRate'].forEach(id=>{if($(id))$(id).value=data[id]||(id==='savingsRate'?10:'')});if($('payDate'))$('payDate').value=iso(dateAtNoon(data.payDate)||new Date());if($('nextPayday'))$('nextPayday').value=iso(dateAtNoon(data.nextPayday))||'';
   if($('planPayNow')){$('planPayNow').textContent=money(c.payNow);$('planReserve').textContent=money(c.reserve);$('planSavings').textContent=money(c.savings);$('planDebt').textContent=money(c.debtPayment);$('planSpend').textContent=money(c.safeToSpend);$('planStatus').textContent=c.shortfall?'Needs attention':data.approvedPlan?'Approved':c.paycheck?'Plan ready':'Ready';$('dexxPlanText').textContent=recommendation(c);const total=c.available||1;[['allocBills',c.payNow],['allocReserve',c.reserve],['allocSavings',c.savings],['allocDebt',c.debtPayment],['allocSpend',c.safeToSpend]].forEach(([id,val])=>$(id).style.width=`${Math.max(0,val/total*100)}%`);allocationRows(c);$('customSavings').value=data.customSavings??'';$('customDebt').value=data.customDebt??'';const step=!c.paycheck?1:!c.bills.length?2:!data.approvedPlan?4:5;$('workflowStatus').textContent=`Step ${step} of 5`;$('workflowCopy').textContent=step===1?'Enter your check and payday dates.':step===2?'Add and confirm every bill coming before and after payday.':step===4?'Review Dexx’s recommendation and adjust only if needed.':'Plan approved. Track the experiment until next payday.';document.querySelectorAll('.step-track i').forEach((x,i)=>x.classList.toggle('active',i<step));const ex=experiment(c);$('experimentTitle').textContent=ex.title;$('experimentText').textContent=ex.text;$('experimentBar').style.width=`${ex.progress}%`;$('experimentProgress').textContent=`${ex.progress}% complete`;renderHistory()}}
 function show(id){document.body.classList.remove('front-door-active');document.querySelectorAll('.view').forEach(v=>v.classList.toggle('active',v.id===id));document.querySelectorAll('.bottom-nav button').forEach(b=>b.classList.toggle('active',b.dataset.go===id));history.replaceState(null,'','#'+id);scrollTo({top:0,behavior:'smooth'})}
@@ -560,6 +659,6 @@ $('enterLabBtn')?.addEventListener('click',e=>{e.preventDefault();openFinancialL
 $('joinLabBtn')?.addEventListener('click',e=>{e.preventDefault();openFinancialLab('start')});
 $('frontDoorBtn')?.addEventListener('click',e=>{e.preventDefault();openFrontDoor()});
 
-const initial=location.hash.slice(1);show(['laboratory','budget','profile','credit','savings','expense','more','start','dexx'].includes(initial)?initial:'laboratory');render();
+const initial=location.hash.slice(1);show(['laboratory','budget','profile','credit','savings','expense','reports','more','start','dexx'].includes(initial)?initial:'laboratory');render();
 
 $('profileForm')?.addEventListener('submit',e=>{e.preventDefault();data.researcherName=$('profileName').value.trim()||'Rob';data.profile={payFrequency:$('payFrequency').value,paydayDay:Number($('paydayDay').value),incomePattern:$('incomePattern').value,recurringBillCount:clamp($('recurringBillCount').value,0,99),financialStrategy:$('financialStrategy').value,reserveDays:clamp($('reserveDays').value,7,31)};data.savingsRate=clamp($('profileSavingsRate').value,0,100);save();$('profileStatus').textContent='Financial Profile saved. Dexx will use it for every payday plan.'});

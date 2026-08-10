@@ -1,44 +1,28 @@
-# Financial Lab 4.1.0.7 — Date Safety Hotfix
+# Financial Lab 4.1.1 — Reports & Spending Analytics
 
-Built directly on the now-confirmed working 4.1.0.6 Direct Payday Control.
+Built directly on the stable 4.1.0.7 Date Safety release.
 
-## Root cause confirmed
-4.1.0.6 proved the Payday Plan button works and the plan saves successfully.
-
-The remaining failure was:
-`Plan SAVED, but screen refresh failed: Invalid Date`
-
-That means legacy/malformed saved date data was crashing `render()`.
-
-## Fixed
-- Rebuilt the shared date parser so invalid dates return `null` instead of becoming JavaScript `Invalid Date` objects.
-- `iso()` can no longer throw on malformed dates.
-- Bill recurrence generation skips invalid bill due dates instead of crashing the whole app.
-- Invalid Savings Goal target dates behave like no deadline.
-- Invalid Debt due dates display `TBD`.
-- Invalid Bill due dates display `TBD`.
-- Invalid Expense dates display safely.
-- Financial Timeline filters invalid dates.
-- Paycheck date fields sanitize persisted values before displaying.
-- Existing expense `cycleId` values now survive migration/reload.
+## Added
+- New Reports Lab.
+- Current paycheck KPIs: Paycheck, Protected, Spent, Safe Left.
+- Where This Paycheck Went allocation bar.
+- Spending by Category using Expense Manager records.
+- Dexx report explaining the current cycle.
+- Paycheck Scorecard for protection, savings, debt, and spending.
+- Paycheck History from approved payday plans.
+- Big Picture totals for debt and savings.
 
 ## Preserved
-- 4.1.0.6 direct Payday Plan button and visible diagnostics.
-- Stable navigation.
-- Expense Manager / Spending Memory.
-- Paycheck-cycle binding.
+- Direct Payday Plan control.
+- Date Safety engine.
+- Spending Memory.
+- Expense Manager.
+- Paycheck Cycle Binding.
 - Reserve Memory.
 - Savings Goals.
 - Debt Manager.
 - Bills Manager.
-- Front Door.
-- Existing local data.
+- Front Door and stable navigation.
+- Existing local browser data.
 
-## Expected test
-Build the same plan again.
-
-The plan should now render instead of showing `Invalid Date`.
-
-Then check:
-- Spent this cycle
-- TRUE Safe-to-Spend
+Reports are read-only. They do not modify balances or plan data.
