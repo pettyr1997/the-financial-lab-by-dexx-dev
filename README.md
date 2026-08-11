@@ -1,40 +1,54 @@
-# Financial Lab 4.1.2 — Dexx Insights & Trends
+# Financial Lab 4.1.2.1 — Accurate History Memory
 
-Built directly on stable 4.1.1 Reports & Spending Analytics.
+Built directly on 4.1.2 Dexx Insights & Trends.
 
-## Added
-- New **Dexx Insights & Trends** section inside Reports Lab.
-- Compares the two most recent approved payday plans.
-- Tracks changes in:
-  - Flexible spending
-  - Savings
-  - TRUE Safe-to-Spend
-  - Protected money
-- Dexx explains what changed in plain language.
-- Recent-cycle trend history shows the last six approved plans.
-- Future approved plans now save richer analytics snapshots:
-  - Spending
-  - Protected money
-  - Pay-now amount
-  - Extra debt payment
-  - Expense category snapshots
-- Biggest spending-category movement can be surfaced once two enriched approvals exist.
+## Why this release matters
+Dexx's comparisons are only useful when historical paycheck data is accurate.
 
-## Behavior
-- With fewer than two approved plans, Trends clearly says another approval is needed.
-- Existing older paycheck-history records continue to work.
-- Trend analytics are read-only and do not modify finances.
+The Aug 10 legacy test cycle had:
+- Paycheck: $120
+- Savings: $12
+- Gas spending: $20
+- TRUE Safe-to-Spend: $88
+
+But its older approval snapshot did not contain a `spent` field, so 4.1.2 displayed $0 spent in Recent Cycles.
+
+## Fixed
+- Older approved paycheck plans recover spending from **Spending Memory**.
+- Exact paycheck-cycle IDs are used first.
+- Legacy date-based expense matching is retained for pre-cycle records.
+- A final accounting fallback can recover spending from:
+  Paycheck - Pay Now - Reserve - Savings - Debt - Safe Left.
+- Reports and Trends now use one shared normalized history source.
+- Budget Lab's plan history uses that same accurate history.
+- Paycheck History now displays Spent, Protected, Saved, and Safe.
+
+## Future approvals now permanently store
+- Pay date
+- Next payday
+- Paycheck cycle ID
+- Spent amount
+- Protected amount
+- Expense category snapshots
+- Savings
+- Debt
+- Safe-to-Spend
+
+## Expected Aug 10 recovery
+- Protected: $12.00
+- Spent: $20.00
+- Saved: $12.00
+- Safe: $88.00
 
 ## Preserved
-- 4.1.1 Reports Lab
-- 4.1.0.7 Date Safety
+- Dexx Insights & Trends
+- Reports Lab
+- Date Safety
 - Direct Payday Plan control
 - Spending Memory
-- Expense Manager
 - Paycheck Cycle Binding
 - Reserve Memory
 - Savings Goals
 - Debt Manager
 - Bills Manager
-- Front Door
 - Existing local data

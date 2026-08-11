@@ -762,3 +762,7 @@ body.front-door-active .app-shell *{
 @media(max-width:640px){
   .trend-grid{grid-template-columns:1fr 1fr}
 }
+
+/* 4.1.2.1 — Accurate History Memory */
+.history-memory-note{display:block;margin-top:10px;color:var(--muted);font-size:.68rem;line-height:1.45}
+.history-mini span+span{margin-top:2px}
