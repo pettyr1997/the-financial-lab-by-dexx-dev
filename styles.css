@@ -781,3 +781,6 @@ body.front-door-active .app-shell *{
 .restore-label{display:block;color:var(--green);font-weight:900;letter-spacing:.06em;font-size:.75rem;margin-bottom:10px}
 #restoreFinancialLab{display:block;width:100%;padding:12px;border:1px solid var(--line);border-radius:12px;background:#050a07;color:var(--white)}
 .memory-status{margin-top:12px;color:var(--green);font-weight:700}
+
+/* 4.1.2.3 — History Date + Category Accuracy
+   History dates now represent paycheck dates; trend categories prefer Spending Memory. */

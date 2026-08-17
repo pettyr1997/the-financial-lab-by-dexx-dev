@@ -1,4 +1,5 @@
-// Financial Lab 4.1.2.2 DEV
+// Financial Lab 4.1.2.3 DEV
+// Service worker intentionally disabled during active DEV testing.
 self.addEventListener('install',()=>self.skipWaiting());
 self.addEventListener('activate',event=>{
   event.waitUntil(
