@@ -784,3 +784,27 @@ body.front-door-active .app-shell *{
 
 /* 4.1.2.3 — History Date + Category Accuracy
    History dates now represent paycheck dates; trend categories prefer Spending Memory. */
+
+/* 4.1.3 — Financial Health Score 2.0 */
+.health-score-card{border-color:rgba(97,255,29,.38)}
+.health-score-hero{display:grid;grid-template-columns:auto 1fr;gap:18px;align-items:center;margin-top:14px}
+.health-score-number{display:flex;align-items:flex-end;gap:4px;min-width:116px}
+.health-score-number strong{font-size:3.8rem;line-height:.9;color:var(--green);letter-spacing:-.05em}
+.health-score-number span{font-weight:900;color:var(--muted);padding-bottom:6px}
+.health-grade{margin:0;color:var(--green);font-weight:900;letter-spacing:.1em;font-size:.8rem}
+.health-copy{margin:7px 0 0;color:var(--muted);line-height:1.45;font-size:.83rem}
+.health-meter{height:12px;background:#17231b;border-radius:999px;overflow:hidden;margin:18px 0}
+.health-meter i{display:block;height:100%;width:0;background:var(--green);border-radius:inherit;transition:width .35s ease}
+.health-breakdown{display:grid;gap:10px}
+.health-breakdown article{border:1px solid var(--line);background:#07100b;border-radius:15px;padding:14px}
+.health-breakdown article>div{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.health-breakdown span{color:var(--muted);font-size:.68rem;font-weight:900;letter-spacing:.09em}
+.health-breakdown b{color:var(--green);font-size:.9rem}
+.health-breakdown small{display:block;color:var(--muted);font-size:.72rem;line-height:1.4;margin-top:6px}
+.dexx-health-note{margin-top:16px;padding:15px;border:1px solid rgba(97,255,29,.3);border-radius:15px;background:rgba(97,255,29,.055)}
+.dexx-health-note span{color:var(--green);font-size:.68rem;font-weight:900;letter-spacing:.1em}
+.dexx-health-note p{margin:8px 0 0;line-height:1.5}
+@media(max-width:520px){
+  .health-score-hero{grid-template-columns:1fr}
+  .health-score-number strong{font-size:3.35rem}
+}

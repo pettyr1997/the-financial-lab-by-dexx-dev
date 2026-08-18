@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 
-<html lang="en"><head><meta charset="utf-8"/><meta content="width=device-width,initial-scale=1,viewport-fit=cover" name="viewport"/><meta content="#050807" name="theme-color"/><meta content="Financial Lab powered by Dexx" name="description"/><link href="manifest.webmanifest" rel="manifest"/><link href="icons/icon.svg" rel="icon"/><link href="icons/icon-192.png" rel="apple-touch-icon"/><link href="styles.css?v=4.1.2.3" rel="stylesheet"/><title>Financial Lab — Powered by Dexx</title><meta content="4.1.2.3" name="financial-lab-version"/><meta name="financial-lab-release" content="4.0.3-bills-manager-layout-fix"/></head>
+<html lang="en"><head><meta charset="utf-8"/><meta content="width=device-width,initial-scale=1,viewport-fit=cover" name="viewport"/><meta content="#050807" name="theme-color"/><meta content="Financial Lab powered by Dexx" name="description"/><link href="manifest.webmanifest" rel="manifest"/><link href="icons/icon.svg" rel="icon"/><link href="icons/icon-192.png" rel="apple-touch-icon"/><link href="styles.css?v=4.1.3" rel="stylesheet"/><title>Financial Lab — Powered by Dexx</title><meta content="4.1.3" name="financial-lab-version"/><meta name="financial-lab-release" content="4.0.3-bills-manager-layout-fix"/></head>
 <body class="front-door-active">
 <div class="front-door" id="frontDoor">
   <div class="front-door-glow"></div>
@@ -51,6 +51,40 @@
 <header class="topbar"><button aria-label="Open menu" class="icon-button" id="menuBtn">☰</button><img alt="Financial Lab powered by Dexx" class="brand-logo" onerror="this.onerror=null;this.src='logo-full.svg'" src="financial-lab-logo.jpg"/><button aria-label="Notifications" class="icon-button">♧<i class="notify-dot"></i></button></header>
 <main>
 <section class="view active" id="laboratory">
+
+  <section class="card health-score-card">
+    <div class="section-head">
+      <span>4.1.3 FINANCIAL HEALTH SCORE</span>
+      <b id="healthScoreChange">Building baseline</b>
+    </div>
+
+    <div class="health-score-hero">
+      <div class="health-score-number">
+        <strong id="healthScoreValue">0</strong>
+        <span>/ 100</span>
+      </div>
+      <div>
+        <p class="health-grade" id="healthScoreGrade">STARTING</p>
+        <p class="health-copy" id="healthScoreSummary">Add financial activity and Dexx will build your score.</p>
+      </div>
+    </div>
+
+    <div class="health-meter" aria-hidden="true"><i id="healthScoreMeter"></i></div>
+
+    <div class="health-breakdown">
+      <article><div><span>PROTECTION</span><b id="healthProtection">0/20</b></div><small id="healthProtectionWhy">Bills and reserves</small></article>
+      <article><div><span>SPENDING</span><b id="healthSpending">0/20</b></div><small id="healthSpendingWhy">TRUE Safe-to-Spend control</small></article>
+      <article><div><span>SAVINGS</span><b id="healthSavings">0/20</b></div><small id="healthSavingsWhy">Savings progress</small></article>
+      <article><div><span>DEBT</span><b id="healthDebt">0/20</b></div><small id="healthDebtWhy">Debt management</small></article>
+      <article><div><span>CONSISTENCY</span><b id="healthConsistency">0/20</b></div><small id="healthConsistencyWhy">Using the Lab consistently</small></article>
+    </div>
+
+    <div class="dexx-health-note">
+      <span>DEXX EXPLAINS</span>
+      <p id="healthDexxExplanation">Your score will explain what is helping and what needs attention.</p>
+    </div>
+  </section>
+
 <div class="hero"><div><p class="eyebrow" id="greeting">GOOD MORNING, ROB 👋</p><h1>Welcome back<br/><span>to the Lab.</span></h1></div><img alt="" aria-hidden="true" class="dexx-hero-image" onerror="this.onerror=null;this.style.display='none'" src="dexx-character-clean.jpg"/></div>
 <section class="card health-card"><div><div class="card-title">FINANCIAL HEALTH SCORE <button class="info" title="Based on your paycheck, bills, savings and weekly plan">i</button></div><div class="score-line"><strong id="healthScore">42</strong><span>/ 100</span></div><p id="healthMessage">Complete Friday Lab to improve your score.</p></div><div class="score-ring" id="scoreRing"><span>⌁</span></div></section>
 <section class="card mission-card"><div class="section-head"><span>TODAY'S MISSION</span><b id="missionCount">0 / 4</b></div><label><input data-mission="spending" type="checkbox"/><i></i>Stay under spending goal</label><label><input data-mission="saving" type="checkbox"/><i></i>Save $20</label><label><input data-mission="bills" type="checkbox"/><i></i>Review upcoming bills</label><label><input data-mission="friday" type="checkbox"/><i></i>Complete Friday Lab</label><div class="flask">⚗</div></section>
@@ -301,7 +335,7 @@
   <div class="page-title"><p>START HERE</p><h1>How Financial Lab works.</h1></div>
 
   <section class="card walkthrough-hero">
-    <div class="section-head"><span>4.1.2.3 APP WALKTHROUGH</span><b>Powered by Dexx</b></div>
+    <div class="section-head"><span>4.1.3 APP WALKTHROUGH</span><b>Powered by Dexx</b></div>
     <p class="manager-copy">Financial Lab helps you decide what to do with each paycheck before the money gets spent. Cover what matters, prepare for what is coming, save on purpose, pay down debt intelligently, and know what is truly safe to spend.</p>
     <button class="primary" data-go="budget">START MY FRIDAY LAB</button>
   </section>
@@ -365,7 +399,7 @@
 <section class="view" id="dexx"><div class="dexx-header"><button data-go="laboratory">←</button><div><h1>DEXX</h1><p>Your Financial Scientist</p></div><img alt="" aria-hidden="true" class="dexx-chat-image" onerror="this.onerror=null;this.style.display='none'" src="dexx-character-clean.jpg"/></div><div class="chat"><div class="bubble" id="dexxReply">Hey Rob! 👋 I’m Dexx. How can I help you today?</div><button data-question="score">How can I improve my score? <span>›</span></button><button data-question="spending">Analyze my spending <span>›</span></button><button data-question="challenge">Give me a money challenge <span>›</span></button><button data-question="saving">Any tips for saving more? <span>›</span></button><form id="chatForm"><input id="chatInput" placeholder="Ask Dexx anything..."/><button type="submit">➤</button></form></div></section>
 </main>
 <nav class="bottom-nav"><button class="active" data-go="laboratory"><b>⚗</b><span>Laboratory</span></button><button data-go="budget"><b>▣</b><span>Budget Lab</span></button><button data-go="credit"><b>◇</b><span>Credit Lab</span></button><button data-go="savings"><b>▤</b><span>Savings Lab</span></button><button data-go="more"><b>•••</b><span>More</span></button></nav>
-</div><script src="app.js?v=4.1.2.3"></script>
+</div><script src="app.js?v=4.1.3"></script>
 <script>
 (function(){
   function wireBuildButton(){
