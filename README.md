@@ -1,32 +1,37 @@
-# Financial Lab 4.1.3 — Financial Health Score 2.0
+# Financial Lab 4.1.4 — Dexx Action Center
 
-Built directly on stable 4.1.2.3 History Date + Category Accuracy.
+Built directly on stable 4.1.3.1 Health Score Baseline Calibration.
 
 ## Added
-A real 100-point Financial Health Score using five 20-point categories:
+Dexx now converts the Financial Health Score and live payday data into a prioritized action list.
 
-- Protection
-- Spending
-- Savings
-- Debt
-- Consistency
+The Action Center can recommend:
+- Complete debt-status setup
+- Build a payday plan
+- Start or increase savings
+- Approve a payday plan
+- Cover a shortfall
+- Pause spending after overspending
+- Strengthen bill protection
+- Improve debt progress
+- Improve consistency
+- Review trend changes
 
-Dexx now explains what is helping the score and what needs attention.
-
-Future approved payday plans save the Financial Health Score so later releases can show score movement across paycheck cycles.
+## Behavior
+- Baseline incomplete: setup actions come first.
+- Baseline complete: weakest financial areas drive recommendations.
+- Current shortfalls and overspending outrank everything else.
+- Trend data can generate follow-up actions.
+- Each recommendation has a direct button to the relevant Lab.
 
 ## Preserved
-- History Date + Category Accuracy
-- Financial Memory Guard
-- Backup / Restore
-- Dexx Insights & Trends
-- Reports Lab
+- 4.1.3.1 baseline calibration
+- Financial Health Score 2.0
+- History accuracy
+- Memory Guard
+- Backup/Restore
+- Trends and Reports
 - Spending Memory
 - TRUE Safe-to-Spend
-- Date Safety
 - Payday Plan workflow
-- Reserve Memory
-- Savings Goals
-- Debt Manager
-- Bills Manager
 - Existing local data
