@@ -1,37 +1,23 @@
-# Financial Lab 4.1.4 — Dexx Action Center
+# Financial Lab 4.1.4.1 — Action Center Navigation Fix
 
-Built directly on stable 4.1.3.1 Health Score Baseline Calibration.
+Built directly on 4.1.4 Dexx Action Center.
 
-## Added
-Dexx now converts the Financial Health Score and live payday data into a prioritized action list.
+## Fixed
+Action Center buttons now use robust routing instead of relying on a nonexistent navigation helper.
 
-The Action Center can recommend:
-- Complete debt-status setup
-- Build a payday plan
-- Start or increase savings
-- Approve a payday plan
-- Cover a shortfall
-- Pause spending after overspending
-- Strengthen bill protection
-- Improve debt progress
-- Improve consistency
-- Review trend changes
-
-## Behavior
-- Baseline incomplete: setup actions come first.
-- Baseline complete: weakest financial areas drive recommendations.
-- Current shortfalls and overspending outrank everything else.
-- Trend data can generate follow-up actions.
-- Each recommendation has a direct button to the relevant Lab.
+### Verified destinations
+- CHECK DEBT STATUS → More → Debt Status card
+- OPEN BUDGET LAB → Budget Lab
+- OPEN CREDIT LAB → Credit Lab
+- OPEN SAVINGS LAB → Savings Lab
+- Other Action Center routes use the same navigation system / direct-view fallback
 
 ## Preserved
-- 4.1.3.1 baseline calibration
+- Dexx Action Center priority engine
+- Health Score Baseline Calibration
 - Financial Health Score 2.0
-- History accuracy
-- Memory Guard
-- Backup/Restore
+- Memory Guard / Backup / Restore
 - Trends and Reports
 - Spending Memory
 - TRUE Safe-to-Spend
-- Payday Plan workflow
 - Existing local data

@@ -672,16 +672,64 @@ function buildDexxActions(c){
   return actions.sort((a,b)=>b.priority-a.priority).slice(0,4);
 }
 function actionTargetView(target){
-  const map={budget:'budget',credit:'credit',savings:'savings',spending:'spending',reports:'reports',more:'more'};
+  const map={
+    budget:'budget',
+    credit:'credit',
+    savings:'savings',
+    spending:'spending',
+    reports:'reports',
+    more:'more'
+  };
   return map[target]||'laboratory';
 }
 function navigateDexxAction(target){
   const view=actionTargetView(target);
-  if(typeof showView==='function'){
-    showView(view);
-    return;
+
+  // Prefer the app's existing navigation controls so routing behavior
+  // stays identical to the bottom navigation / More menu.
+  const selectors=[
+    `[data-view="${view}"]`,
+    `[data-target="${view}"]`,
+    `[data-route="${view}"]`,
+    `[href="#${view}"]`
+  ];
+  for(const selector of selectors){
+    const control=document.querySelector(selector);
+    if(control){
+      control.click();
+      return true;
+    }
   }
-  document.querySelector(`[data-view="${view}"]`)?.click();
+
+  // Fallback: switch views directly if no routed control exists.
+  const targetView=document.getElementById(view);
+  if(targetView && targetView.classList.contains('view')){
+    document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+    targetView.classList.add('active');
+
+    document.querySelectorAll('[data-view],[data-target],[data-route]').forEach(el=>{
+      const matches=
+        el.dataset.view===view ||
+        el.dataset.target===view ||
+        el.dataset.route===view;
+      el.classList.toggle('active',matches);
+    });
+
+    window.scrollTo({top:0,behavior:'smooth'});
+    return true;
+  }
+
+  // Special destinations live inside another parent view.
+  if(target==='reports'){
+    const moreControl=document.querySelector('[data-view="more"],[data-target="more"],[href="#more"]');
+    if(moreControl)moreControl.click();
+    setTimeout(()=>{
+      document.querySelector('[data-view="reports"],[data-target="reports"],[href="#reports"]')?.click();
+    },0);
+    return true;
+  }
+
+  return false;
 }
 function renderActionCenter(c){
   if(!$('dexxActionList'))return;
@@ -1194,12 +1242,20 @@ $('confirmNoDebt')?.addEventListener('change',e=>{
 
 $('actionTopButton')?.addEventListener('click',e=>{
   e.preventDefault();
-  navigateDexxAction(e.currentTarget.dataset.target);
+  const target=e.currentTarget.dataset.target;
+  const moved=navigateDexxAction(target);
+  if(moved && target==='more'){
+    setTimeout(()=>document.querySelector('.debt-status-card')?.scrollIntoView({behavior:'smooth',block:'start'}),80);
+  }
 });
 $('dexxActionList')?.addEventListener('click',e=>{
   const button=e.target.closest('button[data-action-target]');
   if(!button)return;
-  navigateDexxAction(button.dataset.actionTarget);
+  const target=button.dataset.actionTarget;
+  const moved=navigateDexxAction(target);
+  if(moved && target==='more'){
+    setTimeout(()=>document.querySelector('.debt-status-card')?.scrollIntoView({behavior:'smooth',block:'start'}),80);
+  }
 });
 
 $('backupFinancialLab')?.addEventListener('click',e=>{
