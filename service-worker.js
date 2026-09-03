@@ -1,4 +1,4 @@
-// Financial Lab 4.1.4.1 DEV
+// Financial Lab 4.1.4.2 DEV
 self.addEventListener('install',()=>self.skipWaiting());
 self.addEventListener('activate',event=>event.waitUntil(
   caches.keys()
