@@ -1,4 +1,54 @@
 const STORAGE_KEY = 'financial-lab-v3-data';
+
+const MEMORY_DB_NAME='financial-lab-memory';
+const MEMORY_DB_VERSION=1;
+const MEMORY_STORE='snapshots';
+const MEMORY_KEY='primary';
+function openMemoryDb(){
+  return new Promise((resolve,reject)=>{
+    if(!('indexedDB' in window)){resolve(null);return}
+    const req=indexedDB.open(MEMORY_DB_NAME,MEMORY_DB_VERSION);
+    req.onupgradeneeded=()=>{const db=req.result;if(!db.objectStoreNames.contains(MEMORY_STORE))db.createObjectStore(MEMORY_STORE)};
+    req.onsuccess=()=>resolve(req.result);
+    req.onerror=()=>reject(req.error||new Error('IndexedDB unavailable'));
+  });
+}
+async function writeMemoryMirror(value){
+  try{
+    const db=await openMemoryDb();if(!db)return;
+    await new Promise((resolve,reject)=>{const tx=db.transaction(MEMORY_STORE,'readwrite');tx.objectStore(MEMORY_STORE).put({savedAt:new Date().toISOString(),data:value},MEMORY_KEY);tx.oncomplete=()=>resolve();tx.onerror=()=>reject(tx.error)});
+    db.close();
+  }catch(err){console.warn('Financial Lab memory mirror could not save',err)}
+}
+async function readMemoryMirror(){
+  try{
+    const db=await openMemoryDb();if(!db)return null;
+    const result=await new Promise((resolve,reject)=>{const tx=db.transaction(MEMORY_STORE,'readonly');const req=tx.objectStore(MEMORY_STORE).get(MEMORY_KEY);req.onsuccess=()=>resolve(req.result||null);req.onerror=()=>reject(req.error)});
+    db.close();return result;
+  }catch(err){console.warn('Financial Lab memory mirror could not load',err);return null}
+}
+async function requestDurableStorage(){
+  try{
+    if(navigator.storage&&navigator.storage.persist){return await navigator.storage.persist()}
+  }catch(_){ }
+  return false;
+}
+async function initializePersistentMemory(){
+  const mirror=await readMemoryMirror();
+  const localRaw=localStorage.getItem(STORAGE_KEY);
+  if(!localRaw&&mirror&&mirror.data){
+    localStorage.setItem(STORAGE_KEY,JSON.stringify(mirror.data));
+    data=load();render();
+    const status=$('memoryGuardStatus');if(status)status.textContent='Financial Lab recovered your saved memory from the device backup layer.';
+  }else if(localRaw&&mirror&&mirror.data){
+    const localTime=Date.parse(data.lastUpdated||0)||0,mirrorTime=Date.parse(mirror.data.lastUpdated||mirror.savedAt||0)||0;
+    if(mirrorTime>localTime){localStorage.setItem(STORAGE_KEY,JSON.stringify(mirror.data));data=load();render()}
+  }
+  await writeMemoryMirror(data);
+  await requestDurableStorage();
+  renderMemoryGuard();
+}
+
 const DEFAULTS = {
   researcherName:'Rob', paycheck:0, currentBalance:0, payDate:'', nextPayday:'', savingsRate:10,
   billName:'', billDate:'', billAmount:0, saveAmount:0, debtAmount:0, debtGoal:0, expenses:0,
@@ -375,7 +425,7 @@ function financialMemorySnapshot(){
   }catch(_){}
   return {
     schema:'financial-lab-backup',
-    version:'4.1.2.2',
+    version:'4.1.5',
     exportedAt:new Date().toISOString(),
     storageKey:STORAGE_KEY,
     data:parsed||data
@@ -392,12 +442,12 @@ function memoryCounts(){
 function renderMemoryGuard(){
   if(!$('memoryStatusLabel'))return;
   const counts=memoryCounts();
-  $('memoryStatusLabel').textContent='Local browser storage';
+  $('memoryStatusLabel').textContent=('standalone' in navigator && navigator.standalone)||window.matchMedia?.('(display-mode: standalone)').matches?'Installed + device memory':'Browser + device memory';
   $('memoryPlanCount').textContent=String(counts.plans);
   $('memoryExpenseCount').textContent=String(counts.expenses);
   $('memoryDebtCount').textContent=String(counts.debts);
   $('memoryGoalCount').textContent=String(counts.goals);
-  $('memoryWarningText').textContent='Your Financial Lab data currently lives in this browser only. If Safari/site data is cleared—or a Private browsing session is discarded—this local history can disappear unless you have a backup.';
+  $('memoryWarningText').textContent='Financial Lab now keeps two on-device copies of your working data and automatically restores the newer copy when possible. Clearing all Safari/site data or deleting the app can still remove both copies, so keep periodic JSON backups for important history.';
 }
 function downloadFinancialLabBackup(){
   const status=$('memoryGuardStatus');
@@ -429,13 +479,14 @@ function restoreFinancialLabBackup(file){
   const status=$('memoryGuardStatus');
   if(!file)return;
   const reader=new FileReader();
-  reader.onload=()=>{
+  reader.onload=async()=>{
     try{
       const payload=JSON.parse(String(reader.result||''));
       const restored=validateFinancialLabBackup(payload);
       localStorage.setItem(STORAGE_KEY,JSON.stringify(restored));
+      await writeMemoryMirror(restored);
       if(status)status.textContent='Backup restored successfully. Reloading Financial Lab…';
-      setTimeout(()=>location.reload(),600);
+      setTimeout(()=>location.reload(),300);
     }catch(err){
       console.error(err);
       if(status)status.textContent=`Restore failed: ${err.message||err}`;
@@ -1021,7 +1072,7 @@ function paycheckPlan(){
   const rememberedReserve=[...dueNowBills,...upcomingBills].reduce((s,b)=>s+Number(b.alreadyProtected||0),0);return {paycheck,balance,available,today,nextPay,reserveEnd,planningEnd,dueNowBills,upcomingBills,laterBills,dueNow,upcomingTotal,reserveTarget,rememberedReserve,desiredSavings,savingsGoalTarget,desiredDebt,targetDebt,managedDebtTotal,payNow,reserve,savings:chosenSavings,debtPayment:chosenDebt,expenseCycleStart,expenseCycleEnd,safeBeforeExpenses,currentExpenses,expenseTotal,overspent,safeToSpend,shortfall:Math.max(0,dueNow-payNow),reserveShortfall:Math.max(0,reserveTarget-reserve)};
 }
 function calc(){const p=paycheckPlan(),bills=[...p.dueNowBills,...p.upcomingBills],billTotal=bills.filter(b=>!b.paid).reduce((s,b)=>s+Number(b.amount||0),0);let score=35;if(p.paycheck>0)score+=15;if(bills.length)score+=10;if(p.savings>0)score+=15;if(p.shortfall===0&&p.paycheck>0)score+=15;if(p.reserveShortfall===0&&p.upcomingBills.length)score+=5;if(data.approvedPlan)score+=5;const missionDone=Object.values(data.missions).filter(Boolean).length;return {...p,bills,billTotal,cash:p.safeToSpend,score:Math.min(score,100),progress:Math.round(missionDone/4*100),missionDone}}
-function save(){data.lastUpdated=new Date().toISOString();localStorage.setItem(STORAGE_KEY,JSON.stringify(data));render()}
+function save(){data.lastUpdated=new Date().toISOString();localStorage.setItem(STORAGE_KEY,JSON.stringify(data));writeMemoryMirror(data);render()}
 function billRows(host,bills){if(!host)return;host.replaceChildren();if(!bills.length){host.innerHTML='<div class="empty-copy">No bills in this payday window. Manage recurring bills in Financial Profile.</div>';return}bills.forEach(b=>{const row=document.createElement('div');row.className=`bill-row${b.paid?' paid':''}`;const btn=document.createElement('button');btn.className='check';btn.textContent=b.paid?'✓':'';btn.setAttribute('aria-label',b.paid?'Mark unpaid':'Mark paid');btn.onclick=()=>{const real=data.bills.find(x=>x.id===(b.parentId||b.id));if(real){real.paidOccurrences=Array.isArray(real.paidOccurrences)?real.paidOccurrences:[];const key=b.occurrenceDate||b.date,isPaid=real.paidOccurrences.includes(key);real.paidOccurrences=isPaid?real.paidOccurrences.filter(x=>x!==key):[...real.paidOccurrences,key];if(!isPaid&&data.reserveMemory)delete data.reserveMemory[reserveKey(b)];data.approvedPlan=null;save()}};const name=document.createElement('span');const held=Number(b.alreadyProtected||protectedFor(b));name.innerHTML=`${b.name||'Bill'} <em class="priority ${b.priority}">${b.priority}</em>${b.autopay?' <em class="autopay">auto</em>':''}${held>0?` <em class="reserve-held">${money(held)} reserved</em>`:''}`;const amt=document.createElement('strong');amt.textContent=money(b.amount);const date=document.createElement('small');date.textContent=b.paid?'Paid':b.date?dateText(b.date,{month:'short',day:'numeric'}):'TBD';row.append(btn,name,amt,date);host.append(row)})}
 function prepareRows(host,bills){
   if(!host)return;host.replaceChildren();
@@ -1200,6 +1251,7 @@ window.FinancialLabBuildPaydayPlan=function(){
     // Persist directly so build success never depends on render().
     data.lastUpdated=new Date().toISOString();
     localStorage.setItem(STORAGE_KEY,JSON.stringify(data));
+    writeMemoryMirror(data);
 
     say(`Payday plan built successfully.${attached?` ${attached} pending expense${attached===1?'':'s'} attached.`:''}`);
 
@@ -1338,6 +1390,6 @@ $('enterLabBtn')?.addEventListener('click',e=>{e.preventDefault();openFinancialL
 $('joinLabBtn')?.addEventListener('click',e=>{e.preventDefault();openFinancialLab('start')});
 $('frontDoorBtn')?.addEventListener('click',e=>{e.preventDefault();openFrontDoor()});
 
-const initial=location.hash.slice(1);show(['laboratory','budget','profile','credit','savings','expense','reports','more','start','dexx'].includes(initial)?initial:'laboratory');render();
+const initial=location.hash.slice(1);show(['laboratory','budget','profile','credit','savings','expense','reports','more','start','dexx'].includes(initial)?initial:'laboratory');render();initializePersistentMemory();
 
 $('profileForm')?.addEventListener('submit',e=>{e.preventDefault();data.researcherName=$('profileName').value.trim()||'Rob';data.profile={payFrequency:$('payFrequency').value,paydayDay:Number($('paydayDay').value),incomePattern:$('incomePattern').value,recurringBillCount:clamp($('recurringBillCount').value,0,99),financialStrategy:$('financialStrategy').value,reserveDays:clamp($('reserveDays').value,7,31)};data.savingsRate=clamp($('profileSavingsRate').value,0,100);save();$('profileStatus').textContent='Financial Profile saved. Dexx will use it for every payday plan.'});
