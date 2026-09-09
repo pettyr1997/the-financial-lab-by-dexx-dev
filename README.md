@@ -1,21 +1,9 @@
-# Financial Lab 4.1.4.2 — Debt Status Route Fix
+# Financial Lab 4.1.5.1 — Paycheck Cleanup Controls
 
-Built directly on 4.1.4.1 Action Center Navigation Fix.
+Built on 4.1.5 Memory + PWA Foundation.
 
-## Fixed
-The Action Center's **CHECK DEBT STATUS** button now uses Financial Lab's existing `show(id)` router directly.
-
-Expected behavior:
-1. Tap CHECK DEBT STATUS.
-2. Financial Lab opens the More view.
-3. The screen scrolls to the Debt Status card.
-4. The Debt Status card briefly highlights so the destination is obvious.
-
-## Preserved
-- Working OPEN BUDGET LAB route
-- Dexx Action Center recommendation engine
-- Health Score Baseline Calibration
-- Financial Health Score 2.0
-- Memory Guard / Backup / Restore
-- Reports and Trends
-- Existing local data
+## Added
+- Delete one approved paycheck without clearing all history.
+- Clear only the active check while keeping bills, debts, savings goals, expenses, profile, and approved history.
+- Safe rollback of reserve/savings contributions when an approved paycheck is deleted.
+- Memory writes continue through the dual on-device persistence layer introduced in 4.1.5.

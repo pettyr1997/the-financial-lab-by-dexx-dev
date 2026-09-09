@@ -839,3 +839,6 @@ body.front-door-active .app-shell *{
   outline:2px solid var(--green);
   box-shadow:0 0 0 5px rgba(97,255,29,.08),0 0 28px rgba(97,255,29,.12);
 }
+
+/* 4.1.5.1 paycheck cleanup */
+.history-delete{flex:0 0 auto}.history-row .history-delete{margin-left:.25rem}
