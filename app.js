@@ -820,6 +820,19 @@ function nextScheduledWeekday(fromDate,weekday){
 function suggestedNextPayCycle(){
   const history=approvedHistory();
   const latest=history[history.length-1]||null;
+  const today=dateAtNoon(new Date());
+  const activePayDate=dateAtNoon(data.payDate);
+  const activeNextPayday=dateAtNoon(data.nextPayday);
+  const activeAmount=Math.max(0,Number(data.paycheck)||0);
+
+  // If an upcoming paycheck cycle was prepared early but no paycheck amount has
+  // been entered yet, keep that real upcoming payday on the launchpad. Preparing
+  // a cycle must not make the UI pretend the following payday is the next check.
+  if(activePayDate&&activePayDate>=today&&activeAmount===0){
+    const nextPayday=activeNextPayday||shiftPayday(activePayDate,1);
+    return {payDate:iso(activePayDate),nextPayday:iso(nextPayday),suggestedAmount:0,preparedUpcoming:true};
+  }
+
   let payDate=null;
   if(data.nextPayday)payDate=dateAtNoon(data.nextPayday);
   if(!payDate&&latest?.nextPayday)payDate=dateAtNoon(latest.nextPayday);
@@ -828,7 +841,7 @@ function suggestedNextPayCycle(){
   if(!nextPayday)nextPayday=new Date(payDate.getTime()+payFrequencyDays()*86400000);
   const latestAmount=Math.max(0,Number(latest?.paycheck||data.paycheck)||0);
   const suggestedAmount=data.profile?.incomePattern==='steady'?latestAmount:0;
-  return {payDate:iso(payDate),nextPayday:iso(nextPayday),suggestedAmount};
+  return {payDate:iso(payDate),nextPayday:iso(nextPayday),suggestedAmount,preparedUpcoming:false};
 }
 function renderNextPaycheckLaunchpad(){
   const preview=suggestedNextPayCycle();
