@@ -836,9 +836,13 @@ function renderNextPaycheckLaunchpad(){
   if($('nextCycleNextPayday'))$('nextCycleNextPayday').textContent=dateText(preview.nextPayday,{weekday:'short',month:'short',day:'numeric'});
 }
 function startNextPaycheckCycle(){
-  const hasActive=Boolean(data.payDate||data.nextPayday||Number(data.paycheck)>0||Number(data.currentBalance)>0);
-  if(hasActive&&!confirm('Start a new paycheck cycle? The active check fields will reset, while recurring bills, debts, savings goals, Reserve Memory, expenses, and approved history stay saved.'))return;
   const preview=suggestedNextPayCycle();
+  const hasActive=Boolean(data.payDate||data.nextPayday||Number(data.paycheck)>0||Number(data.currentBalance)>0);
+  const cycleLabel=`${dateText(preview.payDate,{month:'short',day:'numeric'})} → ${dateText(preview.nextPayday,{month:'short',day:'numeric'})}`;
+  const warning=hasActive
+    ? `Start ${cycleLabel} paycheck cycle?\n\nThis will replace the active check fields with the next cycle. Your recurring bills, debts, savings goals, Reserve Memory, expenses, and approved history will stay saved.`
+    : `Start ${cycleLabel} paycheck cycle?\n\nYour recurring bills, debts, savings goals, Reserve Memory, expenses, and approved history will stay saved.`;
+  if(!confirm(warning))return;
   data.paycheck=preview.suggestedAmount;
   data.currentBalance=0;
   data.payDate=preview.payDate;
