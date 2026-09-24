@@ -1,17 +1,27 @@
-# Financial Lab 4.1.6.1 — Calendar Amount Display Polish
+# Financial Lab 4.1.7 — Payday Continuity
 
-Builds on 4.1.6 without changing the saved financial-data schema.
+Builds on 4.1.6.1 without changing the saved financial-data schema.
 
-## Polished
-- Calendar bill totals now use a compact display so narrow iPhone day cells do not truncate `$100.00` into `$10...`.
-- Amounts under $1,000 display as rounded whole dollars (for example `$100`).
-- Larger calendar-only totals use compact labels such as `$1.2k` while the Forecast Engine and Upcoming Money Dates keep full currency precision.
-- No forecast math, payday planning, Reserve Memory, expenses, debts, savings, or approved history logic was changed.
+## Added
+- **Start Next Paycheck** launchpad in Budget Lab.
+- Automatically prepares the next check date and following payday from the saved pay schedule.
+- Uses the previous cycle as an anchor when available, so weekly/biweekly continuity does not require re-entering dates.
+- For steady-income profiles, the latest check amount can carry forward as a starting value; variable-income profiles intentionally start the amount at $0.
+- Keeps recurring bills, debts, savings goals, Reserve Memory, expenses, and approved paycheck history intact.
+- Resets only cycle-specific planning state and weekly mission progress.
+
+## Fixed
+- Clearing/deleting the active paycheck now correctly clears `currentBalance` instead of the unused legacy `balance` field.
+
+## Safety
+- Starting the next paycheck does **not** approve a plan or write new Reserve Memory.
+- Reserve Memory and Savings Goal contributions still change only when **Approve This Payday Plan** is tapped.
+- No saved financial-data schema change.
 
 ## Test target
-1. Deploy over 4.1.6.
-2. Open the installed Home Screen app and confirm the update arrives without reinstalling.
-3. Add a temporary $100 recurring bill to a visible calendar date.
-4. Confirm the calendar cell displays `$100` instead of `$10...`.
-5. Confirm Forecast Engine still shows the full `$100.00` and its totals remain unchanged.
-6. Delete the temporary bill after the display test.
+1. Deploy over 4.1.6.1 and reopen the installed Home Screen app.
+2. Open Budget Lab and confirm the **4.1.7 Payday Continuity** card appears.
+3. With a weekly Friday profile, confirm the suggested dates are the next Friday and the Friday after it.
+4. Tap **Start Next Paycheck** and confirm check dates populate while bills/debts/savings remain saved.
+5. Confirm a variable-income profile leaves paycheck amount blank/zero.
+6. Enter a temporary check amount and build (do not approve unless using real data).
