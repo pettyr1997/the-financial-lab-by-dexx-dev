@@ -1,6 +1,6 @@
-// Financial Lab 4.1.6 — Forecast Engine + Bill Calendar
-const CACHE='financial-lab-v4.1.6';
-const CORE=['./styles.css?v=4.1.6','./app.js?v=4.1.6','./manifest.webmanifest','./icon-192.png','./icon-512.png','./financial-lab-logo.jpg','./dexx-character-clean.jpg'];
+// Financial Lab 4.1.6.1 — Calendar Amount Display Polish
+const CACHE='financial-lab-v4.1.6.1';
+const CORE=['./styles.css?v=4.1.6.1','./app.js?v=4.1.6.1','./manifest.webmanifest','./icon-192.png','./icon-512.png','./financial-lab-logo.jpg','./dexx-character-clean.jpg'];
 
 self.addEventListener('install',event=>{
   event.waitUntil(caches.open(CACHE).then(cache=>cache.addAll(CORE)).then(()=>self.skipWaiting()));

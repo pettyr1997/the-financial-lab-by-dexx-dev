@@ -425,7 +425,7 @@ function financialMemorySnapshot(){
   }catch(_){}
   return {
     schema:'financial-lab-backup',
-    version:'4.1.6',
+    version:'4.1.6.1',
     exportedAt:new Date().toISOString(),
     storageKey:STORAGE_KEY,
     data:parsed||data
@@ -798,6 +798,12 @@ function renderActionCenter(c){
 }
 
 let calendarCursor=null;
+function calendarMoney(value){
+  const n=Math.max(0,Number(value)||0);
+  if(n>=1000000)return `$${(n/1000000).toFixed(n>=10000000?0:1).replace(/\.0$/,'')}m`;
+  if(n>=1000)return `$${(n/1000).toFixed(n>=10000?0:1).replace(/\.0$/,'')}k`;
+  return `$${Math.round(n).toLocaleString('en-US')}`;
+}
 function payFrequencyDays(){return data.profile?.payFrequency==='biweekly'?14:data.profile?.payFrequency==='monthly'?30:7}
 function shiftPayday(date,direction=1){
   const d=dateAtNoon(date);if(!d)return null;
@@ -852,7 +858,7 @@ function renderCalendar(c){
     const cell=document.createElement('article');cell.className='calendar-day';
     if(key===iso(today))cell.classList.add('today');
     const due=bills.reduce((s,b)=>s+Number(b.amount||0),0),paid=bills.length&&bills.every(b=>b.paid);
-    cell.innerHTML=`<div class="calendar-day-top"><strong>${day}</strong>${paySet.has(key)?'<i class="payday-dot" title="Estimated payday"></i>':''}</div>${bills.length?`<span class="calendar-due ${paid?'paid':''}">${paid?'Paid':money(due)}</span><small>${bills.length} bill${bills.length===1?'':'s'}</small>`:'<span class="calendar-empty">·</span>'}`;
+    cell.innerHTML=`<div class="calendar-day-top"><strong>${day}</strong>${paySet.has(key)?'<i class="payday-dot" title="Estimated payday"></i>':''}</div>${bills.length?`<span class="calendar-due ${paid?'paid':''}">${paid?'Paid':calendarMoney(due)}</span><small>${bills.length} bill${bills.length===1?'':'s'}</small>`:'<span class="calendar-empty">·</span>'}`;
     grid.append(cell)
   }
   const f=forecastWindow(30);

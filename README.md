@@ -1,27 +1,17 @@
-# Financial Lab 4.1.6 — Forecast Engine + Bill Calendar
+# Financial Lab 4.1.6.1 — Calendar Amount Display Polish
 
-Builds on 4.1.5.2 without changing the saved financial-data schema.
+Builds on 4.1.6 without changing the saved financial-data schema.
 
-## Added
-- Calendar Lab with a real month grid for recurring bill occurrences.
-- Estimated payday markers based on the saved pay frequency and next payday.
-- 30-day Forecast Engine using recurring bills, latest entered paycheck, and savings rate.
-- Forecast KPIs for bills, estimated income, estimated savings target, and room after bills + savings.
-- Upcoming Money Dates list covering the next 45 days.
-- Bill Calendar quick action under More and a Forecast Engine launch card in Reports.
-- Paid bill occurrences remain visible as paid on the calendar instead of disappearing.
-
-## Forecast rules
-- Income is explicitly labeled as an estimate and uses the latest entered paycheck for each projected payday.
-- Variable income remains an estimate; Financial Lab does not treat forecast income as guaranteed.
-- Forecast does not change Reserve Memory, Savings Goal balances, approved history, expenses, debts, or the active payday plan.
-- Existing localStorage + IndexedDB memory schema remains unchanged.
+## Polished
+- Calendar bill totals now use a compact display so narrow iPhone day cells do not truncate `$100.00` into `$10...`.
+- Amounts under $1,000 display as rounded whole dollars (for example `$100`).
+- Larger calendar-only totals use compact labels such as `$1.2k` while the Forecast Engine and Upcoming Money Dates keep full currency precision.
+- No forecast math, payday planning, Reserve Memory, expenses, debts, savings, or approved history logic was changed.
 
 ## Test target
-1. Deploy over 4.1.5.2.
-2. Open the already-installed Home Screen app and confirm it updates without reinstalling.
-3. Confirm existing Financial Lab data remains.
-4. Open More → Bill Calendar.
-5. Verify recurring bills appear on the correct dates and estimated paydays show green markers.
-6. Move forward/back one month and verify recurring bill dates continue correctly.
-7. Open Reports and verify the 30-day forecast card matches Calendar Lab.
+1. Deploy over 4.1.6.
+2. Open the installed Home Screen app and confirm the update arrives without reinstalling.
+3. Add a temporary $100 recurring bill to a visible calendar date.
+4. Confirm the calendar cell displays `$100` instead of `$10...`.
+5. Confirm Forecast Engine still shows the full `$100.00` and its totals remain unchanged.
+6. Delete the temporary bill after the display test.
