@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 
-<html lang="en"><head><meta charset="utf-8"/><meta content="width=device-width,initial-scale=1,viewport-fit=cover" name="viewport"/><meta content="#050807" name="theme-color"/><meta content="Financial Lab powered by Dexx" name="description"/><link href="manifest.webmanifest" rel="manifest"/><link href="icon.svg" rel="icon"/><link href="icon-192.png" rel="apple-touch-icon"/><link href="styles.css?v=4.1.5.2" rel="stylesheet"/><meta name="apple-mobile-web-app-capable" content="yes"/><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/><meta name="apple-mobile-web-app-title" content="Financial Lab"/><title>Financial Lab — Powered by Dexx</title><meta content="4.1.5.2" name="financial-lab-version"/><meta name="financial-lab-release" content="4.0.3-bills-manager-layout-fix"/></head>
+<html lang="en"><head><meta charset="utf-8"/><meta content="width=device-width,initial-scale=1,viewport-fit=cover" name="viewport"/><meta content="#050807" name="theme-color"/><meta content="Financial Lab powered by Dexx" name="description"/><link href="manifest.webmanifest" rel="manifest"/><link href="icon.svg" rel="icon"/><link href="icon-192.png" rel="apple-touch-icon"/><link href="styles.css?v=4.1.6" rel="stylesheet"/><meta name="apple-mobile-web-app-capable" content="yes"/><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/><meta name="apple-mobile-web-app-title" content="Financial Lab"/><title>Financial Lab — Powered by Dexx</title><meta content="4.1.6" name="financial-lab-version"/><meta name="financial-lab-release" content="4.1.6-forecast-calendar"/></head>
 <body class="front-door-active">
 <div class="front-door" id="frontDoor">
   <div class="front-door-glow"></div>
@@ -315,6 +315,16 @@
     <div class="report-history" id="reportHistory"></div>
   </section>
 
+  <section class="card forecast-launch-card">
+    <div class="section-head"><span>4.1.6 FORECAST ENGINE</span><b>30-day look ahead</b></div>
+    <p class="manager-copy">See upcoming bills on a real calendar and preview the next 30 days using your recurring bills, pay schedule, latest entered paycheck, and savings rate.</p>
+    <div class="forecast-mini-grid">
+      <div><span>NEXT 30-DAY BILLS</span><strong id="reportForecastBills">$0.00</strong></div>
+      <div><span>EST. PAYCHECKS</span><strong id="reportForecastIncome">$0.00</strong></div>
+    </div>
+    <button class="primary" data-go="calendar" type="button">OPEN BILL CALENDAR</button>
+  </section>
+
   <section class="card">
     <div class="section-head"><span>BIG PICTURE</span><b>Live totals</b></div>
     <div class="big-picture-grid">
@@ -323,6 +333,38 @@
       <div><span>SAVINGS GOALS</span><strong id="reportGoalCount">0</strong></div>
       <div><span>DEBT ACCOUNTS</span><strong id="reportDebtCount">0</strong></div>
     </div>
+  </section>
+</section>
+
+<section class="view" id="calendar">
+  <div class="page-title"><p>CALENDAR LAB</p><h1>See what’s coming.</h1></div>
+
+  <section class="card forecast-hero-card">
+    <div class="section-head"><span>4.1.6 FORECAST ENGINE</span><b>Planning estimate</b></div>
+    <p class="manager-copy">Dexx maps recurring bills and estimated paydays ahead so you can see pressure before it reaches your next check. Forecast income uses your latest entered paycheck and is an estimate, not guaranteed income.</p>
+    <div class="forecast-kpis">
+      <div><span>BILLS · NEXT 30 DAYS</span><strong id="forecastBills30">$0.00</strong></div>
+      <div><span>EST. INCOME</span><strong id="forecastIncome30">$0.00</strong></div>
+      <div><span>EST. SAVINGS TARGET</span><strong id="forecastSavings30">$0.00</strong></div>
+      <div><span>AFTER BILLS + SAVINGS</span><strong id="forecastRoom30">$0.00</strong></div>
+    </div>
+    <div class="dexx-forecast-note"><span>DEXX FORECAST</span><p id="forecastObservation">Add recurring bills and a paycheck to build your forecast.</p></div>
+  </section>
+
+  <section class="card bill-calendar-card">
+    <div class="calendar-toolbar">
+      <button id="calendarPrev" type="button" aria-label="Previous month">‹</button>
+      <div><span>BILL CALENDAR</span><strong id="calendarMonthLabel">Month</strong></div>
+      <button id="calendarNext" type="button" aria-label="Next month">›</button>
+    </div>
+    <div class="calendar-weekdays" aria-hidden="true"><span>Sun</span><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span></div>
+    <div class="calendar-grid" id="billCalendarGrid"></div>
+    <div class="calendar-legend"><span><i class="bill-dot"></i>Bill due</span><span><i class="payday-dot"></i>Estimated payday</span><span><i class="paid-dot"></i>Paid</span></div>
+  </section>
+
+  <section class="card">
+    <div class="section-head"><span>UPCOMING MONEY DATES</span><b id="calendarUpcomingCount">0 events</b></div>
+    <div class="calendar-upcoming" id="calendarUpcoming"></div>
   </section>
 </section>
 
@@ -364,13 +406,13 @@
 
     <p class="status memory-status" id="memoryGuardStatus">Memory Guard ready.</p>
   </section>
-<div class="page-title"><p>MORE</p><h1>Quick actions.</h1></div><div class="quick-grid"><button data-action="expense">＋<span>Add Expense</span></button><button data-action="income"><b>＋</b><span>Enter Check</span></button><button data-go="budget">▦<span>Friday Lab</span></button><button data-go="reports">▥<span>Reports</span></button><button data-go="dexx">☵<span>Ask Dexx</span></button><button data-go="profile">◎<span>Financial Profile</span></button><button data-go="start">?<span>Start Here</span></button><button id="frontDoorBtn">⌂<span>Front Door</span></button></div></section>
+<div class="page-title"><p>MORE</p><h1>Quick actions.</h1></div><div class="quick-grid"><button data-action="expense">＋<span>Add Expense</span></button><button data-action="income"><b>＋</b><span>Enter Check</span></button><button data-go="budget">▦<span>Friday Lab</span></button><button data-go="reports">▥<span>Reports</span></button><button data-go="calendar">▣<span>Bill Calendar</span></button><button data-go="dexx">☵<span>Ask Dexx</span></button><button data-go="profile">◎<span>Financial Profile</span></button><button data-go="start">?<span>Start Here</span></button><button id="frontDoorBtn">⌂<span>Front Door</span></button></div></section>
 
 <section class="view" id="start">
   <div class="page-title"><p>START HERE</p><h1>How Financial Lab works.</h1></div>
 
   <section class="card walkthrough-hero">
-    <div class="section-head"><span>4.1.5 APP WALKTHROUGH</span><b>Powered by Dexx</b></div>
+    <div class="section-head"><span>4.1.6 APP WALKTHROUGH</span><b>Powered by Dexx</b></div>
     <p class="manager-copy">Financial Lab helps you decide what to do with each paycheck before the money gets spent. Cover what matters, prepare for what is coming, save on purpose, pay down debt intelligently, and know what is truly safe to spend.</p>
     <button class="primary" data-go="budget">START MY FRIDAY LAB</button>
   </section>
@@ -393,6 +435,7 @@
       <article><h3>💵 Budget Lab</h3><p>The payday engine. Enter a check, review bills, see reserves, savings and debt recommendations, then approve the plan.</p><button data-go="budget">OPEN BUDGET LAB</button></article>
       <article><h3>💳 Credit Lab</h3><p>Add each debt, track balances and minimums, and choose Balanced, Snowball, or Avalanche targeting.</p><button data-go="credit">OPEN CREDIT LAB</button></article>
       <article><h3>💰 Savings Lab</h3><p>Create multiple savings goals and let Dexx prioritize by importance, deadline, or quickest goal to finish.</p><button data-go="savings">OPEN SAVINGS LAB</button></article>
+      <article><h3>📅 Calendar Lab</h3><p>See recurring bills and estimated paydays on a monthly calendar, plus a 30-day money forecast.</p><button data-go="calendar">OPEN BILL CALENDAR</button></article>
     </div>
   </section>
 
@@ -434,7 +477,7 @@
 <section class="view" id="dexx"><div class="dexx-header"><button data-go="laboratory">←</button><div><h1>DEXX</h1><p>Your Financial Scientist</p></div><img alt="" aria-hidden="true" class="dexx-chat-image" onerror="this.onerror=null;this.style.display='none'" src="dexx-character-clean.jpg"/></div><div class="chat"><div class="bubble" id="dexxReply">Hey Rob! 👋 I’m Dexx. How can I help you today?</div><button data-question="score">How can I improve my score? <span>›</span></button><button data-question="spending">Analyze my spending <span>›</span></button><button data-question="challenge">Give me a money challenge <span>›</span></button><button data-question="saving">Any tips for saving more? <span>›</span></button><form id="chatForm"><input id="chatInput" placeholder="Ask Dexx anything..."/><button type="submit">➤</button></form></div></section>
 </main>
 <nav class="bottom-nav"><button class="active" data-go="laboratory"><b>⚗</b><span>Laboratory</span></button><button data-go="budget"><b>▣</b><span>Budget Lab</span></button><button data-go="credit"><b>◇</b><span>Credit Lab</span></button><button data-go="savings"><b>▤</b><span>Savings Lab</span></button><button data-go="more"><b>•••</b><span>More</span></button></nav>
-</div><script src="app.js?v=4.1.5.2"></script>
+</div><script src="app.js?v=4.1.6"></script>
 <script>
 (function(){
   function wireBuildButton(){
@@ -462,10 +505,10 @@
     wireBuildButton();
   }
 
-  // 4.1.5: register the PWA service worker instead of removing it.
+  // 4.1.6: keep reliable PWA updates while adding Forecast + Calendar.
   if('serviceWorker' in navigator){
     window.addEventListener('load',function(){
-      navigator.serviceWorker.register('./service-worker.js?v=4.1.5.2',{updateViaCache:'none'}).then(function(reg){
+      navigator.serviceWorker.register('./service-worker.js?v=4.1.6',{updateViaCache:'none'}).then(function(reg){
         reg.update().catch(function(){});
         setInterval(function(){ reg.update().catch(function(){}); }, 60000);
       }).catch(function(err){console.warn('Service worker registration failed',err)});
