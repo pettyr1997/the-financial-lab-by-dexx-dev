@@ -1,15 +1,23 @@
-# Financial Lab 4.1.7.2 — Payday Date Logic Fix
+# Financial Lab 4.1.7.3 — Safety & Recovery Foundation
 
-Builds on 4.1.7.1 without changing the saved financial-data schema.
+Builds on 4.1.7.2 without changing the existing financial-data schema.
 
-## Fixed
+## Added
 
-- A paycheck cycle prepared **before payday** no longer makes the following payday appear to be the next check.
-- If the active check date is today or in the future and no paycheck amount has been entered yet, Payday Continuity keeps that date as the upcoming paycheck.
-- Example: on Sep 24, a prepared Sep 25 → Oct 2 cycle continues to show **Sep 25** as the next check instead of jumping the launchpad to Oct 2.
-- Once the upcoming check is actually entered, normal continuity can advance to the following cycle.
-- The 4.1.7.1 confirmation guard remains intact.
+- **Undo Last Change** using short-term local recovery points created before saved Financial Lab changes.
+- **Restore Previous Safe State** with a selectable list of recent recovery points.
+- Restoring a safe state automatically saves the current state first, so the restore itself can be reversed.
+- **Selective Reset** controls for Current Paycheck, Expenses, Bills + Reserve Memory, Debt Accounts, and Savings Goals.
+- **Full Financial Lab Reset** requires typing `RESET` plus a second confirmation and creates an undo point first.
+- **Recent Activity** shows the latest protected changes and recovery actions.
+- Payday-cycle advances, approved plans, deletes, debt payments, savings moves, and other saved changes now participate in the recovery layer.
+
+## Safety design
+
+Recovery snapshots store the **whole Financial Lab data state** before a saved change. That keeps linked values—such as Reserve Memory, approved paycheck history, savings balances, bill status, and active-cycle dates—together when undoing or restoring instead of trying to reverse individual numbers manually.
+
+Recovery history is stored separately from the existing `financial-lab-v3-data` record, so this release does not require a migration of the user's financial-data schema.
 
 ## Preserved
 
-Recurring bills, debts, savings goals, Reserve Memory, expenses, approved history, Forecast Engine, Bill Calendar, and saved financial data are unchanged.
+4.1.7.2 payday-date logic, Payday Continuity Guard, recurring bills, debts, savings goals, Reserve Memory, expenses, approved history, Forecast Engine, Bill Calendar, dual-device Memory Guard, and JSON backup/restore remain in place.

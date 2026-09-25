@@ -1,4 +1,8 @@
 const STORAGE_KEY = 'financial-lab-v3-data';
+const RECOVERY_KEY='financial-lab-recovery-v1';
+const ACTIVITY_KEY='financial-lab-activity-v1';
+const RECOVERY_LIMIT=12;
+const ACTIVITY_LIMIT=30;
 
 const MEMORY_DB_NAME='financial-lab-memory';
 const MEMORY_DB_VERSION=1;
@@ -45,6 +49,7 @@ async function initializePersistentMemory(){
     if(mirrorTime>localTime){localStorage.setItem(STORAGE_KEY,JSON.stringify(mirror.data));data=load();render()}
   }
   await writeMemoryMirror(data);
+  lastSavedSnapshot=cloneFinancialData(data);
   await requestDurableStorage();
   renderMemoryGuard();
 }
@@ -85,6 +90,114 @@ const dateTimeOrInfinity=v=>{
 const clamp=(v,min,max)=>Math.min(max,Math.max(min,Number(v)||0));
 function load(){try{const old=JSON.parse(localStorage.getItem(STORAGE_KEY)||'{}');const migratedBills=Array.isArray(old.bills)?old.bills.map((b,i)=>({id:b.id||`bill-${i}-${Date.now()}`,name:b.name||'Bill',amount:Number(b.amount)||0,dueDate:b.dueDate||b.date||'',date:b.dueDate||b.date||'',priority:b.priority||'important',frequency:b.frequency||'monthly',autopay:!!b.autopay,paidOccurrences:Array.isArray(b.paidOccurrences)?b.paidOccurrences:(b.paid&&b.date?[b.date]:[])})):[];const migratedDebts=Array.isArray(old.debts)?old.debts.map((d,i)=>({id:d.id||`debt-${i}-${Date.now()}`,name:d.name||'Debt',balance:Math.max(0,Number(d.balance)||0),minimumPayment:Math.max(0,Number(d.minimumPayment??d.minimum??0)||0),dueDate:d.dueDate||d.date||'',apr:Math.max(0,Number(d.apr)||0),accountType:d.accountType||d.type||'credit-card'})):[];const migratedGoals=Array.isArray(old.savingsGoals)?old.savingsGoals.map((g,i)=>({id:g.id||`goal-${i}-${Date.now()}`,name:g.name||'Savings goal',target:Math.max(0,Number(g.target)||0),saved:Math.max(0,Number(g.saved)||0),priority:g.priority||'medium',targetDate:g.targetDate||'',category:g.category||'general'})):[];const migratedExpenses=Array.isArray(old.expenseRecords)?old.expenseRecords.map((x,i)=>({id:x.id||`expense-${i}-${Date.now()}`,name:x.name||x.merchant||'Expense',amount:Math.max(0,Number(x.amount)||0),category:x.category||'other',date:x.date||old.payDate||iso(new Date()),note:x.note||'',cycleId:x.cycleId||''})):((Number(old.expenses)||0)>0?[{id:`legacy-expense-${Date.now()}`,name:'Previous spending',amount:Math.max(0,Number(old.expenses)||0),category:'other',date:old.payDate||iso(new Date()),note:'Migrated from an earlier Financial Lab version'}]:[]);return {...DEFAULTS,...old,bills:migratedBills,debts:migratedDebts,expenseRecords:migratedExpenses,expenses:0,savingsGoals:migratedGoals,savingsStrategy:old.savingsStrategy||'priority',debtStrategy:old.debtStrategy||'balanced',paycheckHistory:Array.isArray(old.paycheckHistory)?old.paycheckHistory:[],reserveMemory:(old.reserveMemory&&typeof old.reserveMemory==='object'?old.reserveMemory:{}),missions:{...DEFAULTS.missions,...(old.missions||{})},profile:{...DEFAULTS.profile,...(old.profile||{})}}}catch{return structuredClone(DEFAULTS)}}
 let data=load();
+function cloneFinancialData(value){
+  try{return JSON.parse(JSON.stringify(value))}catch(_){return structuredClone(value)}
+}
+let lastSavedSnapshot=cloneFinancialData(data);
+let pendingRecoveryContext=null;
+function readJsonList(key){
+  try{const value=JSON.parse(localStorage.getItem(key)||'[]');return Array.isArray(value)?value:[]}catch{return []}
+}
+function writeJsonList(key,value){localStorage.setItem(key,JSON.stringify(value))}
+function recoveryPoints(){return readJsonList(RECOVERY_KEY)}
+function activityEntries(){return readJsonList(ACTIVITY_KEY)}
+function setRecoveryContext(label,detail='',type='change'){pendingRecoveryContext={label,detail,type}}
+function pushRecoveryPoint(snapshot,label='Financial Lab change',detail='',type='change'){
+  if(!snapshot||typeof snapshot!=='object')return null;
+  const points=recoveryPoints();
+  const point={id:`recovery-${Date.now()}-${Math.random().toString(36).slice(2,7)}`,createdAt:new Date().toISOString(),label,detail,type,data:cloneFinancialData(snapshot)};
+  points.push(point);
+  writeJsonList(RECOVERY_KEY,points.slice(-RECOVERY_LIMIT));
+  return point;
+}
+function logRecoveryActivity(label,detail='',type='change'){
+  const entries=activityEntries();
+  entries.push({id:`activity-${Date.now()}-${Math.random().toString(36).slice(2,7)}`,createdAt:new Date().toISOString(),label,detail,type});
+  writeJsonList(ACTIVITY_KEY,entries.slice(-ACTIVITY_LIMIT));
+}
+function recoveryTimeText(value){
+  const d=new Date(value);if(Number.isNaN(d.getTime()))return '';
+  const today=new Date(),sameDay=d.toDateString()===today.toDateString();
+  return d.toLocaleString('en-US',sameDay?{hour:'numeric',minute:'2-digit'}:{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'});
+}
+function recoveryIcon(type){return ({payday:'↪',reset:'↻',restore:'⟲',delete:'×',approval:'✓',expense:'−',bill:'▣',debt:'◇',savings:'▤'})[type]||'•'}
+function renderSafetyRecovery(){
+  const undo=$('undoLastChange'),select=$('recoveryPointSelect'),restore=$('restoreRecoveryPoint'),activity=$('recoveryActivityList');
+  if(!undo||!select||!restore||!activity)return;
+  const points=recoveryPoints();
+  const latest=points[points.length-1];
+  undo.disabled=!latest;
+  undo.textContent=latest?`UNDO: ${latest.label.toUpperCase()}`:'NOTHING TO UNDO';
+  if($('recoveryPointCount'))$('recoveryPointCount').textContent=`${points.length} safe state${points.length===1?'':'s'}`;
+  select.replaceChildren();
+  if(!points.length){const opt=document.createElement('option');opt.value='';opt.textContent='No recovery points yet';select.append(opt);restore.disabled=true}
+  else{
+    [...points].reverse().forEach(point=>{const opt=document.createElement('option');opt.value=point.id;opt.textContent=`${recoveryTimeText(point.createdAt)} · ${point.label}`;select.append(opt)});
+    restore.disabled=false;
+  }
+  const entries=activityEntries().slice(-8).reverse();
+  activity.replaceChildren();
+  if(!entries.length){activity.innerHTML='<div class="empty-copy">Your protected changes will appear here as you use Financial Lab.</div>';return}
+  entries.forEach(entry=>{const row=document.createElement('article');row.className='recovery-activity-row';row.innerHTML=`<i>${recoveryIcon(entry.type)}</i><div><strong>${entry.label}</strong><span>${entry.detail||'Financial Lab saved the change.'}</span></div><small>${recoveryTimeText(entry.createdAt)}</small>`;activity.append(row)});
+}
+async function applyRecoveryData(snapshot,statusText){
+  data={...structuredClone(DEFAULTS),...cloneFinancialData(snapshot),missions:{...DEFAULTS.missions,...(snapshot?.missions||{})},profile:{...DEFAULTS.profile,...(snapshot?.profile||{})}};
+  data.lastUpdated=new Date().toISOString();
+  localStorage.setItem(STORAGE_KEY,JSON.stringify(data));
+  lastSavedSnapshot=cloneFinancialData(data);
+  await writeMemoryMirror(data);
+  render();
+  const status=$('safetyRecoveryStatus');if(status)status.textContent=statusText;
+}
+async function undoLastFinancialChange(){
+  const points=recoveryPoints();const point=points.pop();
+  if(!point){const status=$('safetyRecoveryStatus');if(status)status.textContent='Nothing to undo yet.';return}
+  writeJsonList(RECOVERY_KEY,points);
+  await applyRecoveryData(point.data,`Undone: ${point.label}.`);
+  logRecoveryActivity(`Undid ${point.label}`,point.detail||'Returned to the previous safe state.','restore');
+  renderSafetyRecovery();
+}
+async function restoreSelectedRecoveryPoint(){
+  const id=$('recoveryPointSelect')?.value;if(!id)return;
+  const point=recoveryPoints().find(x=>x.id===id);if(!point)return;
+  if(!confirm(`Restore the safe state from ${recoveryTimeText(point.createdAt)} — ${point.label}?
+
+Financial Lab will first save your current state so this restore can be reversed.`))return;
+  pushRecoveryPoint(data,'Before recovery restore','State saved automatically before restoring an earlier safe state.','restore');
+  await applyRecoveryData(point.data,`Restored safe state: ${point.label}.`);
+  logRecoveryActivity(`Restored ${point.label}`,'Financial Lab returned to a selected safe state.','restore');
+  renderSafetyRecovery();
+}
+function resetFinancialArea(area){
+  const labels={paycheck:'current paycheck',expenses:'tracked expenses',bills:'recurring bills + Reserve Memory',debts:'debt accounts',savings:'savings goals'};
+  const label=labels[area];if(!label)return;
+  if(!confirm(`Reset ${label}?
+
+Financial Lab will create an undo point first. Other areas will stay saved.`))return;
+  if(area==='paycheck'){
+    data.paycheck=0;data.currentBalance=0;data.payDate='';data.nextPayday='';data.customSavings=null;data.customDebt=null;data.approvedPlan=null;data.missions={...data.missions,friday:false,spending:false};
+  }else if(area==='expenses'){
+    data.expenseRecords=[];data.expenses=0;data.missions.spending=false;
+  }else if(area==='bills'){
+    data.bills=[];data.reserveMemory={};data.billName='';data.billDate='';data.billAmount=0;data.approvedPlan=null;data.missions.bills=false;
+  }else if(area==='debts'){
+    data.debts=[];data.debtAmount=0;data.debtGoal=0;data.confirmedNoDebt=false;data.approvedPlan=null;
+  }else if(area==='savings'){
+    data.savingsGoals=[];data.saveAmount=0;data.approvedPlan=null;data.missions.saving=false;
+  }
+  setRecoveryContext(`Reset ${label}`,`Only ${label} was reset. Other Financial Lab areas were preserved.`,'reset');
+  save();
+  const status=$('safetyRecoveryStatus');if(status)status.textContent=`${label[0].toUpperCase()+label.slice(1)} reset. Tap Undo if that was a mistake.`;
+}
+function fullFinancialLabReset(){
+  const typed=prompt('FULL RESET removes all Financial Lab working data on this device. Type RESET to continue.');
+  if(typed!=='RESET'){const status=$('safetyRecoveryStatus');if(status)status.textContent='Full reset canceled.';return}
+  if(!confirm('Final confirmation: reset the entire Financial Lab? A local undo point will be created first.'))return;
+  data=structuredClone(DEFAULTS);
+  setRecoveryContext('Full Financial Lab reset','All working Financial Lab data was reset to defaults.','reset');
+  save();
+  const status=$('safetyRecoveryStatus');if(status)status.textContent='Financial Lab reset. Undo is available while this device recovery history remains.';
+}
 const priorityRank={essential:0,important:1,flexible:2};
 function billDefinitions(){return (Array.isArray(data.bills)?data.bills:[]).filter(b=>b.name||b.dueDate||b.date||Number(b.amount)).map((b,i)=>({id:b.id||`bill-${i}-${b.name||'bill'}`,name:b.name||'Bill',amount:Number(b.amount)||0,dueDate:b.dueDate||b.date||'',date:b.dueDate||b.date||'',priority:b.priority||'important',frequency:b.frequency||'monthly',autopay:!!b.autopay,paidOccurrences:Array.isArray(b.paidOccurrences)?b.paidOccurrences:[]}))}
 
@@ -425,7 +538,7 @@ function financialMemorySnapshot(){
   }catch(_){}
   return {
     schema:'financial-lab-backup',
-    version:'4.1.6.1',
+    version:'4.1.7.3',
     exportedAt:new Date().toISOString(),
     storageKey:STORAGE_KEY,
     data:parsed||data
@@ -434,7 +547,7 @@ function financialMemorySnapshot(){
 function memoryCounts(){
   return {
     plans:Array.isArray(data.paycheckHistory)?data.paycheckHistory.length:0,
-    expenses:Array.isArray(data.expenses)?data.expenses.length:0,
+    expenses:Array.isArray(data.expenseRecords)?data.expenseRecords.length:0,
     debts:debtDefinitions().length,
     goals:savingsGoalDefinitions().length
   };
@@ -483,6 +596,8 @@ function restoreFinancialLabBackup(file){
     try{
       const payload=JSON.parse(String(reader.result||''));
       const restored=validateFinancialLabBackup(payload);
+      pushRecoveryPoint(data,'Before JSON backup restore','Current state saved before importing a Financial Lab backup.','restore');
+      logRecoveryActivity('Restore JSON backup','A Financial Lab backup file was imported.','restore');
       localStorage.setItem(STORAGE_KEY,JSON.stringify(restored));
       await writeMemoryMirror(restored);
       if(status)status.textContent='Backup restored successfully. Reloading Financial Lab…';
@@ -864,6 +979,7 @@ function startNextPaycheckCycle(){
   data.customDebt=null;
   data.approvedPlan=null;
   data.missions={...data.missions,spending:false,saving:false,bills:data.bills.length>0,friday:false};
+  setRecoveryContext(`Advance paycheck to ${cycleLabel}`,`Prepared ${cycleLabel}. Bills, debts, savings, Reserve Memory, expenses, and approved history were preserved.`,'payday');
   save();
   if($('nextPaycheckStatus'))$('nextPaycheckStatus').textContent=`Next cycle prepared: ${dateText(preview.payDate,{month:'short',day:'numeric'})} → ${dateText(preview.nextPayday,{month:'short',day:'numeric'})}. Enter this check’s amount${preview.suggestedAmount?' or confirm the prefilled amount':''}, then build the plan.`;
   setTimeout(()=>$('paycheck')?.focus(),120);
@@ -1208,7 +1324,17 @@ function paycheckPlan(){
   const rememberedReserve=[...dueNowBills,...upcomingBills].reduce((s,b)=>s+Number(b.alreadyProtected||0),0);return {paycheck,balance,available,today,nextPay,reserveEnd,planningEnd,dueNowBills,upcomingBills,laterBills,dueNow,upcomingTotal,reserveTarget,rememberedReserve,desiredSavings,savingsGoalTarget,desiredDebt,targetDebt,managedDebtTotal,payNow,reserve,savings:chosenSavings,debtPayment:chosenDebt,expenseCycleStart,expenseCycleEnd,safeBeforeExpenses,currentExpenses,expenseTotal,overspent,safeToSpend,shortfall:Math.max(0,dueNow-payNow),reserveShortfall:Math.max(0,reserveTarget-reserve)};
 }
 function calc(){const p=paycheckPlan(),bills=[...p.dueNowBills,...p.upcomingBills],billTotal=bills.filter(b=>!b.paid).reduce((s,b)=>s+Number(b.amount||0),0);let score=35;if(p.paycheck>0)score+=15;if(bills.length)score+=10;if(p.savings>0)score+=15;if(p.shortfall===0&&p.paycheck>0)score+=15;if(p.reserveShortfall===0&&p.upcomingBills.length)score+=5;if(data.approvedPlan)score+=5;const missionDone=Object.values(data.missions).filter(Boolean).length;return {...p,bills,billTotal,cash:p.safeToSpend,score:Math.min(score,100),progress:Math.round(missionDone/4*100),missionDone}}
-function save(){data.lastUpdated=new Date().toISOString();localStorage.setItem(STORAGE_KEY,JSON.stringify(data));writeMemoryMirror(data);render()}
+function save(options={}){
+  const context=pendingRecoveryContext||{label:'Financial Lab update',detail:'A saved Financial Lab value changed.',type:'change'};
+  if(!options.skipRecovery){pushRecoveryPoint(lastSavedSnapshot,context.label,context.detail,context.type)}
+  data.lastUpdated=new Date().toISOString();
+  localStorage.setItem(STORAGE_KEY,JSON.stringify(data));
+  lastSavedSnapshot=cloneFinancialData(data);
+  pendingRecoveryContext=null;
+  writeMemoryMirror(data);
+  if(!options.skipActivity)logRecoveryActivity(context.label,context.detail,context.type);
+  render();
+}
 function billRows(host,bills){if(!host)return;host.replaceChildren();if(!bills.length){host.innerHTML='<div class="empty-copy">No bills in this payday window. Manage recurring bills in Financial Profile.</div>';return}bills.forEach(b=>{const row=document.createElement('div');row.className=`bill-row${b.paid?' paid':''}`;const btn=document.createElement('button');btn.className='check';btn.textContent=b.paid?'✓':'';btn.setAttribute('aria-label',b.paid?'Mark unpaid':'Mark paid');btn.onclick=()=>{const real=data.bills.find(x=>x.id===(b.parentId||b.id));if(real){real.paidOccurrences=Array.isArray(real.paidOccurrences)?real.paidOccurrences:[];const key=b.occurrenceDate||b.date,isPaid=real.paidOccurrences.includes(key);real.paidOccurrences=isPaid?real.paidOccurrences.filter(x=>x!==key):[...real.paidOccurrences,key];if(!isPaid&&data.reserveMemory)delete data.reserveMemory[reserveKey(b)];data.approvedPlan=null;save()}};const name=document.createElement('span');const held=Number(b.alreadyProtected||protectedFor(b));name.innerHTML=`${b.name||'Bill'} <em class="priority ${b.priority}">${b.priority}</em>${b.autopay?' <em class="autopay">auto</em>':''}${held>0?` <em class="reserve-held">${money(held)} reserved</em>`:''}`;const amt=document.createElement('strong');amt.textContent=money(b.amount);const date=document.createElement('small');date.textContent=b.paid?'Paid':b.date?dateText(b.date,{month:'short',day:'numeric'}):'TBD';row.append(btn,name,amt,date);host.append(row)})}
 function prepareRows(host,bills){
   if(!host)return;host.replaceChildren();
@@ -1289,12 +1415,12 @@ function renderDebtManager(){
 }
 
 function renderHistory(){const host=$('planHistory');if(!host)return;host.replaceChildren();const list=[...approvedHistory()].reverse().slice(0,12);if(!list.length){host.innerHTML='<div class="empty-copy">Approved plans will appear here.</div>';return}list.forEach(h=>{const row=document.createElement('article');row.className='history-row';row.innerHTML=`<div><strong>${money(h.paycheck)} payday</strong><small>${dateText(historyDisplayDate(h),{month:'short',day:'numeric',year:'numeric'})}</small></div><span>Spent ${money(h.spent)} · Saved ${money(h.savings)}${h.savingsContributions?.[0]?.name?` to ${h.savingsContributions[0].name}`:''} · Safe ${money(h.safeToSpend)}</span><button class="danger-link history-delete" type="button" data-delete-plan="${h.id||''}">Delete</button>`;host.append(row)})}
-function render(){const c=calc(),hour=new Date().getHours();renderNextPaycheckLaunchpad();$('greeting').textContent=`GOOD ${hour<12?'MORNING':hour<17?'AFTERNOON':'EVENING'}, ${(data.researcherName||'ROB').toUpperCase()} 👋`;$('healthScore').textContent=c.score;$('scoreRing').style.setProperty('--score',c.score);$('healthMessage').textContent=c.score>=80?'Your payday plan is fully protected.':c.score>=60?'Your plan is gaining strength.':'Complete Payday Mode to improve your score.';$('cashAvailable').textContent=money(c.safeToSpend);$('billsWeek').textContent=money(c.payNow);$('savingsTotal').textContent=money(savingsGoalDefinitions().length?totalGoalSavings():c.savings);$('debtRemaining').textContent=money(totalDebtBalance());$('missionCount').textContent=`${c.missionDone} / 4`;$('progressText').textContent=`${c.progress}%`;$('progressBar').style.width=`${c.progress}%`;$('dexxObservation').textContent=recommendation(c);const conf=confidence(c);if($('confidenceLabel'))$('confidenceLabel').textContent=conf.level;if($('confidenceText'))$('confidenceText').textContent=conf.text;if($('confidenceBar'))$('confidenceBar').style.width=`${conf.pct}%`;renderTimeline(c);renderProfile();renderDebtManager();renderSavingsManager();renderExpenseManager(c);renderReports(c);renderCalendar(c);renderMemoryGuard();renderHealthScore(c);renderDebtStatusControl();renderActionCenter(c);if(debtDefinitions().length&&$('debtAmount')){$('debtAmount').value=totalDebtBalance();$('debtAmount').readOnly=true;$('debtAmount').title='Managed automatically from Credit Lab';}else if($('debtAmount')){$('debtAmount').readOnly=false;}document.querySelectorAll('[data-mission]').forEach(x=>x.checked=!!data.missions[x.dataset.mission]);billRows($('billList'),c.bills.filter(b=>!b.paid).slice(0,4));billRows($('allBills'),c.dueNowBills);prepareRows($('prepareBills'),c.upcomingBills);if($('reserveMemorySummary'))$('reserveMemorySummary').innerHTML=`<strong>${money(c.rememberedReserve)}</strong><span>already protected from approved payday plans</span>`;
+function render(){const c=calc(),hour=new Date().getHours();renderNextPaycheckLaunchpad();$('greeting').textContent=`GOOD ${hour<12?'MORNING':hour<17?'AFTERNOON':'EVENING'}, ${(data.researcherName||'ROB').toUpperCase()} 👋`;$('healthScore').textContent=c.score;$('scoreRing').style.setProperty('--score',c.score);$('healthMessage').textContent=c.score>=80?'Your payday plan is fully protected.':c.score>=60?'Your plan is gaining strength.':'Complete Payday Mode to improve your score.';$('cashAvailable').textContent=money(c.safeToSpend);$('billsWeek').textContent=money(c.payNow);$('savingsTotal').textContent=money(savingsGoalDefinitions().length?totalGoalSavings():c.savings);$('debtRemaining').textContent=money(totalDebtBalance());$('missionCount').textContent=`${c.missionDone} / 4`;$('progressText').textContent=`${c.progress}%`;$('progressBar').style.width=`${c.progress}%`;$('dexxObservation').textContent=recommendation(c);const conf=confidence(c);if($('confidenceLabel'))$('confidenceLabel').textContent=conf.level;if($('confidenceText'))$('confidenceText').textContent=conf.text;if($('confidenceBar'))$('confidenceBar').style.width=`${conf.pct}%`;renderTimeline(c);renderProfile();renderDebtManager();renderSavingsManager();renderExpenseManager(c);renderReports(c);renderCalendar(c);renderMemoryGuard();renderSafetyRecovery();renderHealthScore(c);renderDebtStatusControl();renderActionCenter(c);if(debtDefinitions().length&&$('debtAmount')){$('debtAmount').value=totalDebtBalance();$('debtAmount').readOnly=true;$('debtAmount').title='Managed automatically from Credit Lab';}else if($('debtAmount')){$('debtAmount').readOnly=false;}document.querySelectorAll('[data-mission]').forEach(x=>x.checked=!!data.missions[x.dataset.mission]);billRows($('billList'),c.bills.filter(b=>!b.paid).slice(0,4));billRows($('allBills'),c.dueNowBills);prepareRows($('prepareBills'),c.upcomingBills);if($('reserveMemorySummary'))$('reserveMemorySummary').innerHTML=`<strong>${money(c.rememberedReserve)}</strong><span>already protected from approved payday plans</span>`;
   ['paycheck','currentBalance','saveAmount','debtAmount','debtGoal','savingsRate'].forEach(id=>{if($(id))$(id).value=data[id]||(id==='savingsRate'?10:'')});if($('payDate'))$('payDate').value=iso(dateAtNoon(data.payDate)||new Date());if($('nextPayday'))$('nextPayday').value=iso(dateAtNoon(data.nextPayday))||'';
   if($('planPayNow')){$('planPayNow').textContent=money(c.payNow);$('planReserve').textContent=money(c.reserve);$('planSavings').textContent=money(c.savings);$('planDebt').textContent=money(c.debtPayment);$('planSpend').textContent=money(c.safeToSpend);$('planStatus').textContent=c.shortfall?'Needs attention':data.approvedPlan?'Approved':c.paycheck?'Plan ready':'Ready';$('dexxPlanText').textContent=recommendation(c);const total=c.available||1;[['allocBills',c.payNow],['allocReserve',c.reserve],['allocSavings',c.savings],['allocDebt',c.debtPayment],['allocSpend',c.safeToSpend]].forEach(([id,val])=>$(id).style.width=`${Math.max(0,val/total*100)}%`);allocationRows(c);$('customSavings').value=data.customSavings??'';$('customDebt').value=data.customDebt??'';const step=!c.paycheck?1:!c.bills.length?2:!data.approvedPlan?4:5;$('workflowStatus').textContent=`Step ${step} of 5`;$('workflowCopy').textContent=step===1?'Enter your check and payday dates.':step===2?'Add and confirm every bill coming before and after payday.':step===4?'Review Dexx’s recommendation and adjust only if needed.':'Plan approved. Track the experiment until next payday.';document.querySelectorAll('.step-track i').forEach((x,i)=>x.classList.toggle('active',i<step));const ex=experiment(c);$('experimentTitle').textContent=ex.title;$('experimentText').textContent=ex.text;$('experimentBar').style.width=`${ex.progress}%`;$('experimentProgress').textContent=`${ex.progress}% complete`;renderHistory()}}
 function show(id){document.body.classList.remove('front-door-active');document.querySelectorAll('.view').forEach(v=>v.classList.toggle('active',v.id===id));document.querySelectorAll('.bottom-nav button').forEach(b=>b.classList.toggle('active',b.dataset.go===id));history.replaceState(null,'','#'+id);scrollTo({top:0,behavior:'smooth'})}
 document.addEventListener('click',e=>{const go=e.target.closest('[data-go]');if(document.body.classList.contains('front-door-active'))return;if(go){e.preventDefault();show(go.dataset.go)}const q=e.target.closest('[data-question]');if(q){const c=calc(),answers={score:`Your score is ${c.score}. Cover immediate bills, protect ${money(c.savings)} in savings, and stay within ${money(c.safeToSpend)}.`,spending:`Your safe-to-spend amount is ${money(c.safeToSpend)} through ${dateText(c.nextPay,{month:'short',day:'numeric'})}.`,challenge:experiment(c).text,saving:`I recommend ${money(c.savings)} this payday${c.savingsGoalTarget?` toward ${c.savingsGoalTarget.name}`:''}. Increase it only after immediate and upcoming bills are protected.`};$('dexxReply').textContent=answers[q.dataset.question]}});
-document.querySelectorAll('[data-mission]').forEach(x=>x.addEventListener('change',()=>{data.missions[x.dataset.mission]=x.checked;save()}));
+document.querySelectorAll('[data-mission]').forEach(x=>x.addEventListener('change',()=>{data.missions[x.dataset.mission]=x.checked;save({skipRecovery:true,skipActivity:true})}));
 
 $('expenseForm')?.addEventListener('submit',e=>{
   e.preventDefault();
@@ -1316,7 +1442,7 @@ document.addEventListener('click',e=>{
   const edit=e.target.closest('[data-edit-expense]');
   if(edit){const x=data.expenseRecords.find(v=>v.id===edit.dataset.editExpense);if(!x)return;$('expenseId').value=x.id;$('expenseName').value=x.name;$('expenseAmount').value=x.amount;$('expenseCategory').value=x.category||'other';$('expenseDate').value=x.date;$('expenseNote').value=x.note||'';$('saveExpense').textContent='UPDATE EXPENSE';$('cancelExpenseEdit').hidden=false;$('expenseStatus').textContent=`Editing ${x.name}.`;show('expense')}
   const del=e.target.closest('[data-delete-expense]');
-  if(del){const x=data.expenseRecords.find(v=>v.id===del.dataset.deleteExpense);if(x&&confirm(`Delete ${x.name} expense?`)){data.expenseRecords=data.expenseRecords.filter(v=>v.id!==x.id);save();$('expenseStatus').textContent=`${x.name} deleted. TRUE Safe-to-Spend was recalculated.`}}
+  if(del){const x=data.expenseRecords.find(v=>v.id===del.dataset.deleteExpense);if(x&&confirm(`Delete ${x.name} expense?`)){data.expenseRecords=data.expenseRecords.filter(v=>v.id!==x.id);setRecoveryContext(`Delete expense: ${x.name}`,`${money(x.amount)} expense removed.`,'delete');save();$('expenseStatus').textContent=`${x.name} deleted. TRUE Safe-to-Spend was recalculated.`}}
 });
 
 
@@ -1384,10 +1510,14 @@ window.FinancialLabBuildPaydayPlan=function(){
 
     const attached=attachUnboundExpensesToActiveCycle();
 
-    // Persist directly so build success never depends on render().
+    // Persist directly so build success never depends on render(), while still
+    // participating in the 4.1.7.3 recovery layer.
+    pushRecoveryPoint(lastSavedSnapshot,'Build payday plan',`${money(paycheck)} paycheck · ${dateText(payDate,{month:'short',day:'numeric'})} → ${dateText(nextPayday,{month:'short',day:'numeric'})}.`,'payday');
     data.lastUpdated=new Date().toISOString();
     localStorage.setItem(STORAGE_KEY,JSON.stringify(data));
+    lastSavedSnapshot=cloneFinancialData(data);
     writeMemoryMirror(data);
+    logRecoveryActivity('Build payday plan',`${money(paycheck)} paycheck saved for ${dateText(payDate,{month:'short',day:'numeric'})} → ${dateText(nextPayday,{month:'short',day:'numeric'})}.`,'payday');
 
     say(`Payday plan built successfully.${attached?` ${attached} pending expense${attached===1?'':'s'} attached.`:''}`);
 
@@ -1443,7 +1573,7 @@ $('restoreFinancialLab')?.addEventListener('change',e=>{
 
 $('billManagerForm')?.addEventListener('submit',e=>{e.preventDefault();const id=$('managerBillId').value,name=$('managerBillName').value.trim(),amount=clamp($('managerBillAmount').value,0,1e9),dueDate=$('managerBillDate').value;if(!name||!amount||!dueDate){$('billManagerStatus').textContent='Add the bill name, amount, and next due date.';return}const existing=id?data.bills.find(b=>b.id===id):null;const priorDue=existing?.dueDate||existing?.date||'';const record={id:id||(crypto.randomUUID?crypto.randomUUID():`bill-${Date.now()}`),name,amount,dueDate,date:dueDate,priority:$('managerBillPriority').value,frequency:$('managerBillFrequency').value,autopay:$('managerBillAutopay').checked,paidOccurrences:existing?.paidOccurrences||[]};if(existing){if(priorDue&&priorDue!==dueDate)clearReserveForBill(existing.id);Object.assign(existing,record)}else data.bills.push(record);if(!existing&&data.bills.length>Number(data.profile?.recurringBillCount||0)){data.profile=data.profile||structuredClone(DEFAULTS.profile);data.profile.recurringBillCount=data.bills.length}data.missions.bills=data.bills.length>0;data.approvedPlan=null;save();$('billManagerStatus').textContent=existing?'Bill updated. Dexx recalculated your payday plan.':'Bill saved. Dexx will use it automatically every payday.';resetBillManagerForm()});
 $('cancelBillEdit')?.addEventListener('click',()=>{resetBillManagerForm();$('billManagerStatus').textContent='Edit canceled.'});
-document.addEventListener('click',e=>{const edit=e.target.closest('[data-edit-bill]');if(edit){const b=data.bills.find(x=>x.id===edit.dataset.editBill);if(!b)return;$('managerBillId').value=b.id;$('managerBillName').value=b.name;$('managerBillAmount').value=b.amount;$('managerBillDate').value=b.dueDate||b.date||'';$('managerBillFrequency').value=b.frequency||'monthly';$('managerBillPriority').value=b.priority||'important';$('managerBillAutopay').checked=!!b.autopay;$('saveManagedBill').textContent='UPDATE BILL';$('cancelBillEdit').hidden=false;$('billManagerStatus').textContent=`Editing ${b.name}.`;if(location.hash!=='#profile')show('profile');setTimeout(()=>$('managerBillName').scrollIntoView({behavior:'smooth',block:'center'}),80)}const del=e.target.closest('[data-delete-bill]');if(del){const b=data.bills.find(x=>x.id===del.dataset.deleteBill);if(b&&confirm(`Delete ${b.name}?`)){clearReserveForBill(b.id);data.bills=data.bills.filter(x=>x.id!==b.id);data.approvedPlan=null;data.missions.bills=data.bills.length>0;save();$('billManagerStatus').textContent=`${b.name} deleted.`}}});
+document.addEventListener('click',e=>{const edit=e.target.closest('[data-edit-bill]');if(edit){const b=data.bills.find(x=>x.id===edit.dataset.editBill);if(!b)return;$('managerBillId').value=b.id;$('managerBillName').value=b.name;$('managerBillAmount').value=b.amount;$('managerBillDate').value=b.dueDate||b.date||'';$('managerBillFrequency').value=b.frequency||'monthly';$('managerBillPriority').value=b.priority||'important';$('managerBillAutopay').checked=!!b.autopay;$('saveManagedBill').textContent='UPDATE BILL';$('cancelBillEdit').hidden=false;$('billManagerStatus').textContent=`Editing ${b.name}.`;if(location.hash!=='#profile')show('profile');setTimeout(()=>$('managerBillName').scrollIntoView({behavior:'smooth',block:'center'}),80)}const del=e.target.closest('[data-delete-bill]');if(del){const b=data.bills.find(x=>x.id===del.dataset.deleteBill);if(b&&confirm(`Delete ${b.name}?`)){clearReserveForBill(b.id);data.bills=data.bills.filter(x=>x.id!==b.id);data.approvedPlan=null;data.missions.bills=data.bills.length>0;setRecoveryContext(`Delete bill: ${b.name}`,`${money(b.amount)} recurring bill removed.`,'delete');save();$('billManagerStatus').textContent=`${b.name} deleted.`}}});
 
 
 $('savingsGoalForm')?.addEventListener('submit',e=>{
@@ -1463,11 +1593,11 @@ document.addEventListener('click',e=>{
   const edit=e.target.closest('[data-edit-saving]');
   if(edit){const g=data.savingsGoals.find(x=>x.id===edit.dataset.editSaving);if(!g)return;$('savingsGoalId').value=g.id;$('savingsGoalName').value=g.name;$('savingsGoalTarget').value=g.target;$('savingsGoalSaved').value=g.saved;$('savingsGoalDate').value=g.targetDate||'';$('savingsGoalPriority').value=g.priority||'medium';$('savingsGoalCategory').value=g.category||'general';$('saveSavingsGoal').textContent='UPDATE SAVINGS GOAL';$('cancelSavingsEdit').hidden=false;$('savingsGoalStatus').textContent=`Editing ${g.name}.`;show('savings');setTimeout(()=>$('savingsGoalName').scrollIntoView({behavior:'smooth',block:'center'}),80)}
   const del=e.target.closest('[data-delete-saving]');
-  if(del){const g=data.savingsGoals.find(x=>x.id===del.dataset.deleteSaving);if(g&&confirm(`Delete ${g.name}?`)){data.savingsGoals=data.savingsGoals.filter(x=>x.id!==g.id);data.approvedPlan=null;save();$('savingsGoalStatus').textContent=`${g.name} deleted.`}}
+  if(del){const g=data.savingsGoals.find(x=>x.id===del.dataset.deleteSaving);if(g&&confirm(`Delete ${g.name}?`)){data.savingsGoals=data.savingsGoals.filter(x=>x.id!==g.id);data.approvedPlan=null;setRecoveryContext(`Delete savings goal: ${g.name}`,'Savings goal removed.','delete');save();$('savingsGoalStatus').textContent=`${g.name} deleted.`}}
   const add=e.target.closest('[data-add-saving]');
-  if(add){const g=data.savingsGoals.find(x=>x.id===add.dataset.addSaving);if(!g)return;const raw=prompt(`Add money to ${g.name}`);const amount=clamp(raw,0,goalRemaining(g));if(!amount)return;g.saved=Math.min(g.target,Math.round((Number(g.saved||0)+amount)*100)/100);save();$('savingsGoalStatus').textContent=`Added ${money(amount)} to ${g.name}.`}
+  if(add){const g=data.savingsGoals.find(x=>x.id===add.dataset.addSaving);if(!g)return;const raw=prompt(`Add money to ${g.name}`);const amount=clamp(raw,0,goalRemaining(g));if(!amount)return;g.saved=Math.min(g.target,Math.round((Number(g.saved||0)+amount)*100)/100);setRecoveryContext(`Add to savings: ${g.name}`,`${money(amount)} added to the goal.`,'savings');save();$('savingsGoalStatus').textContent=`Added ${money(amount)} to ${g.name}.`}
   const withdraw=e.target.closest('[data-withdraw-saving]');
-  if(withdraw){const g=data.savingsGoals.find(x=>x.id===withdraw.dataset.withdrawSaving);if(!g)return;const raw=prompt(`Withdraw from ${g.name}`);const amount=clamp(raw,0,g.saved);if(!amount)return;g.saved=Math.max(0,Math.round((Number(g.saved||0)-amount)*100)/100);save();$('savingsGoalStatus').textContent=`Withdrew ${money(amount)} from ${g.name}.`}
+  if(withdraw){const g=data.savingsGoals.find(x=>x.id===withdraw.dataset.withdrawSaving);if(!g)return;const raw=prompt(`Withdraw from ${g.name}`);const amount=clamp(raw,0,g.saved);if(!amount)return;g.saved=Math.max(0,Math.round((Number(g.saved||0)-amount)*100)/100);setRecoveryContext(`Withdraw savings: ${g.name}`,`${money(amount)} withdrawn from the goal.`,'savings');save();$('savingsGoalStatus').textContent=`Withdrew ${money(amount)} from ${g.name}.`}
 });
 
 $('debtManagerForm')?.addEventListener('submit',e=>{
@@ -1487,9 +1617,9 @@ document.addEventListener('click',e=>{
   const edit=e.target.closest('[data-edit-debt]');
   if(edit){const d=data.debts.find(x=>x.id===edit.dataset.editDebt);if(!d)return;$('managerDebtId').value=d.id;$('managerDebtName').value=d.name;$('managerDebtBalance').value=d.balance;$('managerDebtMinimum').value=d.minimumPayment;$('managerDebtDate').value=d.dueDate||'';$('managerDebtApr').value=d.apr;$('managerDebtType').value=d.accountType||'credit-card';$('saveManagedDebt').textContent='UPDATE DEBT ACCOUNT';$('cancelDebtEdit').hidden=false;$('debtManagerStatus').textContent=`Editing ${d.name}.`;show('credit');setTimeout(()=>$('managerDebtName').scrollIntoView({behavior:'smooth',block:'center'}),80)}
   const del=e.target.closest('[data-delete-debt]');
-  if(del){const d=data.debts.find(x=>x.id===del.dataset.deleteDebt);if(d&&confirm(`Delete ${d.name}?`)){data.debts=data.debts.filter(x=>x.id!==d.id);data.debtAmount=debtDefinitions().reduce((s,x)=>s+x.balance,0);data.approvedPlan=null;save();$('debtManagerStatus').textContent=`${d.name} deleted.`}}
+  if(del){const d=data.debts.find(x=>x.id===del.dataset.deleteDebt);if(d&&confirm(`Delete ${d.name}?`)){data.debts=data.debts.filter(x=>x.id!==d.id);data.debtAmount=debtDefinitions().reduce((s,x)=>s+x.balance,0);data.approvedPlan=null;setRecoveryContext(`Delete debt: ${d.name}`,'Debt account removed.','delete');save();$('debtManagerStatus').textContent=`${d.name} deleted.`}}
   const pay=e.target.closest('[data-pay-debt]');
-  if(pay){const d=data.debts.find(x=>x.id===pay.dataset.payDebt);if(!d)return;const raw=prompt(`Record a payment to ${d.name}`);const amount=clamp(raw,0,d.balance);if(!amount)return;d.balance=Math.max(0,d.balance-amount);data.debtAmount=debtDefinitions().reduce((s,x)=>s+x.balance,0);data.approvedPlan=null;save();$('debtManagerStatus').textContent=`Recorded ${money(amount)} payment to ${d.name}.`}
+  if(pay){const d=data.debts.find(x=>x.id===pay.dataset.payDebt);if(!d)return;const raw=prompt(`Record a payment to ${d.name}`);const amount=clamp(raw,0,d.balance);if(!amount)return;d.balance=Math.max(0,d.balance-amount);data.debtAmount=debtDefinitions().reduce((s,x)=>s+x.balance,0);data.approvedPlan=null;setRecoveryContext(`Debt payment: ${d.name}`,`${money(amount)} payment recorded.`,'debt');save();$('debtManagerStatus').textContent=`Recorded ${money(amount)} payment to ${d.name}.`}
 });
 
 $('customSavings').addEventListener('change',()=>{data.customSavings=$('customSavings').value===''?null:clamp($('customSavings').value,0,1e9);data.approvedPlan=null;save()});$('customDebt').addEventListener('change',()=>{data.customDebt=$('customDebt').value===''?null:clamp($('customDebt').value,0,1e9);data.approvedPlan=null;save()});
@@ -1503,11 +1633,13 @@ $('approvePlan').onclick=()=>{
   const savingsContributions=applySavingsContributions(c.savings);
   const snapshot={id:`plan-${Date.now()}`,approvedAt:new Date().toISOString(),healthScore:calculateHealthScore(c).total,paycheck:c.paycheck,balance:c.balance,payDate:data.payDate,nextPayday:data.nextPayday,cycleId:paycheckCycleId(data.payDate,data.nextPayday),payNow:c.payNow,reserve:c.reserve,reserveTarget:c.reserveTarget,reserveContributions,savingsContributions,reserveDetails:c.upcomingBills.map(b=>({parentId:b.parentId||b.id,name:b.name,amount:b.amount,date:b.date,alreadyProtected:b.alreadyProtected,currentCheckReserve:b.currentCheckReserve,paychecksRemaining:b.paychecksRemaining})),savings:c.savings,debtPayment:c.debtPayment,debtTarget:c.targetDebt?{id:c.targetDebt.id,name:c.targetDebt.name}:null,spent:c.expenseTotal||0,protected:(c.payNow||0)+(c.reserve||0)+(c.savings||0)+(c.debtPayment||0),expenses:(c.currentExpenses||[]).map(x=>({name:x.name||'Expense',category:historyExpenseCategory(x),amount:Number(x.amount)||0,date:x.date||''})),safeToSpend:c.safeToSpend,shortfall:c.shortfall,bills:c.dueNowBills.map(b=>({name:b.name,amount:b.amount,date:b.date,priority:b.priority,alreadyProtected:b.alreadyProtected,currentCheckDue:b.currentCheckDue}))};
   data.approvedPlan=snapshot;data.paycheckHistory.push(snapshot);data.missions.friday=true;data.missions.saving=c.savings>0;data.missions.bills=c.bills.length>0;
+  setRecoveryContext('Approve payday plan',`${money(c.paycheck)} paycheck plan approved with ${money(c.reserve)} in current-check bill reserve.`,'approval');
   save();$('approvalStatus').textContent=`Payday plan approved. Dexx remembered ${money(reserveContributions.reduce((s,x)=>s+x.amount,0))} in bill reserves${savingsContributions.length?` and moved ${money(savingsContributions.reduce((s,x)=>s+x.amount,0))} into your savings goals`:''}.`;
 };
-$('clearBills').onclick=()=>{if(confirm('Clear all saved bills?')){data.bills=[];data.reserveMemory={};data.billName='';data.billDate='';data.billAmount=0;data.approvedPlan=null;save()}};
+$('clearBills').onclick=()=>resetFinancialArea('bills');
 function clearActiveCheck(){
   data.paycheck=0;data.currentBalance=0;data.payDate='';data.nextPayday='';data.customSavings=null;data.customDebt=null;data.approvedPlan=null;
+  setRecoveryContext('Clear active paycheck','Active check fields cleared; other Financial Lab data was preserved.','reset');
   save();
   if($('approvalStatus'))$('approvalStatus').textContent='Active check cleared. Bills, debts, savings goals, expenses, and approved history were kept.';
 }
@@ -1521,10 +1653,15 @@ document.addEventListener('click',e=>{
   if(data.approvedPlan?.id===snapshot.id)data.approvedPlan=null;
   const sameActive=data.payDate===snapshot.payDate&&data.nextPayday===snapshot.nextPayday&&Math.abs(Number(data.paycheck||0)-Number(snapshot.paycheck||0))<0.005;
   if(sameActive){data.paycheck=0;data.currentBalance=0;data.payDate='';data.nextPayday='';data.customSavings=null;data.customDebt=null;}
+  setRecoveryContext('Delete approved paycheck',`${money(snapshot.paycheck||0)} approved paycheck removed.`,'delete');
   save();
   if($('approvalStatus'))$('approvalStatus').textContent='Paycheck deleted. Other Financial Lab data was kept.';
 });
 $('startNextPaycheck')?.addEventListener('click',startNextPaycheckCycle);
+$('undoLastChange')?.addEventListener('click',undoLastFinancialChange);
+$('restoreRecoveryPoint')?.addEventListener('click',restoreSelectedRecoveryPoint);
+document.querySelectorAll('[data-reset-area]').forEach(button=>button.addEventListener('click',()=>resetFinancialArea(button.dataset.resetArea)));
+$('fullFinancialLabReset')?.addEventListener('click',fullFinancialLabReset);
 $('chatForm').addEventListener('submit',e=>{e.preventDefault();const text=$('chatInput').value.trim();if(!text)return;const c=calc();$('dexxReply').textContent=`Based on this payday, cover ${money(c.payNow)} now, protect ${money(c.reserve)} for upcoming bills, save ${money(c.savings)}${c.savingsGoalTarget?` toward ${c.savingsGoalTarget.name}`:''}, pay ${money(c.debtPayment)} toward ${c.targetDebt?.name||'debt'}, and limit flexible spending to ${money(c.safeToSpend)}. You have recorded ${money(c.expenseTotal)} of flexible expenses this cycle.`;$('chatInput').value=''});
 document.querySelectorAll('[data-action]').forEach(b=>b.onclick=()=>{const type=b.dataset.action;if(type==='income'){show('budget');setTimeout(()=>$('paycheck').focus(),200);return}if(type==='expense'){show('expense');setTimeout(()=>{resetExpenseForm();$('expenseName')?.focus()},150);return}});
 

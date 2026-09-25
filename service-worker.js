@@ -1,6 +1,6 @@
-// Financial Lab 4.1.7.2 — Payday Continuity Guard
-const CACHE='financial-lab-v4.1.7.2';
-const CORE=['./styles.css?v=4.1.7.2','./app.js?v=4.1.7.2','./manifest.webmanifest','./icon-192.png','./icon-512.png','./financial-lab-logo.jpg','./dexx-character-clean.jpg'];
+// Financial Lab 4.1.7.3 — Safety & Recovery Foundation
+const CACHE='financial-lab-v4.1.7.3';
+const CORE=['./styles.css?v=4.1.7.3','./app.js?v=4.1.7.3','./manifest.webmanifest','./icon-192.png','./icon-512.png','./financial-lab-logo.jpg','./dexx-character-clean.jpg'];
 
 self.addEventListener('install',event=>{
   event.waitUntil(caches.open(CACHE).then(cache=>cache.addAll(CORE)).then(()=>self.skipWaiting()));
