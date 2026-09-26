@@ -1,12 +1,17 @@
-# Financial Lab 4.1.7.3.1 — Recovery Polish
+# Financial Lab 4.1.8 — Payday Command Center
 
-Builds on 4.1.7.3 without changing the existing financial-data schema.
+Builds on 4.1.7.3.1 without changing the existing financial-data schema.
 
-## Polished
-- Undo and Restore now replace stale Payday Mode status copy with a clear recovery-complete message when payday/recovery state is restored.
-- New and edited expenses now create descriptive recovery labels such as `Add expense: Recovery test` instead of the generic `Financial Lab update`.
-- New and edited recurring bills, savings goals, and debt accounts also create descriptive recovery labels.
-- Existing Safety & Recovery snapshots, selective reset controls, Recent Activity, Reserve Memory, Forecast Engine, Bill Calendar, and Payday Guard remain intact.
+## Added
+- A new **Payday Command Center** at the top of Budget Lab.
+- One-screen money flow: **Paycheck → Protected Money → TRUE Safe-to-Spend**.
+- Live payday tiles for **Bills Now, Bill Reserve, Savings, Extra Debt, Spent, and Next Payday**.
+- A Dexx payday readout that changes with the real plan state: waiting for check, plan ready, shortfall, or approved.
+- Direct actions for **Enter Check, Review/Approve Plan, Add Expense, and Bill Calendar**.
+- Next-payday countdown and check-date context.
 
-## Why this patch exists
-Hands-on 4.1.7.3 testing proved Undo, Restore, and Selective Reset work. The test also exposed two UX issues: stale payday success text after a recovery and vague recovery-point labels for ordinary saved changes. 4.1.7.3.1 polishes those messages without changing the financial model.
+## Preserved
+Payday Guard/date logic, Safety & Recovery, Recent Activity, Reserve Memory, Forecast Engine, Bill Calendar, recurring bills, debts, savings goals, expenses, approved paycheck history, reports, and existing local saved data remain intact.
+
+## Goal
+Bring the existing Financial Lab systems together so Friday planning feels like one connected money command center instead of separate tools.

@@ -902,3 +902,26 @@ body.front-door-active .app-shell *{
 .recovery-activity-row:last-child{border-bottom:0}.recovery-activity-row i{width:25px;height:25px;border-radius:50%;display:grid;place-items:center;background:#101a15;color:var(--green);font-style:normal;font-weight:900}
 .recovery-activity-row div{min-width:0}.recovery-activity-row strong,.recovery-activity-row span{display:block}.recovery-activity-row strong{font-size:.78rem}.recovery-activity-row span{color:var(--muted);font-size:.68rem;line-height:1.35;margin-top:3px}.recovery-activity-row small{color:#7f8b84;font-size:.62rem;white-space:nowrap;padding-top:4px}
 @media(max-width:390px){.selective-reset-grid{grid-template-columns:1fr}.selective-reset-grid button:last-child{grid-column:auto}.recovery-activity-row{grid-template-columns:28px 1fr}.recovery-activity-row small{grid-column:2}}
+
+/* 4.1.8 — Payday Command Center */
+.payday-command-card{border-color:rgba(97,255,29,.52);background:linear-gradient(180deg,rgba(97,255,29,.065),rgba(5,10,7,.28));box-shadow:0 0 0 1px rgba(97,255,29,.035) inset}
+.payday-command-card .section-head b{color:var(--green)}
+.command-flow{display:grid;grid-template-columns:minmax(0,1fr) 24px minmax(0,1fr) 24px minmax(0,1.12fr);gap:6px;align-items:stretch;margin:16px 0}
+.command-flow-item{border:1px solid var(--line);border-radius:15px;background:#07100b;padding:14px 12px;min-width:0}
+.command-flow-item span,.command-money-grid span{display:block;color:var(--muted);font-size:.61rem;font-weight:900;letter-spacing:.08em}
+.command-flow-item strong{display:block;font-size:1.05rem;margin-top:7px;overflow-wrap:anywhere}
+.command-flow-item small,.command-money-grid small{display:block;color:var(--muted);font-size:.62rem;line-height:1.35;margin-top:5px}
+.command-flow-item.income strong,.command-flow-item.spend strong{color:var(--green)}
+.command-flow-item.protected strong{color:#ffb446}
+.command-arrow{display:grid;place-items:center;color:var(--green);font-size:1.15rem;font-weight:900}
+.command-money-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px;margin:12px 0}
+.command-money-grid article{border:1px solid var(--line);border-radius:13px;background:#07100b;padding:12px;min-width:0}
+.command-money-grid strong{display:block;font-size:.95rem;margin-top:6px;overflow-wrap:anywhere}
+.command-dexx-note{border:1px solid rgba(97,255,29,.28);border-radius:14px;background:rgba(97,255,29,.045);padding:14px;margin:14px 0}
+.command-dexx-note span{color:var(--green);font-size:.66rem;font-weight:900;letter-spacing:.09em}
+.command-dexx-note p{margin:7px 0 0;line-height:1.45;font-size:.8rem}
+.command-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+.command-actions button{min-height:48px;border:1px solid #39443e;border-radius:11px;background:#0a0f0d;color:#fff;font-weight:900;padding:10px;font-size:.72rem}
+.command-actions .command-primary{background:var(--green);border-color:var(--green);color:#071006}
+@media(max-width:520px){.command-flow{grid-template-columns:1fr 18px 1fr}.command-flow-item.spend{grid-column:1/-1}.command-arrow-final{display:none}.command-money-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:390px){.command-flow{grid-template-columns:1fr}.command-arrow{transform:rotate(90deg);min-height:14px}.command-arrow-final{display:grid}.command-flow-item.spend{grid-column:auto}.command-money-grid{grid-template-columns:1fr 1fr}.command-actions{grid-template-columns:1fr 1fr}}
