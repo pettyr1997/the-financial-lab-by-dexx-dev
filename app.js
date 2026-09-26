@@ -1353,7 +1353,9 @@ function renderPaydayCommandCenter(c){
   const protectedTotal=Math.max(0,Number(c.payNow||0)+Number(c.reserve||0)+Number(c.savings||0)+Number(c.debtPayment||0));
   const nextPay=c.nextPay||dateAtNoon(data.nextPayday);
   const today=dateAtNoon(new Date());
-  const days=nextPay&&today?Math.max(0,Math.ceil((nextPay-today)/86400000)):null;
+  const checkDate=c.paycheck&&data.payDate?dateAtNoon(data.payDate):null;
+  const countdownAnchor=checkDate||today;
+  const days=nextPay&&countdownAnchor?Math.max(0,Math.round((nextPay-countdownAnchor)/86400000)):null;
   $('commandPaycheck').textContent=money(c.paycheck||0);
   $('commandCheckDate').textContent=c.paycheck&&data.payDate?`Check ${dateText(data.payDate,{month:'short',day:'numeric'})}`:'No check entered';
   $('commandProtected').textContent=money(protectedTotal);
@@ -1365,7 +1367,7 @@ function renderPaydayCommandCenter(c){
   $('commandDebt').textContent=money(c.debtPayment||0);
   $('commandSpent').textContent=money(c.expenseTotal||0);
   $('commandNextPayday').textContent=nextPay?dateText(nextPay,{month:'short',day:'numeric'}):'—';
-  $('commandDaysToPayday').textContent=days===null?'Schedule not set':days===0?'Payday today':`${days} day${days===1?'':'s'} away`;
+  $('commandDaysToPayday').textContent=days===null?'Schedule not set':checkDate?(days===0?'Same-day payday':`${days} day${days===1?'':'s'} after this check`):(days===0?'Payday today':`${days} day${days===1?'':'s'} away`);
   const status=!c.paycheck?'Waiting for check':c.shortfall?'Needs attention':data.approvedPlan?'Plan approved':'Plan ready';
   $('commandCenterStatus').textContent=status;
   $('commandCenterStatus').dataset.state=c.shortfall?'watch':data.approvedPlan?'approved':c.paycheck?'ready':'waiting';

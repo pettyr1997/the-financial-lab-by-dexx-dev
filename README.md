@@ -1,17 +1,15 @@
-# Financial Lab 4.1.8 — Payday Command Center
+# Financial Lab 4.1.8.1 — Command Center Payday Timing Polish
 
-Builds on 4.1.7.3.1 without changing the existing financial-data schema.
+Builds on 4.1.8 without changing the existing financial-data schema.
 
-## Added
-- A new **Payday Command Center** at the top of Budget Lab.
-- One-screen money flow: **Paycheck → Protected Money → TRUE Safe-to-Spend**.
-- Live payday tiles for **Bills Now, Bill Reserve, Savings, Extra Debt, Spent, and Next Payday**.
-- A Dexx payday readout that changes with the real plan state: waiting for check, plan ready, shortfall, or approved.
-- Direct actions for **Enter Check, Review/Approve Plan, Add Expense, and Bill Calendar**.
-- Next-payday countdown and check-date context.
+## Polished
+- The Payday Command Center now measures the next payday from the **entered check date** whenever a paycheck is active.
+- A future test cycle such as **Oct 2 → Oct 9** now reads **7 days after this check** instead of counting from the phone’s current date.
+- When no active paycheck is entered, the Command Center can still use today for its upcoming-payday countdown.
+- The Command Center keeps the next-payday date itself visible, so the timing context is clear without changing any payday-plan math.
 
 ## Preserved
-Payday Guard/date logic, Safety & Recovery, Recent Activity, Reserve Memory, Forecast Engine, Bill Calendar, recurring bills, debts, savings goals, expenses, approved paycheck history, reports, and existing local saved data remain intact.
+Payday calculations, Bills Now, Bill Reserve, savings, extra debt, TRUE Safe-to-Spend, Payday Guard/date logic, Safety & Recovery, Recent Activity, Reserve Memory, Forecast Engine, Bill Calendar, recurring bills, debts, savings goals, expenses, approved paycheck history, reports, and existing local saved data remain intact.
 
 ## Goal
-Bring the existing Financial Lab systems together so Friday planning feels like one connected money command center instead of separate tools.
+Keep Command Center timing tied to the paycheck cycle being planned, especially when a future paycheck is entered early for testing or preparation.
