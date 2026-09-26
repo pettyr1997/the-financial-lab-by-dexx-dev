@@ -148,6 +148,8 @@ async function applyRecoveryData(snapshot,statusText){
   await writeMemoryMirror(data);
   render();
   const status=$('safetyRecoveryStatus');if(status)status.textContent=statusText;
+  const paydayStatus=$('nextPaycheckStatus');
+  if(paydayStatus && /paycheck|payday|safe state|recovery/i.test(statusText||'')) paydayStatus.textContent=`Recovery complete. ${statusText}`;
 }
 async function undoLastFinancialChange(){
   const points=recoveryPoints();const point=points.pop();
@@ -538,7 +540,7 @@ function financialMemorySnapshot(){
   }catch(_){}
   return {
     schema:'financial-lab-backup',
-    version:'4.1.7.3',
+    version:'4.1.7.3.1',
     exportedAt:new Date().toISOString(),
     storageKey:STORAGE_KEY,
     data:parsed||data
@@ -1430,6 +1432,7 @@ $('expenseForm')?.addEventListener('submit',e=>{
   const cycleId=existing?.cycleId||activeExpenseCycleId()||'';
   const record={id:id||(crypto.randomUUID?crypto.randomUUID():`expense-${Date.now()}`),name,amount,category,date,note,cycleId};
   if(existing)Object.assign(existing,record);else data.expenseRecords.push(record);
+  setRecoveryContext(existing?`Update expense: ${name}`:`Add expense: ${name}`,`${money(amount)} ${category||'other'} expense ${existing?'updated':'recorded'} for ${dateText(date,{month:'short',day:'numeric'})}.`,'expense');
   save();
   const hasActiveCycle=!!activeExpenseCycleId();
   $('expenseStatus').textContent=existing
@@ -1511,7 +1514,7 @@ window.FinancialLabBuildPaydayPlan=function(){
     const attached=attachUnboundExpensesToActiveCycle();
 
     // Persist directly so build success never depends on render(), while still
-    // participating in the 4.1.7.3 recovery layer.
+    // participating in the 4.1.7.3.1 recovery layer.
     pushRecoveryPoint(lastSavedSnapshot,'Build payday plan',`${money(paycheck)} paycheck · ${dateText(payDate,{month:'short',day:'numeric'})} → ${dateText(nextPayday,{month:'short',day:'numeric'})}.`,'payday');
     data.lastUpdated=new Date().toISOString();
     localStorage.setItem(STORAGE_KEY,JSON.stringify(data));
@@ -1571,7 +1574,7 @@ $('restoreFinancialLab')?.addEventListener('change',e=>{
   if(file)restoreFinancialLabBackup(file);
 });
 
-$('billManagerForm')?.addEventListener('submit',e=>{e.preventDefault();const id=$('managerBillId').value,name=$('managerBillName').value.trim(),amount=clamp($('managerBillAmount').value,0,1e9),dueDate=$('managerBillDate').value;if(!name||!amount||!dueDate){$('billManagerStatus').textContent='Add the bill name, amount, and next due date.';return}const existing=id?data.bills.find(b=>b.id===id):null;const priorDue=existing?.dueDate||existing?.date||'';const record={id:id||(crypto.randomUUID?crypto.randomUUID():`bill-${Date.now()}`),name,amount,dueDate,date:dueDate,priority:$('managerBillPriority').value,frequency:$('managerBillFrequency').value,autopay:$('managerBillAutopay').checked,paidOccurrences:existing?.paidOccurrences||[]};if(existing){if(priorDue&&priorDue!==dueDate)clearReserveForBill(existing.id);Object.assign(existing,record)}else data.bills.push(record);if(!existing&&data.bills.length>Number(data.profile?.recurringBillCount||0)){data.profile=data.profile||structuredClone(DEFAULTS.profile);data.profile.recurringBillCount=data.bills.length}data.missions.bills=data.bills.length>0;data.approvedPlan=null;save();$('billManagerStatus').textContent=existing?'Bill updated. Dexx recalculated your payday plan.':'Bill saved. Dexx will use it automatically every payday.';resetBillManagerForm()});
+$('billManagerForm')?.addEventListener('submit',e=>{e.preventDefault();const id=$('managerBillId').value,name=$('managerBillName').value.trim(),amount=clamp($('managerBillAmount').value,0,1e9),dueDate=$('managerBillDate').value;if(!name||!amount||!dueDate){$('billManagerStatus').textContent='Add the bill name, amount, and next due date.';return}const existing=id?data.bills.find(b=>b.id===id):null;const priorDue=existing?.dueDate||existing?.date||'';const record={id:id||(crypto.randomUUID?crypto.randomUUID():`bill-${Date.now()}`),name,amount,dueDate,date:dueDate,priority:$('managerBillPriority').value,frequency:$('managerBillFrequency').value,autopay:$('managerBillAutopay').checked,paidOccurrences:existing?.paidOccurrences||[]};if(existing){if(priorDue&&priorDue!==dueDate)clearReserveForBill(existing.id);Object.assign(existing,record)}else data.bills.push(record);if(!existing&&data.bills.length>Number(data.profile?.recurringBillCount||0)){data.profile=data.profile||structuredClone(DEFAULTS.profile);data.profile.recurringBillCount=data.bills.length}data.missions.bills=data.bills.length>0;data.approvedPlan=null;setRecoveryContext(existing?`Update bill: ${name}`:`Add bill: ${name}`,`${money(amount)} recurring bill ${existing?'updated':'added'}; next due ${dateText(dueDate,{month:'short',day:'numeric'})}.`,'bill');save();$('billManagerStatus').textContent=existing?'Bill updated. Dexx recalculated your payday plan.':'Bill saved. Dexx will use it automatically every payday.';resetBillManagerForm()});
 $('cancelBillEdit')?.addEventListener('click',()=>{resetBillManagerForm();$('billManagerStatus').textContent='Edit canceled.'});
 document.addEventListener('click',e=>{const edit=e.target.closest('[data-edit-bill]');if(edit){const b=data.bills.find(x=>x.id===edit.dataset.editBill);if(!b)return;$('managerBillId').value=b.id;$('managerBillName').value=b.name;$('managerBillAmount').value=b.amount;$('managerBillDate').value=b.dueDate||b.date||'';$('managerBillFrequency').value=b.frequency||'monthly';$('managerBillPriority').value=b.priority||'important';$('managerBillAutopay').checked=!!b.autopay;$('saveManagedBill').textContent='UPDATE BILL';$('cancelBillEdit').hidden=false;$('billManagerStatus').textContent=`Editing ${b.name}.`;if(location.hash!=='#profile')show('profile');setTimeout(()=>$('managerBillName').scrollIntoView({behavior:'smooth',block:'center'}),80)}const del=e.target.closest('[data-delete-bill]');if(del){const b=data.bills.find(x=>x.id===del.dataset.deleteBill);if(b&&confirm(`Delete ${b.name}?`)){clearReserveForBill(b.id);data.bills=data.bills.filter(x=>x.id!==b.id);data.approvedPlan=null;data.missions.bills=data.bills.length>0;setRecoveryContext(`Delete bill: ${b.name}`,`${money(b.amount)} recurring bill removed.`,'delete');save();$('billManagerStatus').textContent=`${b.name} deleted.`}}});
 
@@ -1583,7 +1586,7 @@ $('savingsGoalForm')?.addEventListener('submit',e=>{
   const existing=id?data.savingsGoals.find(g=>g.id===id):null;
   const record={id:id||(crypto.randomUUID?crypto.randomUUID():`goal-${Date.now()}`),name,target,saved:Math.min(saved,target),targetDate,priority,category};
   if(existing)Object.assign(existing,record);else data.savingsGoals.push(record);
-  data.approvedPlan=null;save();
+  data.approvedPlan=null;setRecoveryContext(existing?`Update savings goal: ${name}`:`Add savings goal: ${name}`,`${money(target)} target ${existing?'updated':'created'}.`,'savings');save();
   $('savingsGoalStatus').textContent=existing?'Savings goal updated. Dexx recalculated the target.':'Savings goal saved. Dexx can now direct payday savings toward it.';
   resetSavingsGoalForm();
 });
@@ -1607,7 +1610,7 @@ $('debtManagerForm')?.addEventListener('submit',e=>{
   const existing=id?data.debts.find(d=>d.id===id):null;
   const record={id:id||(crypto.randomUUID?crypto.randomUUID():`debt-${Date.now()}`),name,balance,minimumPayment,dueDate,apr,accountType};
   if(existing)Object.assign(existing,record);else data.debts.push(record);
-  data.debtAmount=debtDefinitions().reduce((s,d)=>s+d.balance,0);data.approvedPlan=null;save();
+  data.debtAmount=debtDefinitions().reduce((s,d)=>s+d.balance,0);data.approvedPlan=null;setRecoveryContext(existing?`Update debt: ${name}`:`Add debt: ${name}`,`${money(balance)} balance ${existing?'updated':'added'}.`,'debt');save();
   $('debtManagerStatus').textContent=existing?'Debt account updated. Dexx recalculated the target.':'Debt account saved. Dexx can now target extra payments intelligently.';
   resetDebtManagerForm();
 });

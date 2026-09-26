@@ -1,23 +1,12 @@
-# Financial Lab 4.1.7.3 — Safety & Recovery Foundation
+# Financial Lab 4.1.7.3.1 — Recovery Polish
 
-Builds on 4.1.7.2 without changing the existing financial-data schema.
+Builds on 4.1.7.3 without changing the existing financial-data schema.
 
-## Added
+## Polished
+- Undo and Restore now replace stale Payday Mode status copy with a clear recovery-complete message when payday/recovery state is restored.
+- New and edited expenses now create descriptive recovery labels such as `Add expense: Recovery test` instead of the generic `Financial Lab update`.
+- New and edited recurring bills, savings goals, and debt accounts also create descriptive recovery labels.
+- Existing Safety & Recovery snapshots, selective reset controls, Recent Activity, Reserve Memory, Forecast Engine, Bill Calendar, and Payday Guard remain intact.
 
-- **Undo Last Change** using short-term local recovery points created before saved Financial Lab changes.
-- **Restore Previous Safe State** with a selectable list of recent recovery points.
-- Restoring a safe state automatically saves the current state first, so the restore itself can be reversed.
-- **Selective Reset** controls for Current Paycheck, Expenses, Bills + Reserve Memory, Debt Accounts, and Savings Goals.
-- **Full Financial Lab Reset** requires typing `RESET` plus a second confirmation and creates an undo point first.
-- **Recent Activity** shows the latest protected changes and recovery actions.
-- Payday-cycle advances, approved plans, deletes, debt payments, savings moves, and other saved changes now participate in the recovery layer.
-
-## Safety design
-
-Recovery snapshots store the **whole Financial Lab data state** before a saved change. That keeps linked values—such as Reserve Memory, approved paycheck history, savings balances, bill status, and active-cycle dates—together when undoing or restoring instead of trying to reverse individual numbers manually.
-
-Recovery history is stored separately from the existing `financial-lab-v3-data` record, so this release does not require a migration of the user's financial-data schema.
-
-## Preserved
-
-4.1.7.2 payday-date logic, Payday Continuity Guard, recurring bills, debts, savings goals, Reserve Memory, expenses, approved history, Forecast Engine, Bill Calendar, dual-device Memory Guard, and JSON backup/restore remain in place.
+## Why this patch exists
+Hands-on 4.1.7.3 testing proved Undo, Restore, and Selective Reset work. The test also exposed two UX issues: stale payday success text after a recovery and vague recovery-point labels for ordinary saved changes. 4.1.7.3.1 polishes those messages without changing the financial model.
