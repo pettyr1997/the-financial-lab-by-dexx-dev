@@ -1,22 +1,20 @@
-# Financial Lab 4.1.9 — Payday Execution Mode
+# Financial Lab 4.1.9.1 — Approved Paycheck Cleanup + Execution Rollback
 
-Builds on 4.1.8.1 without changing the existing Financial Lab financial-data schema.
+Builds on 4.1.9 without changing the existing Financial Lab financial-data schema.
 
-## New — Payday Execution Mode
-- Once a payday plan is approved, the Command Center changes from planning into **Execution Mode**.
-- The approved allocation is kept as the source of truth while the paycheck cycle is active, so paying/handling an item does not make protected money suddenly look spendable.
-- A new payday checklist turns the approved plan into concrete moves: immediate bills, future-bill reserve, savings, extra debt, and the active TRUE Safe-to-Spend guard.
-- Reserve Memory and savings allocations that Financial Lab records during approval show as completed automatically.
-- Bill/debt moves can be confirmed and undone in the checklist without rebuilding the payday plan.
-- Execution confirmations persist locally for the approved paycheck and reset automatically when a different plan becomes active.
+## Fixed — approved paycheck deletion
+- Deleting an approved paycheck now removes the matching history record and rolls back that plan’s Reserve Memory and savings contributions.
+- If the deleted paycheck is the active approved plan, its Payday Execution Mode state is cleared at the same time.
+- If the deleted paycheck is also the active check, only that cycle’s check fields are cleared; recurring bills, debts, savings goals, unrelated expenses, and other approved history stay saved.
+- Friday/savings mission state tied to the deleted active cycle is reset so the dashboard does not keep credit for a removed plan.
 
-## TRUE Safe-to-Spend after approval
-- The approved plan remains locked as the baseline.
-- New tracked expenses reduce the approved TRUE Safe-to-Spend instead of recalculating protected allocations away.
-- Command Center and the Payday Plan summary use the same approved baseline during execution.
+## New — stale execution guard
+- Every render now verifies that an active approved plan still exists in approved paycheck history.
+- Orphaned Execution Mode state is automatically cleared instead of leaving an old “Execution mode is active” readout after its plan is gone.
+- This specifically protects the Command Center, Dexx Payday Readout, and Payday Execution checklist from disagreeing after cleanup.
 
 ## Preserved
-Payday math, 4.1.8.1 check-date timing, Payday Guard, Safety & Recovery, Recent Activity, Reserve Memory, Forecast Engine, Bill Calendar, recurring bills, debts, savings goals, expenses, approved paycheck history, reports, PWA update reliability, and existing local saved data remain intact.
+Payday Execution Mode, TRUE Safe-to-Spend expense tracking, Payday Command Center, Payday Guard, Safety & Recovery, Recent Activity, Reserve Memory, Forecast Engine, Bill Calendar, recurring bills, debts, savings goals, expenses, reports, PWA update reliability, and existing local saved data remain intact.
 
 ## Storage note
-Execution checklist confirmations use a separate local key (`financial-lab-payday-execution-v1`) so the existing financial-data schema is not changed.
+No financial-data schema change. Execution confirmations still use `financial-lab-payday-execution-v1`.
