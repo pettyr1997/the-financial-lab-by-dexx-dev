@@ -1320,7 +1320,14 @@ function paycheckPlan(){
   const paycheck=clamp(data.paycheck,0,1e9), balance=clamp(data.currentBalance,0,1e9), available=paycheck+balance;
   const today=dateAtNoon(data.payDate)||new Date();today.setHours(12,0,0,0);
   const freqDays=data.profile?.payFrequency==='biweekly'?14:data.profile?.payFrequency==='monthly'?30:7;
-  const nextPay=dateAtNoon(data.nextPayday)||new Date(today.getTime()+freqDays*86400000);
+  // 4.1.9.2: when no active check/next-payday fields exist, anchor the
+  // waiting state to the saved payday schedule instead of simply using today + cadence.
+  // This keeps a Sunday app-open from inventing a Sunday payday for Friday-paid users.
+  let nextPay=dateAtNoon(data.nextPayday);
+  if(!nextPay){
+    if(dateAtNoon(data.payDate)) nextPay=shiftPayday(today,1);
+    else nextPay=dateAtNoon(suggestedNextPayCycle().payDate)||shiftPayday(today,1);
+  }
   const reserveDays=clamp(data.profile?.reserveDays||14,7,31);
   const reserveEnd=new Date(nextPay.getTime()+reserveDays*86400000);
   // 4.0.6: Dexx plans across several future paychecks, not only the short reserve window.
@@ -1456,7 +1463,7 @@ function renderPaydayCommandCenter(c){
   const action=$('commandPlanAction');
   if(action)action.textContent=!p.paycheck?'ENTER CHECK':data.approvedPlan?'PAYDAY CHECKLIST':'REVIEW / APPROVE PLAN';
   const readout=!p.paycheck
-    ?`Next scheduled check: ${dateText(nextPaycheckPreview().payDate,{weekday:'short',month:'short',day:'numeric'})}. Enter the amount and Dexx will connect bills, reserves, savings, debt, and spending.`
+    ?`Next scheduled check: ${dateText(suggestedNextPayCycle().payDate,{weekday:'short',month:'short',day:'numeric'})}. Enter the amount and Dexx will connect bills, reserves, savings, debt, and spending.`
     :p.shortfall>0
       ?`This check is ${money(p.shortfall)} short on immediate priorities. Protect required bills first; TRUE Safe-to-Spend stays at ${money(p.safeToSpend)}.`
       :data.approvedPlan
