@@ -1,36 +1,26 @@
-# Financial Lab 4.1.9.2 — Waiting-State Payday Date Fix
+# Financial Lab 4.1.9.3 — Reserve Schedule Cleanup
 
-Builds on 4.1.9.1 without changing the existing Financial Lab financial-data schema.
+Builds on 4.1.9.2 without changing the existing Financial Lab financial-data schema.
 
-## Fixed — waiting-state payday schedule
+## Fixed — reserve schedule after paycheck deletion
 
-- When no active paycheck is entered, the Payday Command Center now anchors its **Next Payday** to the saved payday schedule instead of blindly adding one pay-frequency interval to the phone's current date.
-- For a weekly Friday profile, opening Financial Lab on **Sunday, Sep 27, 2026** now shows **Fri, Oct 2** as the upcoming payday rather than **Sun, Oct 4**.
-- If a valid saved `nextPayday` already exists, Financial Lab continues to use it.
-- If a prepared check date exists but its following payday is missing, Financial Lab derives the following payday from that prepared check date.
-- Biweekly/monthly continuity still prefers saved cycle/history anchors when available through the existing Payday Continuity engine.
+- Future-bill reserve math no longer counts a deleted/cleared paycheck as an extra remaining check.
+- When there is **no active paycheck cycle**, the next scheduled payday is treated as the **first real remaining paycheck** instead of also counting a phantom “this paycheck.”
+- When an active/prepared paycheck cycle **does** exist, that active check is still counted once, followed by the remaining scheduled paydays through the bill due date.
+- Reserve Memory rollback from 4.1.9.1 remains intact.
+- Waiting-state payday anchoring from 4.1.9.2 remains intact.
 
-## Fixed — waiting-state Dexx readout
+## Regression case caught during testing
 
-- The Command Center waiting message now uses the same `suggestedNextPayCycle()` continuity engine as the launchpad.
-- Removed the stale `nextPaycheckPreview()` reference so the empty-check readout can render cleanly instead of depending on an undefined helper.
+After deleting the approved Oct 2 test paycheck:
+
+- Bill: **$300 due Oct 16**
+- Reserve Memory: **$0 already protected**
+- Remaining real checks: **Oct 2, Oct 9, Oct 16 = 3 checks**
+- Correct protection target: **$100 per check**
+
+4.1.9.2 incorrectly displayed **4 paychecks / $75 per check** because the reserve scheduler counted a cleared paycheck plus Oct 2. 4.1.9.3 removes that phantom check.
 
 ## Preserved
 
-- 4.1.9.1 approved-paycheck cleanup and Execution Mode rollback.
-- Payday Execution Mode and approved-plan source-of-truth behavior.
-- Reserve Memory and savings rollback behavior.
-- TRUE Safe-to-Spend expense recalculation.
-- Payday Continuity and confirmation guard.
-- Forecast Engine and Bill Calendar.
-- Recurring bills, debts, savings goals, expenses, approved history, Financial Profile, and existing saved-data schema.
-
-## Test target
-
-With the phone date on Sep 27, 2026 and a weekly Friday payday profile, clear/no active paycheck should show:
-
-- Status: **Waiting for check**
-- Paycheck: **$0.00**
-- Next Payday: **Oct 2**
-- Countdown: **5 days away**
-- Dexx readout: next scheduled check is **Fri, Oct 2**
+Payday Command Center, Payday Execution Mode, approved-paycheck cleanup/rollback, TRUE Safe-to-Spend, Reserve Memory, savings contributions, recurring bills, Bill Calendar, Forecast Engine, Payday Continuity/Guard, expenses, reports, recovery controls, and existing saved data remain preserved.

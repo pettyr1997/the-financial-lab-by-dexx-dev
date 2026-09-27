@@ -1299,17 +1299,23 @@ function applyReserveContributions(plan){
   return out;
 }
 
-function paydaysThrough(dueDate,today,nextPay,freqDays){
+function paydaysThrough(dueDate,today,nextPay,freqDays,includeCurrentCheck=true){
   const due=dateAtNoon(dueDate);if(!due||due<=today)return 1;
-  let count=1; // this paycheck
-  let cursor=new Date(nextPay);
+  // 4.1.9.3: only count a separate "current paycheck" when an active
+  // paycheck cycle actually exists. After an approved check is deleted,
+  // nextPay is already the first real remaining paycheck; counting both a
+  // phantom current check and nextPay made reserves too small (4 x $75
+  // instead of 3 x $100 for a $300 Oct 16 bill after deleting Oct 2).
+  let count=includeCurrentCheck?1:0;
+  let cursor=dateAtNoon(nextPay);
   let guard=0;
-  while(cursor<=due&&guard<60){count+=1;cursor=new Date(cursor.getTime()+freqDays*86400000);guard+=1}
+  while(cursor&&cursor<=due&&guard<60){count+=1;cursor=new Date(cursor.getTime()+freqDays*86400000);guard+=1}
   return Math.max(1,count)
 }
 function reserveTargets(upcomingBills,today,nextPay,freqDays){
+  const includeCurrentCheck=Boolean(dateAtNoon(data.payDate));
   return upcomingBills.map(b=>{
-    const checks=paydaysThrough(b.date,today,nextPay,freqDays);
+    const checks=paydaysThrough(b.date,today,nextPay,freqDays,includeCurrentCheck);
     const alreadyProtected=protectedFor(b);
     const remainingToFund=Math.max(0,Number(b.amount||0)-alreadyProtected);
     const target=Math.round((remainingToFund/checks)*100)/100;

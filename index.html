@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 
-<html lang="en"><head><meta charset="utf-8"/><meta content="width=device-width,initial-scale=1,viewport-fit=cover" name="viewport"/><meta content="#050807" name="theme-color"/><meta content="Financial Lab powered by Dexx" name="description"/><link href="manifest.webmanifest" rel="manifest"/><link href="icon.svg" rel="icon"/><link href="icon-192.png" rel="apple-touch-icon"/><link href="styles.css?v=4.1.9.2" rel="stylesheet"/><meta name="apple-mobile-web-app-capable" content="yes"/><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/><meta name="apple-mobile-web-app-title" content="Financial Lab"/><title>Financial Lab — Powered by Dexx</title><meta content="4.1.9.2" name="financial-lab-version"/><meta name="financial-lab-release" content="4.1.9.2-waiting-state-payday-date-fix"/></head>
+<html lang="en"><head><meta charset="utf-8"/><meta content="width=device-width,initial-scale=1,viewport-fit=cover" name="viewport"/><meta content="#050807" name="theme-color"/><meta content="Financial Lab powered by Dexx" name="description"/><link href="manifest.webmanifest" rel="manifest"/><link href="icon.svg" rel="icon"/><link href="icon-192.png" rel="apple-touch-icon"/><link href="styles.css?v=4.1.9.3" rel="stylesheet"/><meta name="apple-mobile-web-app-capable" content="yes"/><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/><meta name="apple-mobile-web-app-title" content="Financial Lab"/><title>Financial Lab — Powered by Dexx</title><meta content="4.1.9.3" name="financial-lab-version"/><meta name="financial-lab-release" content="4.1.9.3-reserve-schedule-cleanup"/></head>
 <body class="front-door-active">
 <div class="front-door" id="frontDoor">
   <div class="front-door-glow"></div>
@@ -124,7 +124,7 @@
 <section class="view" id="budget">
 <div class="page-title"><p>BUDGET LAB</p><h1>Dexx Payday Mode.</h1></div>
 <section class="card payday-command-card" id="paydayCommandCenter">
-  <div class="section-head"><span>4.1.9.2 PAYDAY COMMAND CENTER</span><b id="commandCenterStatus">Waiting for check</b></div>
+  <div class="section-head"><span>4.1.9.3 PAYDAY COMMAND CENTER</span><b id="commandCenterStatus">Waiting for check</b></div>
   <p class="manager-copy">Your whole payday in one view — what came in, what gets protected, what is moving forward, and what is truly safe to spend.</p>
   <div class="command-flow" aria-label="Payday money flow">
     <div class="command-flow-item income"><span>PAYCHECK</span><strong id="commandPaycheck">$0.00</strong><small id="commandCheckDate">No check entered</small></div>
@@ -143,7 +143,7 @@
   </div>
   <div class="command-dexx-note"><span>DEXX PAYDAY READOUT</span><p id="commandDexxReadout">Enter your check and Dexx will turn the paycheck into one clear money plan.</p></div>
   <section class="payday-execution" id="paydayExecutionMode" hidden>
-    <div class="execution-head"><div><span>4.1.9.2 PAYDAY EXECUTION MODE</span><strong>Approved plan → real-world moves</strong></div><b id="executionProgress">Execution ready</b></div>
+    <div class="execution-head"><div><span>4.1.9.3 PAYDAY EXECUTION MODE</span><strong>Approved plan → real-world moves</strong></div><b id="executionProgress">Execution ready</b></div>
     <p class="execution-intro">Dexx turns the approved plan into a short checklist. Reserve and savings allocations already recorded by Financial Lab show as complete; bill and debt moves can be confirmed as you handle them.</p>
     <div class="execution-tasks" id="executionTasks"></div>
     <p class="execution-status" id="executionStatus"></p>
@@ -556,7 +556,7 @@
 <section class="view" id="dexx"><div class="dexx-header"><button data-go="laboratory">←</button><div><h1>DEXX</h1><p>Your Financial Scientist</p></div><img alt="" aria-hidden="true" class="dexx-chat-image" onerror="this.onerror=null;this.style.display='none'" src="dexx-character-clean.jpg"/></div><div class="chat"><div class="bubble" id="dexxReply">Hey Rob! 👋 I’m Dexx. How can I help you today?</div><button data-question="score">How can I improve my score? <span>›</span></button><button data-question="spending">Analyze my spending <span>›</span></button><button data-question="challenge">Give me a money challenge <span>›</span></button><button data-question="saving">Any tips for saving more? <span>›</span></button><form id="chatForm"><input id="chatInput" placeholder="Ask Dexx anything..."/><button type="submit">➤</button></form></div></section>
 </main>
 <nav class="bottom-nav"><button class="active" data-go="laboratory"><b>⚗</b><span>Laboratory</span></button><button data-go="budget"><b>▣</b><span>Budget Lab</span></button><button data-go="credit"><b>◇</b><span>Credit Lab</span></button><button data-go="savings"><b>▤</b><span>Savings Lab</span></button><button data-go="more"><b>•••</b><span>More</span></button></nav>
-</div><script src="app.js?v=4.1.9.2"></script>
+</div><script src="app.js?v=4.1.9.3"></script>
 <script>
 (function(){
   function wireBuildButton(){
@@ -587,7 +587,7 @@
   // 4.1.6.1: keep reliable PWA updates while polishing Calendar amount display.
   if('serviceWorker' in navigator){
     window.addEventListener('load',function(){
-      navigator.serviceWorker.register('./service-worker.js?v=4.1.9.2',{updateViaCache:'none'}).then(function(reg){
+      navigator.serviceWorker.register('./service-worker.js?v=4.1.9.3',{updateViaCache:'none'}).then(function(reg){
         reg.update().catch(function(){});
         setInterval(function(){ reg.update().catch(function(){}); }, 60000);
       }).catch(function(err){console.warn('Service worker registration failed',err)});
