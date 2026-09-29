@@ -1,25 +1,26 @@
-# Financial Lab v4.1.16 — Payday Landing + Amount Reconciliation
+# Financial Lab v4.1.17 — Guided Lab Setup Foundation
 
-Builds directly on v4.1.15 Payday Landing Guard. No saved financial-data schema migration is required.
+Builds directly on v4.1.16 Payday Landing + Amount Reconciliation and preserves the locked Oct 2 payday test. This release adds a small, additive `setup` metadata object that is merged automatically with existing saved data; existing bills, debts, savings, expenses, approved history, Reserve Memory, and payday state are preserved.
 
 ## What changed
 
-- Keeps future payday visibly locked with `PAYCHECK LANDS <DATE>` until the scheduled check date.
-- On payday, the lock transitions into a two-step **Payday Check-In** instead of assuming the planned amount arrived.
-- Step 1 asks for the **actual deposit received**.
-- Step 2 compares actual vs planned and previews the recalculated protected amount and TRUE Safe-to-Spend **before any reserve or savings funding is recorded**.
-- Matching checks can activate normally after review.
-- Higher/lower checks are recalculated against the existing bills, reserve rules, savings settings, debt settings, and cycle dates.
-- If the actual check creates an immediate-bill shortfall, Financial Lab blocks activation and sends the cycle back for review rather than funding an unsafe plan.
-- Reconciled amount, variance, and timestamp are stored with the approved paycheck history once activated.
-
-## Product rule added to the roadmap
-
-**Progressive Unlock / Step Guard System:** if a step depends on something that has not happened yet, Financial Lab keeps the next step visibly locked and explains what event unlocks it. This rule should be extended naturally across payday, bills, savings, debt, onboarding, and future Premium workflows.
+- Rebuilds **Start Here** as a guided first-time Financial Lab setup instead of only an app walkthrough.
+- Separates setup into **required** and **recommended** information.
+- Required step 1 confirms **money available today**. A real $0 balance is valid and can be explicitly confirmed.
+- Required step 2 captures **pay frequency, income pattern, expected next check, and next payday**.
+- Setup income is planning information only. Saving it does **not** mark a paycheck as landed, funded, or approved.
+- Bills, debt, savings, and spending can be added immediately or marked **Skip for now**.
+- Skipped information remains visibly incomplete so Financial Lab never treats missing data as a real $0 balance or “no debt / no bills.”
+- Adds a **Lab Readiness** summary and a Dexx recommendation for the next missing setup area.
+- **Enter My Lab — Finish Later** unlocks after the two essential steps are complete.
+- Existing users with a real active payday plan are recognized as already having the two essential money/income steps, so the update does not force them to re-enter the current cycle.
+- Keeps the Progressive Unlock rule: required steps unlock the Lab; recommended information improves completeness without becoming a wall.
 
 ## Current Sep 29 test state
 
-The approved Oct 2 test cycle should remain locked at `PAYCHECK LANDS OCT 2` with 0 moves funded. The new actual-paycheck reconciliation UI is intentionally unavailable until Oct 2.
+The existing Oct 2 plan must remain untouched: $700 planned paycheck, $170 planned protected, $530 planned TRUE Safe-to-Spend, 0 moves funded, and `PAYCHECK LANDS OCT 2` still locked.
+
+For the current test data, **Start Here** should recognize the active Oct 2 plan as satisfying the two required setup steps. Any missing bills/debt/savings/spending areas should show as recommended or optional rather than silently assumed to be zero.
 
 ## Deployment
 

@@ -87,7 +87,7 @@ const DEFAULTS = {
   researcherName:'Rob', paycheck:0, currentBalance:0, payDate:'', nextPayday:'', savingsRate:10,
   billName:'', billDate:'', billAmount:0, saveAmount:0, debtAmount:0, debtGoal:0, expenses:0,
   customSavings:null, customDebt:null, bills:[], debts:[], expenseRecords:[], savingsGoals:[], savingsStrategy:'priority', debtStrategy:'balanced', paycheckHistory:[], approvedPlan:null, reserveMemory:{},
-  missions:{spending:false,saving:false,bills:false,friday:false}, profile:{payFrequency:'weekly',paydayDay:5,incomePattern:'variable',recurringBillCount:9,financialStrategy:'balanced',reserveDays:14}, lastUpdated:''
+  missions:{spending:false,saving:false,bills:false,friday:false}, profile:{payFrequency:'weekly',paydayDay:5,incomePattern:'variable',recurringBillCount:9,financialStrategy:'balanced',reserveDays:14}, setup:{currentMoneyConfirmed:false,incomeConfirmed:false,expectedPaycheck:0,nextPayday:'',skipped:{bills:false,debt:false,savings:false,spending:false},completedAt:''}, lastUpdated:''
 };
 const $=id=>document.getElementById(id);
 const money=v=>new Intl.NumberFormat('en-US',{style:'currency',currency:'USD'}).format(Number(v)||0);
@@ -117,7 +117,7 @@ const dateTimeOrInfinity=v=>{
   return d?d.getTime():Infinity;
 };
 const clamp=(v,min,max)=>Math.min(max,Math.max(min,Number(v)||0));
-function load(){try{const old=JSON.parse(localStorage.getItem(STORAGE_KEY)||'{}');const migratedBills=Array.isArray(old.bills)?old.bills.map((b,i)=>({id:b.id||`bill-${i}-${Date.now()}`,name:b.name||'Bill',amount:Number(b.amount)||0,dueDate:b.dueDate||b.date||'',date:b.dueDate||b.date||'',priority:b.priority||'important',frequency:b.frequency||'monthly',autopay:!!b.autopay,paidOccurrences:Array.isArray(b.paidOccurrences)?b.paidOccurrences:(b.paid&&b.date?[b.date]:[])})):[];const migratedDebts=Array.isArray(old.debts)?old.debts.map((d,i)=>({id:d.id||`debt-${i}-${Date.now()}`,name:d.name||'Debt',balance:Math.max(0,Number(d.balance)||0),minimumPayment:Math.max(0,Number(d.minimumPayment??d.minimum??0)||0),dueDate:d.dueDate||d.date||'',apr:Math.max(0,Number(d.apr)||0),accountType:d.accountType||d.type||'credit-card'})):[];const migratedGoals=Array.isArray(old.savingsGoals)?old.savingsGoals.map((g,i)=>({id:g.id||`goal-${i}-${Date.now()}`,name:g.name||'Savings goal',target:Math.max(0,Number(g.target)||0),saved:Math.max(0,Number(g.saved)||0),priority:g.priority||'medium',targetDate:g.targetDate||'',category:g.category||'general'})):[];const migratedExpenses=Array.isArray(old.expenseRecords)?old.expenseRecords.map((x,i)=>({id:x.id||`expense-${i}-${Date.now()}`,name:x.name||x.merchant||'Expense',amount:Math.max(0,Number(x.amount)||0),category:x.category||'other',date:x.date||old.payDate||iso(new Date()),note:x.note||'',cycleId:x.cycleId||''})):((Number(old.expenses)||0)>0?[{id:`legacy-expense-${Date.now()}`,name:'Previous spending',amount:Math.max(0,Number(old.expenses)||0),category:'other',date:old.payDate||iso(new Date()),note:'Migrated from an earlier Financial Lab version'}]:[]);return {...DEFAULTS,...old,bills:migratedBills,debts:migratedDebts,expenseRecords:migratedExpenses,expenses:0,savingsGoals:migratedGoals,savingsStrategy:old.savingsStrategy||'priority',debtStrategy:old.debtStrategy||'balanced',paycheckHistory:Array.isArray(old.paycheckHistory)?old.paycheckHistory:[],reserveMemory:(old.reserveMemory&&typeof old.reserveMemory==='object'?old.reserveMemory:{}),missions:{...DEFAULTS.missions,...(old.missions||{})},profile:{...DEFAULTS.profile,...(old.profile||{})}}}catch{return structuredClone(DEFAULTS)}}
+function load(){try{const old=JSON.parse(localStorage.getItem(STORAGE_KEY)||'{}');const migratedBills=Array.isArray(old.bills)?old.bills.map((b,i)=>({id:b.id||`bill-${i}-${Date.now()}`,name:b.name||'Bill',amount:Number(b.amount)||0,dueDate:b.dueDate||b.date||'',date:b.dueDate||b.date||'',priority:b.priority||'important',frequency:b.frequency||'monthly',autopay:!!b.autopay,paidOccurrences:Array.isArray(b.paidOccurrences)?b.paidOccurrences:(b.paid&&b.date?[b.date]:[])})):[];const migratedDebts=Array.isArray(old.debts)?old.debts.map((d,i)=>({id:d.id||`debt-${i}-${Date.now()}`,name:d.name||'Debt',balance:Math.max(0,Number(d.balance)||0),minimumPayment:Math.max(0,Number(d.minimumPayment??d.minimum??0)||0),dueDate:d.dueDate||d.date||'',apr:Math.max(0,Number(d.apr)||0),accountType:d.accountType||d.type||'credit-card'})):[];const migratedGoals=Array.isArray(old.savingsGoals)?old.savingsGoals.map((g,i)=>({id:g.id||`goal-${i}-${Date.now()}`,name:g.name||'Savings goal',target:Math.max(0,Number(g.target)||0),saved:Math.max(0,Number(g.saved)||0),priority:g.priority||'medium',targetDate:g.targetDate||'',category:g.category||'general'})):[];const migratedExpenses=Array.isArray(old.expenseRecords)?old.expenseRecords.map((x,i)=>({id:x.id||`expense-${i}-${Date.now()}`,name:x.name||x.merchant||'Expense',amount:Math.max(0,Number(x.amount)||0),category:x.category||'other',date:x.date||old.payDate||iso(new Date()),note:x.note||'',cycleId:x.cycleId||''})):((Number(old.expenses)||0)>0?[{id:`legacy-expense-${Date.now()}`,name:'Previous spending',amount:Math.max(0,Number(old.expenses)||0),category:'other',date:old.payDate||iso(new Date()),note:'Migrated from an earlier Financial Lab version'}]:[]);return {...DEFAULTS,...old,bills:migratedBills,debts:migratedDebts,expenseRecords:migratedExpenses,expenses:0,savingsGoals:migratedGoals,savingsStrategy:old.savingsStrategy||'priority',debtStrategy:old.debtStrategy||'balanced',paycheckHistory:Array.isArray(old.paycheckHistory)?old.paycheckHistory:[],reserveMemory:(old.reserveMemory&&typeof old.reserveMemory==='object'?old.reserveMemory:{}),missions:{...DEFAULTS.missions,...(old.missions||{})},profile:{...DEFAULTS.profile,...(old.profile||{})},setup:{...DEFAULTS.setup,...(old.setup||{}),skipped:{...DEFAULTS.setup.skipped,...(old.setup?.skipped||{})}}}}catch{return structuredClone(DEFAULTS)}}
 let data=load();
 function cloneFinancialData(value){
   try{return JSON.parse(JSON.stringify(value))}catch(_){return structuredClone(value)}
@@ -170,7 +170,7 @@ function renderSafetyRecovery(){
   entries.forEach(entry=>{const row=document.createElement('article');row.className='recovery-activity-row';row.innerHTML=`<i>${recoveryIcon(entry.type)}</i><div><strong>${entry.label}</strong><span>${entry.detail||'Financial Lab saved the change.'}</span></div><small>${recoveryTimeText(entry.createdAt)}</small>`;activity.append(row)});
 }
 async function applyRecoveryData(snapshot,statusText){
-  data={...structuredClone(DEFAULTS),...cloneFinancialData(snapshot),missions:{...DEFAULTS.missions,...(snapshot?.missions||{})},profile:{...DEFAULTS.profile,...(snapshot?.profile||{})}};
+  data={...structuredClone(DEFAULTS),...cloneFinancialData(snapshot),missions:{...DEFAULTS.missions,...(snapshot?.missions||{})},profile:{...DEFAULTS.profile,...(snapshot?.profile||{})},setup:{...DEFAULTS.setup,...(snapshot?.setup||{}),skipped:{...DEFAULTS.setup.skipped,...(snapshot?.setup?.skipped||{})}}};
   data.lastUpdated=new Date().toISOString();
   localStorage.setItem(STORAGE_KEY,JSON.stringify(data));
   lastSavedSnapshot=cloneFinancialData(data);
@@ -592,7 +592,7 @@ function financialMemorySnapshot(){
   }catch(_){}
   return {
     schema:'financial-lab-backup',
-    version:'4.1.16',
+    version:'4.1.17',
     exportedAt:new Date().toISOString(),
     storageKey:STORAGE_KEY,
     data:parsed||data
@@ -1866,6 +1866,70 @@ function renderLabBriefing(c){
 
 function confidence(p){let level='LOW',pct=25,text='Complete your profile and enter a paycheck.';if(p.paycheck&&p.shortfall===0){level='MEDIUM';pct=65;text='Immediate bills are covered, but review reserves and savings.'}if(p.paycheck&&p.shortfall===0&&p.reserveShortfall===0&&p.savings>0){level='HIGH';pct=100;text='Bills, upcoming reserves and savings are protected.'}return{level,pct,text}}
 function renderTimeline(c){const host=$('financialTimeline');if(!host)return;host.replaceChildren();const events=[];if(c.paycheck)events.push({date:c.today,label:'Paycheck received',amount:c.paycheck,type:'income'});if(c.savings)events.push({date:c.today,label:'Move to savings',amount:-c.savings,type:'saving'});c.currentExpenses.forEach(x=>events.push({date:dateAtNoon(x.date)||c.today,label:x.name,amount:-x.amount,type:'expense'}));c.dueNowBills.forEach(b=>events.push({date:dateAtNoon(b.date)||c.today,label:b.name,amount:-Number(b.amount||0),type:'bill'}));c.upcomingBills.forEach(b=>events.push({date:dateAtNoon(b.date),label:`Protect for ${b.name}`,amount:-Number(b.currentCheckReserve||0),type:'reserve'}));events.push({date:c.nextPay,label:'Next payday',amount:0,type:'payday'});events.filter(e=>dateAtNoon(e.date)).sort((a,b)=>dateAtNoon(a.date)-dateAtNoon(b.date)).slice(0,8).forEach(e=>{const row=document.createElement('div');row.className='timeline-row';row.innerHTML=`<div><strong>${dateText(e.date,{weekday:'short',month:'short',day:'numeric'})}</strong><span>${e.label}</span></div><b>${e.amount?money(e.amount):'Coming up'}</b>`;host.append(row)});if(!events.length)host.innerHTML='<div class="empty-copy">Add your paycheck and bills to build the week ahead.</div>'}
+
+function guidedSetupState(){
+  const setup=data.setup||DEFAULTS.setup;
+  const skipped={...DEFAULTS.setup.skipped,...(setup.skipped||{})};
+  const hasActiveMoneyContext=!!data.approvedPlan||Number(data.paycheck||0)>0||!!data.payDate;
+  const moneyComplete=!!setup.currentMoneyConfirmed||hasActiveMoneyContext||Number(data.currentBalance||0)>0;
+  const incomeComplete=!!setup.incomeConfirmed||hasActiveMoneyContext;
+  const areas={
+    money:moneyComplete,
+    income:incomeComplete,
+    bills:billDefinitions().length>0,
+    debt:debtDefinitions().length>0,
+    savings:savingsGoalDefinitions().length>0,
+    spending:(Array.isArray(data.expenseRecords)&&data.expenseRecords.length>0)
+  };
+  const completeCount=Object.values(areas).filter(Boolean).length;
+  const requiredRemaining=[areas.money,areas.income].filter(v=>!v).length;
+  return {setup,skipped,areas,completeCount,percent:Math.round(completeCount/6*100),requiredRemaining,requiredReady:requiredRemaining===0};
+}
+function renderGuidedSetup(){
+  if(!$('setupReadinessList'))return;
+  const state=guidedSetupState(),{setup,skipped,areas}=state;
+  const set=(id,value)=>{const el=$(id);if(el)el.textContent=value};
+  if($('setupCurrentBalance'))$('setupCurrentBalance').value=areas.money?Number(data.currentBalance||0):'';
+  if($('setupPayFrequency'))$('setupPayFrequency').value=data.profile?.payFrequency||'weekly';
+  if($('setupIncomePattern'))$('setupIncomePattern').value=data.profile?.incomePattern||'variable';
+  if($('setupExpectedPaycheck'))$('setupExpectedPaycheck').value=Number(setup.expectedPaycheck||data.paycheck||0)||'';
+  if($('setupNextPayday'))$('setupNextPayday').value=setup.nextPayday||data.payDate||'';
+  if($('setupReadinessBar'))$('setupReadinessBar').style.width=`${state.percent}%`;
+  set('setupReadinessPercent',`${state.percent}% complete`);
+  set('setupHeroStatus',state.requiredReady?'Ready to enter':`${state.requiredRemaining} essential${state.requiredRemaining===1?'':'s'} left`);
+  set('setupReadinessNote',state.requiredReady?'Essentials complete · recommended details can be added now or later':'2 essentials are required before entering your Lab');
+  set('setupMoneyState',areas.money?'READY':'NEEDS INFO');
+  set('setupIncomeState',areas.income?'READY':'NEEDS INFO');
+  set('setupRequiredStatus',state.requiredReady?'Essentials complete':`${state.requiredRemaining} essential${state.requiredRemaining===1?'':'s'} remaining`);
+  const recState=(area,doneLabel)=>areas[area]?doneLabel:(skipped[area]?'Skipped · add later':(area==='spending'?'Optional':'Recommended'));
+  set('setupBillsState',recState('bills',`${billDefinitions().length} saved`));
+  set('setupDebtState',recState('debt',`${debtDefinitions().length} saved`));
+  set('setupSavingsState',recState('savings',`${savingsGoalDefinitions().length} saved`));
+  set('setupSpendingState',recState('spending',`${data.expenseRecords.length} recorded`));
+  document.querySelectorAll('[data-setup-area]').forEach(card=>{
+    const area=card.dataset.setupArea;
+    card.classList.toggle('complete',!!areas[area]);
+    card.classList.toggle('skipped',!areas[area]&&!!skipped[area]);
+    const skip=card.querySelector('[data-setup-skip]');
+    if(skip){skip.textContent=skipped[area]&&!areas[area]?'ADD LATER ✓':'SKIP FOR NOW';skip.disabled=!!areas[area]}
+  });
+  const rows=[
+    ['Money available today',areas.money,'Required',areas.money?money(data.currentBalance):'Confirm even if the balance is $0.00'],
+    ['Income & next payday',areas.income,'Required',areas.income?`${money(setup.expectedPaycheck||data.paycheck)} expected · ${dateText(setup.nextPayday||data.payDate,{month:'short',day:'numeric'})}`:'Add pay frequency, expected check, and next payday'],
+    ['Recurring bills',areas.bills,'Recommended',areas.bills?`${billDefinitions().length} bill${billDefinitions().length===1?'':'s'} saved`:(skipped.bills?'Skipped for now':'Makes bill protection and forecasts more accurate')],
+    ['Debt',areas.debt,'Recommended',areas.debt?`${debtDefinitions().length} account${debtDefinitions().length===1?'':'s'} saved`:(skipped.debt?'Skipped for now':'Helps Dexx plan minimums and extra payoff')],
+    ['Savings',areas.savings,'Recommended',areas.savings?`${savingsGoalDefinitions().length} goal${savingsGoalDefinitions().length===1?'':'s'} saved`:(skipped.savings?'Skipped for now':'Helps Dexx protect progress before spending')],
+    ['Spending history',areas.spending,'Optional',areas.spending?`${data.expenseRecords.length} expense${data.expenseRecords.length===1?'':'s'} recorded`:(skipped.spending?'Skipped for now':'Can be added later')]
+  ];
+  $('setupReadinessList').innerHTML=rows.map(([name,done,kind,note])=>`<article class="${done?'ready':''}"><span>${done?'✓':kind==='Required'?'!':'○'}</span><div><strong>${name}</strong><small>${note}</small></div><b>${done?'READY':kind.toUpperCase()}</b></article>`).join('');
+  const missingRecommended=['bills','debt','savings'].filter(x=>!areas[x]);
+  const next=missingRecommended[0];
+  const guidance=!state.requiredReady?'Start with money available today and your income/payday. Those two essentials unlock the Lab.':next==='bills'?'Your essentials are ready. Add recurring bills next so Dexx knows what must be protected.':next==='debt'?'Bills are in. Add debt next so Dexx can account for minimums and payoff progress.':next==='savings'?'Add savings goals next so Dexx can protect progress before flexible spending.':'Your core setup is strong. Spending history is optional and can be added as you use the Lab.';
+  set('setupDexxRecommendation',guidance);
+  const enter=$('setupEnterLab');if(enter){enter.disabled=!state.requiredReady;enter.textContent=state.requiredReady?'ENTER MY LAB — FINISH LATER':'COMPLETE ESSENTIALS FIRST'}
+  const cont=$('setupContinueRecommended');if(cont){cont.textContent=!state.requiredReady?'FINISH REQUIRED SETUP':next?`ADD ${next.toUpperCase()} NEXT`:'SETUP LOOKS GOOD';cont.disabled=state.requiredReady&&!next}
+  set('setupFinalStatus',state.requiredReady?'Your Lab can open now. Recommended information can still be added before or after you enter.':'Complete the two required steps to enter your Lab. Bills, debt, savings, and spending can be added now or later.');
+}
 function renderProfile(){const p=data.profile||DEFAULTS.profile;const map={profileName:data.researcherName||'Rob',payFrequency:p.payFrequency,paydayDay:String(p.paydayDay??5),incomePattern:p.incomePattern,recurringBillCount:p.recurringBillCount,financialStrategy:p.financialStrategy,profileSavingsRate:data.savingsRate||10,reserveDays:String(p.reserveDays||14)};Object.entries(map).forEach(([id,v])=>{if($(id))$(id).value=v});const fields=[data.researcherName,p.payFrequency,p.incomePattern,p.recurringBillCount,p.financialStrategy,data.savingsRate,p.reserveDays],pct=Math.round(fields.filter(v=>v!==''&&v!==null&&v!==undefined).length/fields.length*100);if($('profileCompletion'))$('profileCompletion').textContent=`${pct}% complete`;if($('profileReady'))$('profileReady').textContent=pct===100?'Ready for Payday Mode':'Needs setup';if($('profileSummary'))$('profileSummary').innerHTML=`<div><span>PAY SCHEDULE</span><strong>${p.payFrequency||'weekly'}</strong></div><div><span>CHECK AMOUNT</span><strong>${p.incomePattern==='variable'?'Variable':'Steady'}</strong></div><div><span>BILLS SAVED</span><strong>${billDefinitions().length} saved</strong></div><div><span>STRATEGY</span><strong>${p.financialStrategy||'balanced'}</strong></div>`;renderBillManager()}
 function resetBillManagerForm(){if(!$('billManagerForm'))return;$('managerBillId').value='';$('managerBillName').value='';$('managerBillAmount').value='';$('managerBillDate').value='';$('managerBillFrequency').value='monthly';$('managerBillPriority').value='essential';$('managerBillAutopay').checked=false;$('saveManagedBill').textContent='SAVE RECURRING BILL';$('cancelBillEdit').hidden=true}
 function renderBillManager(){const host=$('managedBills');if(!host)return;const defs=billDefinitions(),estimate=Number(data.profile?.recurringBillCount)||0;if($('billManagerProgress'))$('billManagerProgress').textContent=`${defs.length} bill${defs.length===1?'':'s'} saved`;if($('billManagerEstimate'))$('billManagerEstimate').textContent=estimate?`Profile estimate: ${estimate} recurring bill${estimate===1?'':'s'}. This is a planning estimate, not a limit.`:'Add as many recurring bills as you need. There is no bill limit.';host.replaceChildren();if(!defs.length){host.innerHTML='<div class="empty-copy">No recurring bills saved yet. Add your first bill above.</div>';return}defs.sort((a,b)=>(a.dueDate||'9999').localeCompare(b.dueDate||'9999')).forEach(b=>{const card=document.createElement('article');card.className='managed-bill';const freq={monthly:'Monthly',weekly:'Weekly',biweekly:'Every 2 weeks',once:'One time'}[b.frequency]||b.frequency;card.innerHTML=`<div class="managed-bill-main"><div><strong>${b.name}</strong><span>${freq} · ${b.priority}${b.autopay?' · Autopay':''}</span></div><b>${money(b.amount)}</b></div><div class="managed-bill-meta"><span>Next due ${b.dueDate?dateText(b.dueDate,{month:'short',day:'numeric',year:'numeric'}):'TBD'}</span><div><button type="button" data-edit-bill="${b.id}">Edit</button><button type="button" class="danger-link" data-delete-bill="${b.id}">Delete</button></div></div>`;host.append(card)})}
@@ -1914,7 +1978,7 @@ function renderDebtManager(){
 }
 
 function renderHistory(){const host=$('planHistory');if(!host)return;host.replaceChildren();const list=[...approvedHistory()].reverse().slice(0,12);if(!list.length){host.innerHTML='<div class="empty-copy">Approved plans will appear here.</div>';return}list.forEach(h=>{const row=document.createElement('article');row.className='history-row';row.innerHTML=`<div><strong>${money(h.paycheck)} payday</strong><small>${dateText(historyDisplayDate(h),{month:'short',day:'numeric',year:'numeric'})}</small></div><span>Spent ${money(h.spent)} · Saved ${money(h.savings)}${h.savingsContributions?.[0]?.name?` to ${h.savingsContributions[0].name}`:''} · Safe ${money(h.safeToSpend)}</span><button class="danger-link history-delete" type="button" data-delete-plan="${h.id||''}">Delete</button>`;host.append(row)})}
-function render(){reconcileExecutionState();const c=calc(),hour=new Date().getHours();renderNextPaycheckLaunchpad();renderPaydayCommandCenter(c);renderLabBriefing(c);$('greeting').textContent=`GOOD ${hour<12?'MORNING':hour<17?'AFTERNOON':'EVENING'}, ${(data.researcherName||'ROB').toUpperCase()} 👋`;if($('healthScore'))$('healthScore').textContent=c.score;if($('scoreRing'))$('scoreRing').style.setProperty('--score',c.score);if($('healthMessage'))$('healthMessage').textContent=c.score>=80?'Your payday plan is fully protected.':c.score>=60?'Your plan is gaining strength.':'Complete Payday Mode to improve your score.';$('cashAvailable').textContent=money(c.safeToSpend);$('billsWeek').textContent=money(c.payNow);$('savingsTotal').textContent=money(savingsGoalDefinitions().length?totalGoalSavings():c.savings);$('debtRemaining').textContent=money(totalDebtBalance());$('missionCount').textContent=`${c.missionDone} / 4`;$('progressText').textContent=`${c.progress}%`;$('progressBar').style.width=`${c.progress}%`;$('dexxObservation').textContent=recommendation(c);const conf=confidence(c);if($('confidenceLabel'))$('confidenceLabel').textContent=conf.level;if($('confidenceText'))$('confidenceText').textContent=conf.text;if($('confidenceBar'))$('confidenceBar').style.width=`${conf.pct}%`;renderTimeline(c);renderProfile();renderDebtManager();renderSavingsManager();renderExpenseManager(c);renderReports(c);renderCalendar(c);renderMemoryGuard();renderSafetyRecovery();renderHealthScore(c);renderDebtStatusControl();renderActionCenter(c);if(debtDefinitions().length&&$('debtAmount')){$('debtAmount').value=totalDebtBalance();$('debtAmount').readOnly=true;$('debtAmount').title='Managed automatically from Credit Lab';}else if($('debtAmount')){$('debtAmount').readOnly=false;}document.querySelectorAll('[data-mission]').forEach(x=>x.checked=!!data.missions[x.dataset.mission]);billRows($('billList'),c.bills.filter(b=>!b.paid).slice(0,4));billRows($('allBills'),c.dueNowBills);prepareRows($('prepareBills'),c.upcomingBills);if($('reserveMemorySummary'))$('reserveMemorySummary').innerHTML=`<strong>${money(c.rememberedReserve)}</strong><span>already protected from approved payday plans</span>`;
+function render(){reconcileExecutionState();const c=calc(),hour=new Date().getHours();renderNextPaycheckLaunchpad();renderPaydayCommandCenter(c);renderLabBriefing(c);$('greeting').textContent=`GOOD ${hour<12?'MORNING':hour<17?'AFTERNOON':'EVENING'}, ${(data.researcherName||'ROB').toUpperCase()} 👋`;if($('healthScore'))$('healthScore').textContent=c.score;if($('scoreRing'))$('scoreRing').style.setProperty('--score',c.score);if($('healthMessage'))$('healthMessage').textContent=c.score>=80?'Your payday plan is fully protected.':c.score>=60?'Your plan is gaining strength.':'Complete Payday Mode to improve your score.';$('cashAvailable').textContent=money(c.safeToSpend);$('billsWeek').textContent=money(c.payNow);$('savingsTotal').textContent=money(savingsGoalDefinitions().length?totalGoalSavings():c.savings);$('debtRemaining').textContent=money(totalDebtBalance());$('missionCount').textContent=`${c.missionDone} / 4`;$('progressText').textContent=`${c.progress}%`;$('progressBar').style.width=`${c.progress}%`;$('dexxObservation').textContent=recommendation(c);const conf=confidence(c);if($('confidenceLabel'))$('confidenceLabel').textContent=conf.level;if($('confidenceText'))$('confidenceText').textContent=conf.text;if($('confidenceBar'))$('confidenceBar').style.width=`${conf.pct}%`;renderTimeline(c);renderProfile();renderGuidedSetup();renderDebtManager();renderSavingsManager();renderExpenseManager(c);renderReports(c);renderCalendar(c);renderMemoryGuard();renderSafetyRecovery();renderHealthScore(c);renderDebtStatusControl();renderActionCenter(c);if(debtDefinitions().length&&$('debtAmount')){$('debtAmount').value=totalDebtBalance();$('debtAmount').readOnly=true;$('debtAmount').title='Managed automatically from Credit Lab';}else if($('debtAmount')){$('debtAmount').readOnly=false;}document.querySelectorAll('[data-mission]').forEach(x=>x.checked=!!data.missions[x.dataset.mission]);billRows($('billList'),c.bills.filter(b=>!b.paid).slice(0,4));billRows($('allBills'),c.dueNowBills);prepareRows($('prepareBills'),c.upcomingBills);if($('reserveMemorySummary'))$('reserveMemorySummary').innerHTML=`<strong>${money(c.rememberedReserve)}</strong><span>already protected from approved payday plans</span>`;
   ['paycheck','currentBalance','saveAmount','debtAmount','debtGoal','savingsRate'].forEach(id=>{if($(id))$(id).value=data[id]||(id==='savingsRate'?10:'')});if($('payDate'))$('payDate').value=iso(dateAtNoon(data.payDate)||new Date());if($('nextPayday'))$('nextPayday').value=iso(dateAtNoon(data.nextPayday))||'';
   if($('planPayNow')){const d=commandCenterPlan(c);$('planPayNow').textContent=money(d.payNow);$('planReserve').textContent=money(d.reserve);$('planSavings').textContent=money(d.savings);$('planDebt').textContent=money(d.debtPayment);$('planSpend').textContent=money(d.safeToSpend);$('planStatus').textContent=d.shortfall?'Needs attention':data.approvedPlan?'Approved · executing':d.paycheck?'Plan ready':'Ready';$('dexxPlanText').textContent=recommendation(d);const total=d.paycheck||d.available||1;[['allocBills',d.payNow],['allocReserve',d.reserve],['allocSavings',d.savings],['allocDebt',d.debtPayment],['allocSpend',d.safeToSpend]].forEach(([id,val])=>$(id).style.width=`${Math.max(0,val/total*100)}%`);allocationRows(d);$('customSavings').value=data.customSavings??'';$('customDebt').value=data.customDebt??'';const step=!c.paycheck?1:!c.bills.length?2:!data.approvedPlan?4:5;$('workflowStatus').textContent=`Step ${step} of 5`;$('workflowCopy').textContent=step===1?'Enter your check and payday dates.':step===2?'Add and confirm every bill coming before and after payday.':step===4?'Review Dexx’s recommendation and adjust only if needed.':'Plan approved. Track the experiment until next payday.';document.querySelectorAll('.step-track i').forEach((x,i)=>x.classList.toggle('active',i<step));const ex=experiment(c);$('experimentTitle').textContent=ex.title;$('experimentText').textContent=ex.text;$('experimentBar').style.width=`${ex.progress}%`;$('experimentProgress').textContent=`${ex.progress}% complete`;renderHistory()}}
 function show(id){document.body.classList.remove('front-door-active');document.querySelectorAll('.view').forEach(v=>v.classList.toggle('active',v.id===id));document.querySelectorAll('.bottom-nav button').forEach(b=>b.classList.toggle('active',b.dataset.go===id));history.replaceState(null,'','#'+id);scrollTo({top:0,behavior:'smooth'})}
@@ -2252,6 +2316,51 @@ function openFrontDoor(){
 $('enterLabBtn')?.addEventListener('click',e=>{e.preventDefault();openFinancialLab('laboratory')});
 $('joinLabBtn')?.addEventListener('click',e=>{e.preventDefault();openFinancialLab('start')});
 $('frontDoorBtn')?.addEventListener('click',e=>{e.preventDefault();openFrontDoor()});
+
+$('setupMoneyForm')?.addEventListener('submit',e=>{
+  e.preventDefault();
+  const raw=$('setupCurrentBalance')?.value;
+  if(raw===''||raw===null){$('setupMoneyStatus').textContent='Enter your available money. $0.00 is valid if that is what you have today.';return}
+  data.currentBalance=clamp(raw,0,1e9);
+  data.setup={...DEFAULTS.setup,...(data.setup||{}),skipped:{...DEFAULTS.setup.skipped,...(data.setup?.skipped||{})},currentMoneyConfirmed:true};
+  setRecoveryContext('Guided setup: money today',`${money(data.currentBalance)} confirmed as money available today.`,'change');
+  save();
+  if($('setupMoneyStatus'))$('setupMoneyStatus').textContent=`Saved. Dexx knows ${money(data.currentBalance)} is available today.`;
+});
+$('setupIncomeForm')?.addEventListener('submit',e=>{
+  e.preventDefault();
+  const expected=clamp($('setupExpectedPaycheck')?.value,0,1e9),next=$('setupNextPayday')?.value||'';
+  if(expected<=0){$('setupIncomeStatus').textContent='Enter the paycheck amount you expect next.';return}
+  if(!next){$('setupIncomeStatus').textContent='Choose the date of your next payday.';return}
+  const nextDate=dateAtNoon(next);if(!nextDate){$('setupIncomeStatus').textContent='Choose a valid next payday.';return}
+  data.profile={...DEFAULTS.profile,...(data.profile||{}),payFrequency:$('setupPayFrequency')?.value||'weekly',incomePattern:$('setupIncomePattern')?.value||'variable'};
+  data.setup={...DEFAULTS.setup,...(data.setup||{}),expectedPaycheck:expected,nextPayday:next,incomeConfirmed:true,skipped:{...DEFAULTS.setup.skipped,...(data.setup?.skipped||{})}};
+  setRecoveryContext('Guided setup: income & payday',`${money(expected)} expected on ${dateText(next,{month:'short',day:'numeric',year:'numeric'})}.`,'change');
+  save();
+  if($('setupIncomeStatus'))$('setupIncomeStatus').textContent='Saved as setup information. Dexx will not treat this paycheck as landed or funded.';
+});
+document.addEventListener('click',e=>{
+  const skip=e.target.closest('[data-setup-skip]');
+  if(skip){
+    const area=skip.dataset.setupSkip;
+    data.setup={...DEFAULTS.setup,...(data.setup||{}),skipped:{...DEFAULTS.setup.skipped,...(data.setup?.skipped||{}),[area]:true}};
+    setRecoveryContext(`Guided setup: skip ${area}`,`${area} setup skipped for now. It can be added later.`,'change');
+    save();
+    if($('setupFinalStatus'))$('setupFinalStatus').textContent=`${area[0].toUpperCase()+area.slice(1)} skipped for now. Dexx will keep recommending it until real information is added.`;
+    return;
+  }
+  if(e.target.closest('#setupEnterLab')){
+    const state=guidedSetupState();if(!state.requiredReady)return;
+    data.setup={...DEFAULTS.setup,...(data.setup||{}),completedAt:data.setup?.completedAt||new Date().toISOString(),skipped:{...DEFAULTS.setup.skipped,...(data.setup?.skipped||{})}};
+    save({skipRecovery:true,skipActivity:true});show('laboratory');return;
+  }
+  if(e.target.closest('#setupContinueRecommended')){
+    const state=guidedSetupState();
+    if(!state.requiredReady){$('setupMoneyForm')?.scrollIntoView({behavior:'smooth',block:'start'});return}
+    const next=['bills','debt','savings'].find(x=>!state.areas[x]);
+    if(next==='bills'){show('profile');setTimeout(()=>$('billManagerForm')?.scrollIntoView({behavior:'smooth',block:'start'}),120)}else if(next==='debt'){show('credit');setTimeout(()=>$('debtManagerForm')?.scrollIntoView({behavior:'smooth',block:'start'}),120)}else if(next==='savings'){show('savings');setTimeout(()=>$('savingsGoalForm')?.scrollIntoView({behavior:'smooth',block:'start'}),120)}
+  }
+});
 
 normalizeApprovedPlanFunding();
 const initial=location.hash.slice(1);show(['laboratory','budget','profile','credit','savings','expense','reports','calendar','more','start','dexx'].includes(initial)?initial:'laboratory');render();initializePersistentMemory();
