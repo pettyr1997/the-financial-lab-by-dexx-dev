@@ -1,26 +1,24 @@
-# Financial Lab 4.1.13 — Laboratory Briefing
+# Financial Lab 4.1.14 — Laboratory Integration Audit
 
-Builds on 4.1.12 without changing the existing Financial Lab financial-data schema.
+Builds on 4.1.13 without changing the existing Financial Lab financial-data schema.
 
-## New — Lab Briefing
+## Audited — Financial Health Score
 
-The Laboratory home screen now opens with a money-status briefing that separates **money available today** from **money planned for an upcoming paycheck**.
+The Laboratory health score is now integrated with the current payday system instead of presenting itself like an older standalone module.
 
-For a future approved paycheck, the briefing shows:
-- Available today from the current available balance.
-- The upcoming paycheck and check date.
-- The amount protected by the approved plan.
-- Planned TRUE Safe-to-Spend for the future cycle.
-- A Dexx Next Move explaining that the live runway begins only when payday arrives.
+- The active card is labeled `4.1.14 FINANCIAL HEALTH SCORE`.
+- A future approved paycheck is identified as **Plan readiness** so planned money is not confused with live spending behavior.
+- The summary explicitly says when the approved future plan is included and that live spending behavior begins on payday.
+- Score change comparisons no longer compare an active approved plan against its own approval snapshot. When a prior approved cycle exists, the comparison uses that prior cycle.
+- A first approved cycle builds the baseline instead of showing a misleading change versus itself.
 
-When the paycheck cycle is live, the same briefing changes automatically to show current TRUE Safe-to-Spend, spending this cycle, protected money, and a next move informed by the Weekly Runway / Pace Coach.
+## Cleaned — Laboratory integration
 
-When a cycle ends, it directs the user to start the next paycheck while preserving the rest of Financial Lab.
+- Removed the older duplicate Financial Health Score card from the Laboratory dashboard.
+- Updated the Dexx Action Center header to the current 4.1.14 integration pass.
+- Kept the newer 100-point breakdown as the single health-score source of truth.
+- Preserved Today's Mission, cash/bill/savings/debt stats, confidence, timeline, observations, upcoming bills, and experiment progress.
 
-## Why this release matters
+## Regression protection
 
-A planned paycheck must never look like cash that is already available. 4.1.13 makes that distinction visible immediately on the Laboratory dashboard.
-
-## Preserved
-
-Payday Command Center, Payday Execution Mode, Weekly Runway, Live Pace Action Guide, Reserve Memory, Bill Calendar, Forecast Engine, reports, recurring bills, debts, savings goals, expenses, approved history, and existing saved data remain intact.
+Payday Command Center, Payday Execution Mode, Weekly Runway, Live Pace Action Guide, Lab Briefing, Reserve Memory, Bill Calendar, Forecast Engine, reports, recurring bills, debts, savings goals, expenses, approved history, and saved financial data remain intact.
