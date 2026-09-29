@@ -947,7 +947,7 @@ body.front-door-active .app-shell *{
 @media(max-width:420px){.execution-head{display:block}.execution-head b{display:block;text-align:left;margin-top:6px}.execution-task{grid-template-columns:28px minmax(0,1fr)}.execution-task>b,.execution-task button,.execution-task>em{grid-column:2;text-align:left;justify-self:start}.execution-task button{margin-top:2px}}
 
 
-/* 4.1.10 — Weekly Runway */
+/* 4.1.10.1 — Weekly Runway + Cycle-Date Expense Guard */
 .weekly-runway{margin:15px 0;border:1px solid rgba(97,255,29,.3);border-radius:15px;background:linear-gradient(180deg,rgba(97,255,29,.04),#07100b);padding:14px}
 .weekly-runway[hidden]{display:none!important}
 .runway-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:11px}

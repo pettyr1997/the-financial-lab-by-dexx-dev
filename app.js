@@ -238,15 +238,38 @@ function billDefinitions(){return (Array.isArray(data.bills)?data.bills:[]).filt
 function paycheckCycleId(payDate,nextPayday){
   return payDate&&nextPayday ? `${payDate}__${nextPayday}` : '';
 }
+function cycleDatesFromId(cycleId){
+  const [start,end]=String(cycleId||'').split('__');
+  return start&&end?{start,end}:null;
+}
+function expenseDateFallsInCycle(date,start,end){
+  const d=dateAtNoon(date),s=dateAtNoon(start),e=dateAtNoon(end);
+  // A paycheck owns spending from its check date up to, but not including,
+  // the next payday. The next payday begins the next paycheck cycle.
+  return !!(d&&s&&e&&d>=s&&d<e);
+}
+function expenseDateMatchesCycleId(date,cycleId){
+  const cycle=cycleDatesFromId(cycleId);
+  return !!(cycle&&expenseDateFallsInCycle(date,cycle.start,cycle.end));
+}
+function normalizeExpenseCycleId(cycleId,date){
+  return cycleId&&expenseDateMatchesCycleId(date,cycleId)?cycleId:'';
+}
 function activeExpenseCycleId(){
   return paycheckCycleId(data.payDate,data.nextPayday);
 }
+function cycleIdForExpenseDate(date,preferredCycleId=''){
+  if(preferredCycleId&&expenseDateMatchesCycleId(date,preferredCycleId))return preferredCycleId;
+  const activeId=activeExpenseCycleId();
+  return activeId&&expenseDateMatchesCycleId(date,activeId)?activeId:'';
+}
 function attachUnboundExpensesToActiveCycle(){
   const id=activeExpenseCycleId();
-  if(!id)return 0;
+  const cycle=cycleDatesFromId(id);
+  if(!id||!cycle)return 0;
   let count=0;
   (Array.isArray(data.expenseRecords)?data.expenseRecords:[]).forEach(x=>{
-    if(x && !x.cycleId){
+    if(x && !x.cycleId && expenseDateFallsInCycle(x.date,cycle.start,cycle.end)){
       x.cycleId=id;
       count++;
     }
@@ -254,15 +277,15 @@ function attachUnboundExpensesToActiveCycle(){
   return count;
 }
 
-function expenseDefinitions(){return (Array.isArray(data.expenseRecords)?data.expenseRecords:[]).filter(x=>Number(x.amount)>0).map((x,i)=>({id:x.id||`expense-${i}`,name:x.name||'Expense',amount:Math.max(0,Number(x.amount)||0),category:x.category||'other',date:x.date||data.payDate||iso(new Date()),note:x.note||'',cycleId:x.cycleId||''}))}
+function expenseDefinitions(){return (Array.isArray(data.expenseRecords)?data.expenseRecords:[]).filter(x=>Number(x.amount)>0).map((x,i)=>({id:x.id||`expense-${i}`,name:x.name||'Expense',amount:Math.max(0,Number(x.amount)||0),category:x.category||'other',date:x.date||data.payDate||iso(new Date()),note:x.note||'',cycleId:normalizeExpenseCycleId(x.cycleId||'',x.date||data.payDate||iso(new Date()))}))}
 function expensesForCycle(start,end){
   const s=dateAtNoon(start),e=dateAtNoon(end);
   if(!s||!e)return expenseDefinitions();
   const cycleId=paycheckCycleId(iso(s),iso(e));
   return expenseDefinitions().filter(x=>{
-    if(x.cycleId)return x.cycleId===cycleId;
-    const d=dateAtNoon(x.date);
-    return d&&d>=s&&d<=e;
+    const inDateWindow=expenseDateFallsInCycle(x.date,s,e);
+    if(!inDateWindow)return false;
+    return !x.cycleId||x.cycleId===cycleId;
   }).sort((a,b)=>b.date.localeCompare(a.date))
 }
 function currentCycleExpenses(){const start=data.payDate||iso(new Date()),end=data.nextPayday||iso(new Date(Date.now()+7*86400000));return expensesForCycle(start,end)}
@@ -569,7 +592,7 @@ function financialMemorySnapshot(){
   }catch(_){}
   return {
     schema:'financial-lab-backup',
-    version:'4.1.10',
+    version:'4.1.10.1',
     exportedAt:new Date().toISOString(),
     storageKey:STORAGE_KEY,
     data:parsed||data
@@ -1640,7 +1663,9 @@ $('expenseForm')?.addEventListener('submit',e=>{
   const id=$('expenseId').value,name=$('expenseName').value.trim(),amount=clamp($('expenseAmount').value,0,1e9),category=$('expenseCategory').value,date=$('expenseDate').value,note=$('expenseNote').value.trim();
   if(!name||amount<=0||!date){$('expenseStatus').textContent='Add the expense name, amount, and date.';return}
   const existing=id?data.expenseRecords.find(x=>x.id===id):null;
-  const cycleId=existing?.cycleId||activeExpenseCycleId()||'';
+  // Bind only to a paycheck cycle that actually contains the expense date.
+  // This prevents pre-payday spending from reducing a future check's runway.
+  const cycleId=cycleIdForExpenseDate(date,existing?.cycleId||'');
   const record={id:id||(crypto.randomUUID?crypto.randomUUID():`expense-${Date.now()}`),name,amount,category,date,note,cycleId};
   if(existing)Object.assign(existing,record);else data.expenseRecords.push(record);
   setRecoveryContext(existing?`Update expense: ${name}`:`Add expense: ${name}`,`${money(amount)} ${category||'other'} expense ${existing?'updated':'recorded'} for ${dateText(date,{month:'short',day:'numeric'})}.`,'expense');
