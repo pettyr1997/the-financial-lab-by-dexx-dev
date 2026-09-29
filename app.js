@@ -592,7 +592,7 @@ function financialMemorySnapshot(){
   }catch(_){}
   return {
     schema:'financial-lab-backup',
-    version:'4.1.11',
+    version:'4.1.12',
     exportedAt:new Date().toISOString(),
     storageKey:STORAGE_KEY,
     data:parsed||data
@@ -1481,7 +1481,7 @@ function weeklyRunwayState(c,now=new Date()){
   const daily=daysLeft>0?safe/daysLeft:0;
   const usedRatio=startingSafe>0?spent/startingSafe:0;
 
-  // 4.1.11 Pace Coach uses whole paycheck days instead of clock time.
+  // 4.1.12 Pace Coach uses whole paycheck days and adds a live action guide.
   // On payday, day 1 of a 7-day cycle means roughly 1/7 of flexible money
   // can be used without being labeled "too fast." The next payday remains
   // exclusive and belongs to the next paycheck cycle.
@@ -1511,7 +1511,7 @@ function weeklyRunwayState(c,now=new Date()){
   }else if(status==='Spending too fast'){
     coachMessage=`You are ${money(Math.abs(paceGap))} over the calendar pace. Slow flexible spending so the remaining ${money(safe)} can last through ${dateText(nextPay,{month:'short',day:'numeric'})}.`;
   }else if(status==='Watch spending'){
-    coachMessage=`You are ${money(Math.abs(paceGap))} ahead of the calendar spending pace. Keep the next purchases light; your current daily runway is ${money(daily)}.`;
+    coachMessage=`You are ${money(Math.abs(paceGap))} over the calendar spending pace. Keep the next purchases light; your current daily runway is ${money(daily)}.`;
   }else if(status==='Ahead of pace'){
     coachMessage=`You are ${money(Math.max(0,paceGap))} under the calendar pace. That cushion gives the remaining ${money(safe)} more room to last until payday.`;
   }else{
@@ -1519,7 +1519,25 @@ function weeklyRunwayState(c,now=new Date()){
   }
 
   const pacePct=Math.max(0,Math.min(100,usedRatio*100));
-  return {payDate,nextPay,today,cycleDays,beforeCycle,afterCycle,daysLeft,startingSafe,spent,safe,daily,usedRatio,elapsedDays,expectedUsedRatio,expectedSpent,paceGap,status,tone,coachMessage,pacePct};
+  const actionRoom=beforeCycle||afterCycle||startingSafe<=0?0:Math.max(0,paceGap);
+  let actionAmount='Starts on payday',actionText=`On ${dateText(payDate,{month:'short',day:'numeric'})}, Dexx will show how much room remains before you reach the calendar spending pace.`;
+  if(afterCycle){
+    actionAmount='Cycle complete';
+    actionText='Start the next paycheck cycle to create a new live pace target.';
+  }else if(!beforeCycle&&startingSafe<=0){
+    actionAmount='$0.00';
+    actionText='There is no flexible Safe-to-Spend budget in this plan to pace.';
+  }else if(!beforeCycle&&safe<=0){
+    actionAmount='$0.00';
+    actionText='The flexible limit has been reached. Hold new flexible spending until the next payday.';
+  }else if(!beforeCycle&&paceGap<0){
+    actionAmount='$0.00';
+    actionText=`You are ${money(Math.abs(paceGap))} over today’s calendar pace. Pause flexible spending to let the calendar catch up.`;
+  }else if(!beforeCycle){
+    actionAmount=money(actionRoom);
+    actionText=`You can use up to ${money(actionRoom)} more before reaching today’s calendar pace. This is a pace guide, not extra money beyond your ${money(safe)} TRUE Safe-to-Spend.`;
+  }
+  return {payDate,nextPay,today,cycleDays,beforeCycle,afterCycle,daysLeft,startingSafe,spent,safe,daily,usedRatio,elapsedDays,expectedUsedRatio,expectedSpent,paceGap,status,tone,coachMessage,pacePct,actionRoom,actionAmount,actionText};
 }
 function renderWeeklyRunway(c){
   const panel=$('weeklyRunway');if(!panel)return;
@@ -1542,6 +1560,9 @@ function renderWeeklyRunway(c){
   if($('runwayPaceGapNote')){
     $('runwayPaceGapNote').textContent=r.beforeCycle?'No pace gap before payday':r.afterCycle?'Final difference from calendar pace':Math.abs(r.paceGap)<0.005?'Right on the pace budget':r.paceGap>=0?'Under the pace budget':'Over the pace budget';
   }
+  if($('runwayActionAmount'))$('runwayActionAmount').textContent=r.actionAmount;
+  if($('runwayActionText'))$('runwayActionText').textContent=r.actionText;
+  if($('runwayActionGuide'))$('runwayActionGuide').dataset.tone=r.tone;
 
   if(r.beforeCycle){
     const until=Math.max(0,Math.ceil((r.payDate-r.today)/86400000));

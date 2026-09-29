@@ -1,33 +1,26 @@
-# Financial Lab 4.1.11 — Runway Pace Coach
+# Financial Lab 4.1.12 — Live Pace Action Guide
 
-Builds on 4.1.10.1 without changing the existing Financial Lab financial-data schema.
+Builds on 4.1.11 without changing the existing Financial Lab financial-data schema.
 
-## Added — Dexx Runway Pace Coach
+## Added — Live Pace Action
 
-Weekly Runway now does more than show the remaining balance. Dexx compares actual flexible spending with where the user is in the paycheck cycle and explains whether the week is ahead of pace, on pace, or moving too fast.
+Dexx Pace Coach now turns the calendar comparison into a concrete same-day action. The new **LIVE PACE ACTION** panel shows how much room remains before flexible spending reaches the current day’s calendar pace.
 
-- **Calendar Pace** shows how much of the cycle's flexible budget could reasonably be used by the current paycheck day.
-- **Pace Gap** shows the dollar cushion under the calendar pace or the amount spending is running over it.
-- Coach states include **Ready**, **Ahead of pace**, **On pace**, **Watch spending**, **Spending too fast**, **Limit reached**, and **Cycle complete**.
-- The coach gives a plain-language action message based on the current pace and remaining TRUE Safe-to-Spend.
-- Daily Runway continues to recalculate from the money and days remaining.
+- Before payday: clearly says the live target starts on the check date.
+- During the cycle and under pace: shows the dollar amount that can still be used before reaching today’s calendar pace.
+- Over pace: shows **$0.00** and tells the user how far spending is over today’s pace.
+- At the flexible limit: shows **$0.00** and tells the user to hold new flexible spending.
+- After the cycle: prompts the user to start the next paycheck cycle.
+- The guide explicitly says this is a pacing target, **not extra money** beyond TRUE Safe-to-Spend.
 
-## Payday-day pacing fix
+## Fixed — Watch-spending wording
 
-Pace is now day-based instead of treating the beginning of payday as 0% of the cycle. For a weekly Oct 2 → Oct 9 cycle, Oct 2 is day 1 of 7 and the calendar pace is about 14% rather than 0%. This avoids labeling normal payday spending as too fast simply because it happened on the first day.
+4.1.11 correctly detected faster-than-calendar spending, but the Watch Spending coach sentence could say the user was “ahead” of pace. 4.1.12 now correctly says the user is **over** the calendar spending pace.
 
-The next payday remains exclusive to the current cycle and belongs to the next paycheck cycle, matching the 4.1.10.1 expense-date guard.
+## Example
 
-## Reference behavior
-
-For an approved Oct 2 → Oct 9 cycle with $530 TRUE Safe-to-Spend:
-
-- Before Oct 2: Pace Coach is **Ready**, spending pace has not started, and pre-cycle expenses do not count.
-- Oct 2: calendar pace is about **14%** (day 1 of 7).
-- Oct 5: calendar pace is about **57%** (day 4 of 7).
-- Oct 8: calendar pace is **100%** (day 7 of 7).
-- Oct 9: the old runway is complete; the next paycheck cycle should take over.
+For an Oct 2 → Oct 9 cycle with $530 TRUE Safe-to-Spend, Oct 2 calendar pace is about $75.71. If $20 has been spent in the cycle, LIVE PACE ACTION shows about **$55.71** of room before reaching that day’s pace. If $90 has been spent, it shows **$0.00** and explains that spending is about $14.29 over pace.
 
 ## Preserved
 
-4.1.10.1 Cycle-Date Expense Guard, Payday Command Center, Payday Execution Mode, Reserve Memory, savings contributions, recurring bills, Bill Calendar, Forecast Engine, Payday Continuity/Guard, reports, recovery controls, approved-paycheck rollback, and existing saved financial data remain preserved.
+4.1.11 Pace Coach, 4.1.10.1 Cycle-Date Expense Guard, Payday Command Center, Payday Execution Mode, Reserve Memory, savings contributions, recurring bills, Bill Calendar, Forecast Engine, Payday Continuity/Guard, reports, recovery controls, approved-paycheck rollback, and existing saved financial data remain preserved.
