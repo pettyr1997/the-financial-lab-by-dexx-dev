@@ -1,27 +1,35 @@
-# Financial Lab v4.1.17 — Guided Lab Setup Foundation
+# Financial Lab v4.1.18 — Lab Readiness Intelligence
 
-Builds directly on v4.1.16 Payday Landing + Amount Reconciliation and preserves the locked Oct 2 payday test. This release adds a small, additive `setup` metadata object that is merged automatically with existing saved data; existing bills, debts, savings, expenses, approved history, Reserve Memory, and payday state are preserved.
+Builds directly on v4.1.17 Guided Lab Setup and preserves the locked Oct 2 payday/reconciliation test. No existing financial-data schema is replaced; current bills, approved plans, Reserve Memory, expenses, history, setup skip states, and payday state remain intact.
 
 ## What changed
 
-- Rebuilds **Start Here** as a guided first-time Financial Lab setup instead of only an app walkthrough.
-- Separates setup into **required** and **recommended** information.
-- Required step 1 confirms **money available today**. A real $0 balance is valid and can be explicitly confirmed.
-- Required step 2 captures **pay frequency, income pattern, expected next check, and next payday**.
-- Setup income is planning information only. Saving it does **not** mark a paycheck as landed, funded, or approved.
-- Bills, debt, savings, and spending can be added immediately or marked **Skip for now**.
-- Skipped information remains visibly incomplete so Financial Lab never treats missing data as a real $0 balance or “no debt / no bills.”
-- Adds a **Lab Readiness** summary and a Dexx recommendation for the next missing setup area.
-- **Enter My Lab — Finish Later** unlocks after the two essential steps are complete.
-- Existing users with a real active payday plan are recognized as already having the two essential money/income steps, so the update does not force them to re-enter the current cycle.
-- Keeps the Progressive Unlock rule: required steps unlock the Lab; recommended information improves completeness without becoming a wall.
+- Adds a compact **Lab Readiness** card to the Laboratory home screen.
+- Shows how many of the six setup areas are actually complete and points to the next useful setup action.
+- Adds **Plan Accuracy** messaging to the Lab Briefing so TRUE Safe-to-Spend is not presented with false certainty when bills, debt, or savings information is missing.
+- Makes the Financial Health Score **provisional** until Money Today, Income/Payday, Bills, Debt Status, and Savings setup are known.
+- Historical activity can still contribute to the score, but it can no longer silently convert skipped/unknown information into known information.
+- Debt skipped is still unknown. Confirmed debt-free is treated as known and displays correctly in Guided Setup.
+- Dexx Action Center now prioritizes missing Bills, Debt Status, and Savings setup before ordinary optimization recommendations.
+- Keeps Guided Setup optional after the two essentials: users can still enter the Lab and finish recommended information later.
 
-## Current Sep 29 test state
+## Expected current test state
 
-The existing Oct 2 plan must remain untouched: $700 planned paycheck, $170 planned protected, $530 planned TRUE Safe-to-Spend, 0 moves funded, and `PAYCHECK LANDS OCT 2` still locked.
+With the existing test data shown during v4.1.17:
 
-For the current test data, **Start Here** should recognize the active Oct 2 plan as satisfying the two required setup steps. Any missing bills/debt/savings/spending areas should show as recommended or optional rather than silently assumed to be zero.
+- Money available today: $0.00 — ready
+- Expected paycheck: $700 on Oct 2 — ready
+- Recurring bills: 2 saved — ready
+- Debt: skipped / unknown
+- Savings: not entered
+- Spending history: 2 expenses — ready
 
-## Deployment
+The Laboratory should therefore show **4 of 6 areas complete (67%)**, recommend continuing setup with **Debt** next, and label plan accuracy as **Partial**. The Financial Health Score may still display the existing numeric baseline, but it must be labeled **Provisional / Baseline** rather than implying the financial picture is complete.
 
-Upload these six files together, wait for GitHub Pages to deploy, fully close the installed PWA, then reopen it.
+## Important preserved behavior
+
+- The $700 Oct 2 paycheck remains planned, not available today.
+- The $170 protection and $530 TRUE Safe-to-Spend remain scheduled until payday.
+- Payday Execution Mode remains blocked before Oct 2.
+- v4.1.16 amount reconciliation remains waiting for the real payday.
+- Bill Calendar, Forecast Engine, Reserve Memory, Weekly Runway, Pace Coach, Reports, debt/savings managers, and history remain available.
