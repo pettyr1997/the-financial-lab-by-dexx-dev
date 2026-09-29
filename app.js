@@ -592,7 +592,7 @@ function financialMemorySnapshot(){
   }catch(_){}
   return {
     schema:'financial-lab-backup',
-    version:'4.1.15',
+    version:'4.1.16',
     exportedAt:new Date().toISOString(),
     storageKey:STORAGE_KEY,
     data:parsed||data
@@ -1306,7 +1306,7 @@ function reserveKey(b){return `${b.parentId||b.id}|${b.occurrenceDate||b.date}`}
 function protectedFor(b){const key=reserveKey(b);return Math.min(Number(b.amount||0),Math.max(0,Number(data.reserveMemory?.[key]||0)))}
 function clearReserveForBill(billId){if(!data.reserveMemory||!billId)return;Object.keys(data.reserveMemory).forEach(k=>{if(k.startsWith(`${billId}|`))delete data.reserveMemory[k]})}
 function rollbackReserveContributions(snapshot){
-  // 4.1.15: a planned future paycheck has not funded anything yet, so there
+  // 4.1.16: a planned future paycheck has not funded anything yet, so there
   // is nothing to roll back when that planned check is deleted.
   if(snapshot?.fundingStatus==='planned')return;
   if(snapshot?.reserveContributions?.length){
@@ -1494,6 +1494,69 @@ function fundApprovedPlan(){
   save();
   return true;
 }
+let paydayReconciliationPreview=null;
+function actualPaycheckPreview(actual){
+  const prior=data.paycheck;
+  data.paycheck=Math.max(0,Number(actual)||0);
+  const preview=paycheckPlan();
+  data.paycheck=prior;
+  return preview;
+}
+function updatePlannedSnapshotFromActual(actual,preview){
+  const plan=data.approvedPlan;if(!plan||planFundingStatus(plan)!=='planned')return false;
+  const plannedAmount=Number(plan.plannedPaycheck??plan.paycheck)||0;
+  data.paycheck=Math.max(0,Number(actual)||0);
+  Object.assign(plan,{
+    plannedPaycheck:plannedAmount,
+    actualPaycheck:data.paycheck,
+    paycheck:data.paycheck,
+    paycheckVariance:Math.round((data.paycheck-plannedAmount)*100)/100,
+    reconciledAt:new Date().toISOString(),
+    healthScore:calculateHealthScore(preview).total,
+    payNow:Number(preview.payNow)||0,
+    reserve:Number(preview.reserve)||0,
+    reserveTarget:Number(preview.reserveTarget)||0,
+    reserveContributions:[],
+    savingsContributions:[],
+    reserveDetails:preview.upcomingBills.map(b=>({parentId:b.parentId||b.id,name:b.name,amount:b.amount,date:b.date,alreadyProtected:b.alreadyProtected,currentCheckReserve:b.currentCheckReserve,paychecksRemaining:b.paychecksRemaining})),
+    savings:Number(preview.savings)||0,
+    debtPayment:Number(preview.debtPayment)||0,
+    debtTarget:preview.targetDebt?{id:preview.targetDebt.id,name:preview.targetDebt.name}:null,
+    spent:Number(preview.expenseTotal)||0,
+    protected:(Number(preview.payNow)||0)+(Number(preview.reserve)||0)+(Number(preview.savings)||0)+(Number(preview.debtPayment)||0),
+    expenses:(preview.currentExpenses||[]).map(x=>({name:x.name||'Expense',category:historyExpenseCategory(x),amount:Number(x.amount)||0,date:x.date||''})),
+    safeToSpend:Number(preview.safeToSpend)||0,
+    shortfall:Number(preview.shortfall)||0,
+    bills:preview.dueNowBills.map(b=>({parentId:b.parentId||b.id,occurrenceDate:b.occurrenceDate||b.date,name:b.name,amount:b.amount,date:b.date,priority:b.priority,alreadyProtected:b.alreadyProtected,currentCheckDue:b.currentCheckDue}))
+  });
+  syncApprovedPlanHistory(plan);
+  return true;
+}
+function sendReconciledPlanBackForReview(actual){
+  const plan=data.approvedPlan;if(!plan)return false;
+  const id=plan.id;
+  data.paycheck=Math.max(0,Number(actual)||0);
+  data.paycheckHistory=(data.paycheckHistory||[]).filter(h=>h.id!==id);
+  data.approvedPlan=null;
+  clearExecutionState();
+  paydayReconciliationPreview=null;
+  setRecoveryContext('Reconcile paycheck amount',`${money(data.paycheck)} actually landed. Dexx paused funding because the updated plan needs review.`,'payday');
+  save();
+  if($('approvalStatus'))$('approvalStatus').textContent=`Actual paycheck recorded as ${money(data.paycheck)}. Review the recalculated plan before approving — nothing has been funded yet.`;
+  setTimeout(()=>document.querySelector('.paycheck-planner')?.scrollIntoView({behavior:'smooth',block:'start'}),100);
+  return true;
+}
+function activateReconciledPayday(actual,preview){
+  if(!updatePlannedSnapshotFromActual(actual,preview))return false;
+  const plan=data.approvedPlan;
+  const planned=Number(plan.plannedPaycheck)||0,variance=Number(plan.paycheckVariance)||0;
+  if(!fundApprovedPlan())return false;
+  setRecoveryContext('Reconcile + activate paycheck',`${money(plan.actualPaycheck)} landed vs ${money(planned)} planned (${variance>=0?'+':''}${money(variance)} difference). Dexx recalculated before funding the payday plan.`,'approval');
+  save();
+  paydayReconciliationPreview=null;
+  return true;
+}
+
 function executionTasks(plan,c){
   if(!plan)return [];
   const tasks=[];
@@ -1505,17 +1568,24 @@ function executionTasks(plan,c){
   return tasks;
 }
 function renderPaydayExecution(c){
-  const panel=$('paydayExecutionMode'),host=$('executionTasks'),status=$('executionStatus'),progress=$('executionProgress'),landing=$('confirmPaycheckLanded');
+  const panel=$('paydayExecutionMode'),host=$('executionTasks'),status=$('executionStatus'),progress=$('executionProgress'),landing=$('confirmPaycheckLanded'),reconcile=$('paycheckReconcile');
   if(!panel||!host)return;
   const plan=data.approvedPlan;
   panel.hidden=!plan;
-  if(!plan){host.replaceChildren();if(landing)landing.hidden=true;return}
+  if(!plan){host.replaceChildren();if(landing)landing.hidden=true;if(reconcile)reconcile.hidden=true;return}
   const funding=planFundingStatus(plan),planned=funding==='planned';
   const payDate=dateAtNoon(plan.payDate||data.payDate),today=dateAtNoon(new Date()),beforePayday=Boolean(payDate&&today&&today<payDate);
   if(landing){
-    landing.hidden=!planned;
-    landing.disabled=planned&&beforePayday;
-    landing.textContent=beforePayday?`PAYCHECK LANDS ${dateText(payDate,{month:'short',day:'numeric'}).toUpperCase()}`:'CONFIRM PAYCHECK LANDED';
+    landing.hidden=!planned||!beforePayday;
+    landing.disabled=true;
+    landing.textContent=beforePayday?`PAYCHECK LANDS ${dateText(payDate,{month:'short',day:'numeric'}).toUpperCase()}`:'PAYCHECK READY';
+  }
+  if(reconcile){
+    reconcile.hidden=!planned||beforePayday;
+    if(!reconcile.hidden){
+      if($('reconcilePlanned'))$('reconcilePlanned').textContent=money(plan.plannedPaycheck??plan.paycheck??0);
+      if($('actualPaycheckAmount')&&!$('actualPaycheckAmount').value)$('actualPaycheckAmount').placeholder=Number(plan.paycheck||0).toFixed(2);
+    }
   }
   const state=executionForPlan(plan),tasks=executionTasks(plan,c);
   host.replaceChildren();
@@ -1875,9 +1945,42 @@ document.addEventListener('click',e=>{
 
 $('confirmPaycheckLanded')?.addEventListener('click',()=>{
   if(!data.approvedPlan)return;
-  const payDate=dateAtNoon(data.approvedPlan.payDate||data.payDate),today=dateAtNoon(new Date());
-  if(payDate&&today&&today<payDate){if($('executionStatus'))$('executionStatus').textContent=`This paycheck is planned for ${dateText(payDate,{month:'short',day:'numeric'})}. Dexx will not fund it early.`;return}
-  if(fundApprovedPlan()){if($('approvalStatus'))$('approvalStatus').textContent='Paycheck confirmed. Reserve Memory and savings funding are now live.';}
+  const payDate=dateAtNoon(data.approvedPlan.payDate||data.payDate);
+  if($('executionStatus'))$('executionStatus').textContent=`This paycheck is planned for ${dateText(payDate,{month:'short',day:'numeric'})}. Dexx will not fund it early.`;
+});
+
+$('checkPaycheckDifference')?.addEventListener('click',()=>{
+  const plan=data.approvedPlan;if(!plan||planFundingStatus(plan)!=='planned')return;
+  const payDate=dateAtNoon(plan.payDate||data.payDate),today=dateAtNoon(new Date());
+  if(payDate&&today&&today<payDate)return;
+  const actual=clamp($('actualPaycheckAmount')?.value,0,1e9);
+  if(actual<=0){if($('reconcileMessage')){$('reconcileMessage').textContent='Enter the amount that actually reached your account.';$('reconcileMessage').classList.add('watch')}return}
+  const preview=actualPaycheckPreview(actual),planned=Number(plan.plannedPaycheck??plan.paycheck)||0,variance=Math.round((actual-planned)*100)/100;
+  paydayReconciliationPreview={actual,preview,planId:plan.id};
+  const diff=$('reconcileDifference'),box=$('reconcilePreview'),varianceBox=diff?.closest('.reconcile-variance');
+  if(diff)diff.textContent=`${variance>0?'+':''}${money(variance)}`;
+  if(varianceBox){varianceBox.classList.toggle('positive',variance>0);varianceBox.classList.toggle('negative',variance<0)}
+  if($('reconcileDifferenceNote'))$('reconcileDifferenceNote').textContent=Math.abs(variance)<.005?'Matches the planned paycheck':variance>0?`${money(variance)} more than planned`:`${money(Math.abs(variance))} less than planned`;
+  if($('reconcileProtected'))$('reconcileProtected').textContent=money((preview.payNow||0)+(preview.reserve||0)+(preview.savings||0)+(preview.debtPayment||0));
+  if($('reconcileSafe'))$('reconcileSafe').textContent=money(preview.safeToSpend||0);
+  if($('reconcileBadge'))$('reconcileBadge').textContent='Step 2 of 2';
+  const msg=$('reconcileMessage'),activate=$('activateReconciledPayday');
+  if(preview.shortfall>0){
+    if(msg){msg.textContent=`The actual check leaves ${money(preview.shortfall)} of immediate bills unfunded. Dexx will not activate this plan until you review the recalculated numbers.`;msg.classList.add('watch')}
+    if(activate){activate.textContent='REVIEW UPDATED PLAN';activate.dataset.mode='review'}
+  }else{
+    if(msg){msg.textContent=Math.abs(variance)<.005?'The deposit matches the plan. Dexx is ready to activate the paycheck and fund the scheduled protection.':`Dexx recalculated the plan using ${money(actual)}. Review the updated protection and TRUE Safe-to-Spend above before activation.`;msg.classList.remove('watch')}
+    if(activate){activate.textContent='ACTIVATE RECONCILED PAYDAY';activate.dataset.mode='activate'}
+  }
+  if(box)box.hidden=false;
+});
+
+$('activateReconciledPayday')?.addEventListener('click',()=>{
+  const r=paydayReconciliationPreview,plan=data.approvedPlan;if(!r||!plan||r.planId!==plan.id)return;
+  if($('activateReconciledPayday')?.dataset.mode==='review'){sendReconciledPlanBackForReview(r.actual);return}
+  if(activateReconciledPayday(r.actual,r.preview)){
+    if($('approvalStatus'))$('approvalStatus').textContent=`Paycheck confirmed at ${money(r.actual)}. Dexx reconciled the amount before Reserve Memory and savings funding went live.`;
+  }
 });
 
 document.querySelectorAll('[data-mission]').forEach(x=>x.addEventListener('change',()=>{data.missions[x.dataset.mission]=x.checked;save({skipRecovery:true,skipActivity:true})}));

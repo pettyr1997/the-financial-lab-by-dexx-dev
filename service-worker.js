@@ -1,6 +1,6 @@
-// Financial Lab 4.1.15 — Payday Landing Guard
-const CACHE='financial-lab-v4.1.15';
-const CORE=['./styles.css?v=4.1.15','./app.js?v=4.1.15','./manifest.webmanifest','./icon-192.png','./icon-512.png','./financial-lab-logo.jpg','./dexx-character-clean.jpg'];
+// Financial Lab 4.1.16 — Payday Landing + Amount Reconciliation
+const CACHE='financial-lab-v4.1.16';
+const CORE=['./styles.css?v=4.1.16','./app.js?v=4.1.16','./manifest.webmanifest','./icon-192.png','./icon-512.png','./financial-lab-logo.jpg','./dexx-character-clean.jpg'];
 
 self.addEventListener('install',event=>{
   event.waitUntil(caches.open(CACHE).then(cache=>cache.addAll(CORE)).then(()=>self.skipWaiting()));

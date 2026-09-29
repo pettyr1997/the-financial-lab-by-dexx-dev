@@ -1014,8 +1014,22 @@ body.front-door-active .app-shell *{
 /* Financial Lab 4.1.14 — Laboratory Integration Audit */
 
 
-/* Financial Lab 4.1.15 — Payday Landing Guard */
+/* Financial Lab 4.1.16 — Payday Landing + Amount Reconciliation */
 .execution-landing-button{width:100%;margin:0 0 10px;border:1px solid rgba(97,255,29,.55);border-radius:11px;background:var(--green);color:#061006;font-weight:950;font-size:.72rem;letter-spacing:.04em;padding:12px 14px}
 .execution-landing-button:disabled{background:#111814;color:#8c9a91;border-color:#2b3831;opacity:1}
 .execution-task.scheduled{border-color:rgba(140,154,145,.28);background:#090d0b}
 .execution-task.scheduled .execution-check,.execution-task.scheduled>em{color:#9aa79f}
+
+/* 4.1.16 — Payday Landing & Amount Reconciliation */
+.paycheck-reconcile{margin:0 0 12px;border:1px solid rgba(255,176,59,.38);border-radius:13px;background:#0d110d;padding:13px}
+.paycheck-reconcile[hidden],.reconcile-preview[hidden]{display:none!important}
+.reconcile-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:8px}
+.reconcile-head span,.reconcile-grid span,.reconcile-variance span{display:block;color:var(--green);font-size:.66rem;font-weight:950;letter-spacing:.1em}
+.reconcile-head strong{display:block;margin-top:3px;font-size:1rem}.reconcile-head b{color:#ffb03b;font-size:.72rem;text-align:right}
+.paycheck-reconcile>p,.reconcile-message{margin:7px 0 12px;color:#aeb9b2;font-size:.78rem;line-height:1.45}
+.reconcile-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin:10px 0}.reconcile-grid article,.reconcile-variance{border:1px solid #28352e;border-radius:11px;background:#07100b;padding:11px}
+.reconcile-grid strong,.reconcile-variance strong{display:block;margin-top:5px;color:#fff;font-size:1.15rem}.reconcile-grid small,.reconcile-variance small{display:block;margin-top:4px;color:#8f9c94;font-size:.68rem;line-height:1.35}
+.reconcile-money{display:flex;align-items:center;margin-top:5px;color:#fff;font-weight:900;font-size:1.1rem}.reconcile-money i{font-style:normal}.reconcile-money input{width:100%;min-width:0;border:0;background:transparent;color:#fff;font:inherit;outline:0;padding:0 0 0 2px}
+.reconcile-preview{margin-top:12px;border-top:1px solid #26332c;padding-top:12px}.reconcile-variance{margin-bottom:9px}.reconcile-variance.positive strong{color:var(--green)}.reconcile-variance.negative strong{color:#ffb03b}
+.reconcile-grid.compact{margin-bottom:8px}.reconcile-message{margin:8px 0 11px}.reconcile-message.watch{color:#ffca75}
+@media(max-width:420px){.reconcile-grid{grid-template-columns:1fr}.reconcile-grid.compact{grid-template-columns:1fr 1fr}}
