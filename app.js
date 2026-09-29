@@ -43,11 +43,11 @@ async function initializePersistentMemory(){
   const localRaw=localStorage.getItem(STORAGE_KEY);
   if(!localRaw&&mirror&&mirror.data){
     localStorage.setItem(STORAGE_KEY,JSON.stringify(mirror.data));
-    data=load();render();
+    data=load();normalizeApprovedPlanFunding();render();
     const status=$('memoryGuardStatus');if(status)status.textContent='Financial Lab recovered your saved memory from the device backup layer.';
   }else if(localRaw&&mirror&&mirror.data){
     const localTime=Date.parse(data.lastUpdated||0)||0,mirrorTime=Date.parse(mirror.data.lastUpdated||mirror.savedAt||0)||0;
-    if(mirrorTime>localTime){localStorage.setItem(STORAGE_KEY,JSON.stringify(mirror.data));data=load();render()}
+    if(mirrorTime>localTime){localStorage.setItem(STORAGE_KEY,JSON.stringify(mirror.data));data=load();normalizeApprovedPlanFunding();render()}
   }
   await writeMemoryMirror(data);
   lastSavedSnapshot=cloneFinancialData(data);
@@ -592,7 +592,7 @@ function financialMemorySnapshot(){
   }catch(_){}
   return {
     schema:'financial-lab-backup',
-    version:'4.1.14',
+    version:'4.1.15',
     exportedAt:new Date().toISOString(),
     storageKey:STORAGE_KEY,
     data:parsed||data
@@ -1306,6 +1306,9 @@ function reserveKey(b){return `${b.parentId||b.id}|${b.occurrenceDate||b.date}`}
 function protectedFor(b){const key=reserveKey(b);return Math.min(Number(b.amount||0),Math.max(0,Number(data.reserveMemory?.[key]||0)))}
 function clearReserveForBill(billId){if(!data.reserveMemory||!billId)return;Object.keys(data.reserveMemory).forEach(k=>{if(k.startsWith(`${billId}|`))delete data.reserveMemory[k]})}
 function rollbackReserveContributions(snapshot){
+  // 4.1.15: a planned future paycheck has not funded anything yet, so there
+  // is nothing to roll back when that planned check is deleted.
+  if(snapshot?.fundingStatus==='planned')return;
   if(snapshot?.reserveContributions?.length){
     data.reserveMemory=data.reserveMemory&&typeof data.reserveMemory==='object'?data.reserveMemory:{};
     snapshot.reserveContributions.forEach(c=>{
@@ -1444,6 +1447,53 @@ function commandCenterPlan(c){
     upcomingBills:Array.isArray(a.reserveDetails)?a.reserveDetails:c.upcomingBills
   };
 }
+function planFundingStatus(plan){
+  if(!plan)return 'none';
+  if(plan.fundingStatus==='planned'||plan.fundingStatus==='funded')return plan.fundingStatus;
+  const payDate=dateAtNoon(plan.payDate||data.payDate),today=dateAtNoon(new Date());
+  return payDate&&today&&payDate>today?'planned':'funded';
+}
+function syncApprovedPlanHistory(plan){
+  if(!plan?.id||!Array.isArray(data.paycheckHistory))return;
+  const idx=data.paycheckHistory.findIndex(h=>h.id===plan.id);
+  if(idx>=0)data.paycheckHistory[idx]={...data.paycheckHistory[idx],...plan};
+}
+function normalizeApprovedPlanFunding(){
+  const plan=data.approvedPlan;if(!plan||plan.fundingStatus)return false;
+  const payDate=dateAtNoon(plan.payDate||data.payDate),today=dateAtNoon(new Date());
+  if(payDate&&today&&payDate>today){
+    // Builds before 4.1.15 recorded reserve/savings immediately on approval.
+    // Reverse those entries once so a future check cannot look funded today.
+    rollbackReserveContributions(plan);
+    plan.fundingStatus='planned';
+    plan.reserveContributions=[];
+    plan.savingsContributions=[];
+    plan.fundedAt='';
+    syncApprovedPlanHistory(plan);
+    localStorage.setItem(STORAGE_KEY,JSON.stringify(data));
+    return true;
+  }
+  plan.fundingStatus='funded';
+  plan.fundedAt=plan.approvedAt||new Date().toISOString();
+  syncApprovedPlanHistory(plan);
+  localStorage.setItem(STORAGE_KEY,JSON.stringify(data));
+  return true;
+}
+function fundApprovedPlan(){
+  const plan=data.approvedPlan;if(!plan||planFundingStatus(plan)!=='planned')return false;
+  const payDate=dateAtNoon(plan.payDate||data.payDate),today=dateAtNoon(new Date());
+  if(payDate&&today&&today<payDate)return false;
+  const reserveContributions=applyReserveContributions({reserve:Number(plan.reserve)||0,upcomingBills:Array.isArray(plan.reserveDetails)?plan.reserveDetails:[]});
+  const savingsContributions=applySavingsContributions(Number(plan.savings)||0);
+  plan.reserveContributions=reserveContributions;
+  plan.savingsContributions=savingsContributions;
+  plan.fundingStatus='funded';
+  plan.fundedAt=new Date().toISOString();
+  syncApprovedPlanHistory(plan);
+  setRecoveryContext('Confirm paycheck landed',`${money(plan.paycheck||0)} paycheck activated. ${money(reserveContributions.reduce((sum,x)=>sum+Number(x.amount||0),0))} funded in bill reserves and ${money(savingsContributions.reduce((sum,x)=>sum+Number(x.amount||0),0))} recorded to savings.`,'approval');
+  save();
+  return true;
+}
 function executionTasks(plan,c){
   if(!plan)return [];
   const tasks=[];
@@ -1455,22 +1505,37 @@ function executionTasks(plan,c){
   return tasks;
 }
 function renderPaydayExecution(c){
-  const panel=$('paydayExecutionMode'),host=$('executionTasks'),status=$('executionStatus'),progress=$('executionProgress');
+  const panel=$('paydayExecutionMode'),host=$('executionTasks'),status=$('executionStatus'),progress=$('executionProgress'),landing=$('confirmPaycheckLanded');
   if(!panel||!host)return;
   const plan=data.approvedPlan;
   panel.hidden=!plan;
-  if(!plan){host.replaceChildren();return}
+  if(!plan){host.replaceChildren();if(landing)landing.hidden=true;return}
+  const funding=planFundingStatus(plan),planned=funding==='planned';
+  const payDate=dateAtNoon(plan.payDate||data.payDate),today=dateAtNoon(new Date()),beforePayday=Boolean(payDate&&today&&today<payDate);
+  if(landing){
+    landing.hidden=!planned;
+    landing.disabled=planned&&beforePayday;
+    landing.textContent=beforePayday?`PAYCHECK LANDS ${dateText(payDate,{month:'short',day:'numeric'}).toUpperCase()}`:'CONFIRM PAYCHECK LANDED';
+  }
   const state=executionForPlan(plan),tasks=executionTasks(plan,c);
   host.replaceChildren();
   let done=0,counted=0;
   tasks.forEach(task=>{
-    const isDone=task.auto&&!task.active?true:!!state.done[task.id];
+    const scheduled=planned;
+    const isDone=scheduled?false:(task.auto&&!task.active?true:!!state.done[task.id]);
     if(!task.active){counted++;if(isDone)done++}
-    const row=document.createElement('article');row.className=`execution-task${isDone?' done':''}${task.active?' active':''}`;
-    const badge=task.active?'ACTIVE':isDone?'DONE':'TO DO';
-    row.innerHTML=`<div class="execution-check" aria-hidden="true">${task.active?'→':isDone?'✓':'○'}</div><div class="execution-copy"><span>${task.kind.toUpperCase()}</span><strong>${task.title}</strong><small>${task.note}</small></div>${task.amount===null?'':`<b>${money(task.amount)}</b>`}${!task.auto&&task.action?`<button type="button" data-execution-task="${task.id}">${isDone?'UNDO':task.action}</button>`:''}<em>${badge}</em>`;
+    const row=document.createElement('article');row.className=`execution-task${isDone?' done':''}${task.active&&!scheduled?' active':''}${scheduled?' scheduled':''}`;
+    const badge=scheduled?'SCHEDULED':task.active?'ACTIVE':isDone?'DONE':'TO DO';
+    const icon=scheduled?'◷':task.active?'→':isDone?'✓':'○';
+    const actionButton=!scheduled&&!task.auto&&task.action?`<button type="button" data-execution-task="${task.id}">${isDone?'UNDO':task.action}</button>`:'';
+    row.innerHTML=`<div class="execution-check" aria-hidden="true">${icon}</div><div class="execution-copy"><span>${task.kind.toUpperCase()}</span><strong>${task.title}</strong><small>${scheduled?'Waiting for the paycheck to land. No money is recorded as funded yet.':task.note}</small></div>${task.amount===null?'':`<b>${money(task.amount)}</b>`}${actionButton}<em>${badge}</em>`;
     host.append(row);
   });
+  if(planned){
+    if(progress)progress.textContent='0 moves funded';
+    if(status)status.textContent=beforePayday?`Plan ready for ${dateText(payDate,{month:'short',day:'numeric'})}. The ${money(plan.paycheck||0)} check, ${money(plan.reserve||0)} reserve, and ${money(plan.savings||0)} savings are still planned — not money available or funded today.`:'Payday has arrived. Confirm the paycheck landed before Dexx records reserve and savings funding.';
+    return;
+  }
   if(progress)progress.textContent=counted?`${done} of ${counted} moves done`:'Execution ready';
   if(status)status.textContent=counted&&done===counted?`Payday moves complete. Keep tracking spending — ${money(c.safeToSpend)} is currently safe through ${dateText(plan.nextPayday,{month:'short',day:'numeric'})}.`:`${counted-done} payday move${counted-done===1?'':'s'} still need confirmation. Protected money stays separated from TRUE Safe-to-Spend.`;
 }
@@ -1613,18 +1678,23 @@ function renderPaydayCommandCenter(c){
   $('commandSpent').textContent=money(p.expenseTotal||0);
   $('commandNextPayday').textContent=nextPay?dateText(nextPay,{month:'short',day:'numeric'}):'—';
   $('commandDaysToPayday').textContent=days===null?'Schedule not set':checkDate?(days===0?'Same-day payday':`${days} day${days===1?'':'s'} after this check`):(days===0?'Payday today':`${days} day${days===1?'':'s'} away`);
-  const status=!p.paycheck?'Waiting for check':p.shortfall?'Needs attention':data.approvedPlan?'Execution mode': 'Plan ready';
+  const funding=data.approvedPlan?planFundingStatus(data.approvedPlan):'none';
+  const plannedFunding=funding==='planned';
+  const status=!p.paycheck?'Waiting for check':p.shortfall?'Needs attention':plannedFunding?'Plan scheduled':data.approvedPlan?'Execution mode':'Plan ready';
   $('commandCenterStatus').textContent=status;
   $('commandCenterStatus').dataset.state=p.shortfall?'watch':data.approvedPlan?'approved':p.paycheck?'ready':'waiting';
+  if($('commandProtectedLabel'))$('commandProtectedLabel').textContent=plannedFunding?'PLANNED PROTECTED':'PROTECTED';
   const action=$('commandPlanAction');
   if(action)action.textContent=!p.paycheck?'ENTER CHECK':data.approvedPlan?'PAYDAY CHECKLIST':'REVIEW / APPROVE PLAN';
   const readout=!p.paycheck
     ?`Next scheduled check: ${dateText(suggestedNextPayCycle().payDate,{weekday:'short',month:'short',day:'numeric'})}. Enter the amount and Dexx will connect bills, reserves, savings, debt, and spending.`
     :p.shortfall>0
       ?`This check is ${money(p.shortfall)} short on immediate priorities. Protect required bills first; TRUE Safe-to-Spend stays at ${money(p.safeToSpend)}.`
-      :data.approvedPlan
-        ?`Execution mode is active. ${money(protectedTotal)} stays assigned to the approved plan and ${money(p.safeToSpend)} is your current TRUE Safe-to-Spend after ${money(p.expenseTotal)} recorded spending.`
-        :`Plan ready. ${money(p.payNow)} goes to bills now, ${money(p.reserve)} protects future bills, ${money(p.savings)} goes to savings, and ${money(p.safeToSpend)} remains truly safe to spend.`;
+      :plannedFunding
+        ?`${money(protectedTotal)} is planned to be protected when the ${money(p.paycheck)} paycheck lands. Nothing from this future check is counted as funded today; ${money(p.safeToSpend)} is the planned TRUE Safe-to-Spend for the upcoming cycle.`
+        :data.approvedPlan
+          ?`Execution mode is active. ${money(protectedTotal)} stays assigned to the approved plan and ${money(p.safeToSpend)} is your current TRUE Safe-to-Spend after ${money(p.expenseTotal)} recorded spending.`
+          :`Plan ready. ${money(p.payNow)} goes to bills now, ${money(p.reserve)} protects future bills, ${money(p.savings)} goes to savings, and ${money(p.safeToSpend)} remains truly safe to spend.`;
   $('commandDexxReadout').textContent=readout;
   renderWeeklyRunway(p);
   renderPaydayExecution(p);
@@ -1664,6 +1734,7 @@ function renderLabBriefing(c){
   const set=(id,value)=>{if($(id))$(id).textContent=value};
 
   set('labProtectedMoney',money(protectedTotal));
+  set('labProtectedLabel',beforeCycle?'PLANNED PROTECTED':'PROTECTED');
   set('labCheckMoney',money(paycheck));
   set('labCheckNote',paycheck&&payDate?`${beforeCycle?'Expected':'Check'} ${dateText(payDate,{month:'short',day:'numeric'})}`:'No check planned');
 
@@ -1800,6 +1871,13 @@ document.addEventListener('click',e=>{
   const btn=e.target.closest('[data-execution-task]');if(!btn||!data.approvedPlan)return;
   const state=executionForPlan(data.approvedPlan),id=btn.dataset.executionTask;
   state.done[id]=!state.done[id];saveExecutionState();render();
+});
+
+$('confirmPaycheckLanded')?.addEventListener('click',()=>{
+  if(!data.approvedPlan)return;
+  const payDate=dateAtNoon(data.approvedPlan.payDate||data.payDate),today=dateAtNoon(new Date());
+  if(payDate&&today&&today<payDate){if($('executionStatus'))$('executionStatus').textContent=`This paycheck is planned for ${dateText(payDate,{month:'short',day:'numeric'})}. Dexx will not fund it early.`;return}
+  if(fundApprovedPlan()){if($('approvalStatus'))$('approvalStatus').textContent='Paycheck confirmed. Reserve Memory and savings funding are now live.';}
 });
 
 document.querySelectorAll('[data-mission]').forEach(x=>x.addEventListener('change',()=>{data.missions[x.dataset.mission]=x.checked;save({skipRecovery:true,skipActivity:true})}));
@@ -2014,13 +2092,15 @@ $('approvePlan').onclick=()=>{
   if(sameIndex>=0){rollbackReserveContributions(data.paycheckHistory[sameIndex]);data.paycheckHistory.splice(sameIndex,1)}
   data.approvedPlan=null;
   const c=calc();
-  const reserveContributions=applyReserveContributions(c);
-  const savingsContributions=applySavingsContributions(c.savings);
-  const snapshot={id:`plan-${Date.now()}`,approvedAt:new Date().toISOString(),healthScore:calculateHealthScore(c).total,paycheck:c.paycheck,balance:c.balance,payDate:data.payDate,nextPayday:data.nextPayday,cycleId:paycheckCycleId(data.payDate,data.nextPayday),payNow:c.payNow,reserve:c.reserve,reserveTarget:c.reserveTarget,reserveContributions,savingsContributions,reserveDetails:c.upcomingBills.map(b=>({parentId:b.parentId||b.id,name:b.name,amount:b.amount,date:b.date,alreadyProtected:b.alreadyProtected,currentCheckReserve:b.currentCheckReserve,paychecksRemaining:b.paychecksRemaining})),savings:c.savings,debtPayment:c.debtPayment,debtTarget:c.targetDebt?{id:c.targetDebt.id,name:c.targetDebt.name}:null,spent:c.expenseTotal||0,protected:(c.payNow||0)+(c.reserve||0)+(c.savings||0)+(c.debtPayment||0),expenses:(c.currentExpenses||[]).map(x=>({name:x.name||'Expense',category:historyExpenseCategory(x),amount:Number(x.amount)||0,date:x.date||''})),safeToSpend:c.safeToSpend,shortfall:c.shortfall,bills:c.dueNowBills.map(b=>({parentId:b.parentId||b.id,occurrenceDate:b.occurrenceDate||b.date,name:b.name,amount:b.amount,date:b.date,priority:b.priority,alreadyProtected:b.alreadyProtected,currentCheckDue:b.currentCheckDue}))};
+  const approvalToday=dateAtNoon(new Date()),approvalPayDate=dateAtNoon(data.payDate);
+  const futurePlan=Boolean(approvalPayDate&&approvalToday&&approvalPayDate>approvalToday);
+  const reserveContributions=futurePlan?[]:applyReserveContributions(c);
+  const savingsContributions=futurePlan?[]:applySavingsContributions(c.savings);
+  const snapshot={id:`plan-${Date.now()}`,approvedAt:new Date().toISOString(),fundingStatus:futurePlan?'planned':'funded',fundedAt:futurePlan?'':new Date().toISOString(),healthScore:calculateHealthScore(c).total,paycheck:c.paycheck,balance:c.balance,payDate:data.payDate,nextPayday:data.nextPayday,cycleId:paycheckCycleId(data.payDate,data.nextPayday),payNow:c.payNow,reserve:c.reserve,reserveTarget:c.reserveTarget,reserveContributions,savingsContributions,reserveDetails:c.upcomingBills.map(b=>({parentId:b.parentId||b.id,name:b.name,amount:b.amount,date:b.date,alreadyProtected:b.alreadyProtected,currentCheckReserve:b.currentCheckReserve,paychecksRemaining:b.paychecksRemaining})),savings:c.savings,debtPayment:c.debtPayment,debtTarget:c.targetDebt?{id:c.targetDebt.id,name:c.targetDebt.name}:null,spent:c.expenseTotal||0,protected:(c.payNow||0)+(c.reserve||0)+(c.savings||0)+(c.debtPayment||0),expenses:(c.currentExpenses||[]).map(x=>({name:x.name||'Expense',category:historyExpenseCategory(x),amount:Number(x.amount)||0,date:x.date||''})),safeToSpend:c.safeToSpend,shortfall:c.shortfall,bills:c.dueNowBills.map(b=>({parentId:b.parentId||b.id,occurrenceDate:b.occurrenceDate||b.date,name:b.name,amount:b.amount,date:b.date,priority:b.priority,alreadyProtected:b.alreadyProtected,currentCheckDue:b.currentCheckDue}))};
   data.approvedPlan=snapshot;data.paycheckHistory.push(snapshot);data.missions.friday=true;data.missions.saving=c.savings>0;data.missions.bills=c.bills.length>0;
   executionState={planId:snapshot.id,done:{},updatedAt:new Date().toISOString()};saveExecutionState();
-  setRecoveryContext('Approve payday plan',`${money(c.paycheck)} paycheck plan approved with ${money(c.reserve)} in current-check bill reserve.`,'approval');
-  save();$('approvalStatus').textContent=`Payday plan approved. Dexx remembered ${money(reserveContributions.reduce((s,x)=>s+x.amount,0))} in bill reserves${savingsContributions.length?` and moved ${money(savingsContributions.reduce((s,x)=>s+x.amount,0))} into your savings goals`:''}.`;
+  setRecoveryContext('Approve payday plan',futurePlan?`${money(c.paycheck)} future paycheck plan approved for ${dateText(data.payDate,{month:'short',day:'numeric'})}; funding waits until payday.`:`${money(c.paycheck)} paycheck plan approved with ${money(c.reserve)} in current-check bill reserve.`,'approval');
+  save();$('approvalStatus').textContent=futurePlan?`Payday plan approved for ${dateText(data.payDate,{month:'short',day:'numeric'})}. Nothing has been recorded as funded yet — confirm the paycheck when it lands.`:`Payday plan approved. Dexx remembered ${money(reserveContributions.reduce((s,x)=>s+x.amount,0))} in bill reserves${savingsContributions.length?` and moved ${money(savingsContributions.reduce((s,x)=>s+x.amount,0))} into your savings goals`:''}.`;
 };
 $('clearBills').onclick=()=>resetFinancialArea('bills');
 function clearActiveCheck(){
@@ -2070,6 +2150,7 @@ $('enterLabBtn')?.addEventListener('click',e=>{e.preventDefault();openFinancialL
 $('joinLabBtn')?.addEventListener('click',e=>{e.preventDefault();openFinancialLab('start')});
 $('frontDoorBtn')?.addEventListener('click',e=>{e.preventDefault();openFrontDoor()});
 
+normalizeApprovedPlanFunding();
 const initial=location.hash.slice(1);show(['laboratory','budget','profile','credit','savings','expense','reports','calendar','more','start','dexx'].includes(initial)?initial:'laboratory');render();initializePersistentMemory();
 
 $('calendarPrev')?.addEventListener('click',()=>{const base=calendarCursor||new Date();calendarCursor=new Date(base.getFullYear(),base.getMonth()-1,1,12);renderCalendar(calc())});
