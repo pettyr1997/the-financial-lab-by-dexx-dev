@@ -569,7 +569,7 @@ function financialMemorySnapshot(){
   }catch(_){}
   return {
     schema:'financial-lab-backup',
-    version:'4.1.8',
+    version:'4.1.10',
     exportedAt:new Date().toISOString(),
     storageKey:STORAGE_KEY,
     data:parsed||data
@@ -1442,6 +1442,62 @@ function renderPaydayExecution(c){
   if(progress)progress.textContent=counted?`${done} of ${counted} moves done`:'Execution ready';
   if(status)status.textContent=counted&&done===counted?`Payday moves complete. Keep tracking spending — ${money(c.safeToSpend)} is currently safe through ${dateText(plan.nextPayday,{month:'short',day:'numeric'})}.`:`${counted-done} payday move${counted-done===1?'':'s'} still need confirmation. Protected money stays separated from TRUE Safe-to-Spend.`;
 }
+function weeklyRunwayState(c,now=new Date()){
+  const plan=data.approvedPlan;
+  if(!plan)return null;
+  const payDate=dateAtNoon(plan.payDate||data.payDate),nextPay=dateAtNoon(plan.nextPayday||data.nextPayday);
+  if(!payDate||!nextPay)return null;
+  const today=dateAtNoon(now),cycleMs=Math.max(86400000,nextPay-payDate);
+  const cycleDays=Math.max(1,Math.round(cycleMs/86400000));
+  const beforeCycle=today<payDate,afterCycle=today>=nextPay;
+  const effectiveDay=beforeCycle?payDate:(afterCycle?nextPay:today);
+  const daysLeft=afterCycle?0:Math.max(1,Math.ceil((nextPay-effectiveDay)/86400000));
+  const startingSafe=Math.max(0,Number(plan.safeToSpend||0)+Number(plan.spent||0));
+  const spent=Math.max(0,Number(c.expenseTotal||0));
+  const safe=Math.max(0,Number(c.safeToSpend||0));
+  const daily=daysLeft>0?safe/daysLeft:0;
+  const usedRatio=startingSafe>0?spent/startingSafe:0;
+  const elapsedRatio=beforeCycle?0:afterCycle?1:Math.max(0,Math.min(1,(today-payDate)/cycleMs));
+  const paceDelta=usedRatio-elapsedRatio;
+  let status='On pace',tone='good';
+  if(beforeCycle){status='Ready';tone='good'}
+  else if(safe<=0&&startingSafe>0){status='Limit reached';tone='danger'}
+  else if(paceDelta>.20){status='Watch pace';tone='danger'}
+  else if(paceDelta>.10){status='Watch pace';tone='watch'}
+  else if(usedRatio+0.12<elapsedRatio){status='Ahead';tone='good'}
+  const pacePct=Math.max(0,Math.min(100,usedRatio*100));
+  return {payDate,nextPay,today,cycleDays,beforeCycle,afterCycle,daysLeft,startingSafe,spent,safe,daily,usedRatio,elapsedRatio,status,tone,pacePct};
+}
+function renderWeeklyRunway(c){
+  const panel=$('weeklyRunway');if(!panel)return;
+  const r=weeklyRunwayState(c);
+  panel.hidden=!r;
+  if(!r)return;
+  $('runwayStatus').textContent=r.status;$('runwayStatus').dataset.tone=r.tone;
+  $('runwayDays').textContent=r.afterCycle?'0':String(r.daysLeft);
+  $('runwaySafe').textContent=money(r.safe);
+  $('runwayDaily').textContent=money(r.daily);
+  $('runwayPace').textContent=r.startingSafe>0?`${Math.round(r.usedRatio*100)}% used`:'No flex budget';
+  $('runwayMeter').style.width=`${r.pacePct}%`;
+  if(r.beforeCycle){
+    const until=Math.max(0,Math.ceil((r.payDate-r.today)/86400000));
+    $('runwayDaysNote').textContent=`Cycle starts ${dateText(r.payDate,{month:'short',day:'numeric'})}`;
+    $('runwayDailyNote').textContent=`Across ${r.cycleDays} cycle days`;
+    $('runwayPaceNote').textContent='Spending pace begins on check date';
+    $('runwayReadout').textContent=`Your approved cycle starts in ${until} day${until===1?'':'s'}. ${money(r.safe)} is protected as TRUE Safe-to-Spend for the ${r.cycleDays}-day runway to ${dateText(r.nextPay,{month:'short',day:'numeric'})}.`;
+  }else if(r.afterCycle){
+    $('runwayDaysNote').textContent='Next payday reached';
+    $('runwayDailyNote').textContent='Start the next paycheck cycle';
+    $('runwayPaceNote').textContent=`${money(r.spent)} recorded this cycle`;
+    $('runwayReadout').textContent=`This paycheck runway has reached ${dateText(r.nextPay,{month:'short',day:'numeric'})}. Start the next paycheck cycle so Dexx can rebuild your daily runway from the new check.`;
+  }else{
+    $('runwayDaysNote').textContent=`Until ${dateText(r.nextPay,{month:'short',day:'numeric'})}`;
+    $('runwayDailyNote').textContent='Average safe amount per day';
+    $('runwayPaceNote').textContent=`${money(r.spent)} of ${money(r.startingSafe)} flexible money used`;
+    const paceText=r.status==='Ahead'?'You are using flexible money slower than the calendar pace.':r.status==='Watch pace'?'Spending is moving faster than the calendar pace.':'Your spending is tracking with the paycheck cycle.';
+    $('runwayReadout').textContent=`${money(r.safe)} remains for ${r.daysLeft} day${r.daysLeft===1?'':'s'} — about ${money(r.daily)} per day if spread evenly. ${paceText}`;
+  }
+}
 function renderPaydayCommandCenter(c){
   if(!$('paydayCommandCenter'))return;
   const p=commandCenterPlan(c);
@@ -1476,6 +1532,7 @@ function renderPaydayCommandCenter(c){
         ?`Execution mode is active. ${money(protectedTotal)} stays assigned to the approved plan and ${money(p.safeToSpend)} is your current TRUE Safe-to-Spend after ${money(p.expenseTotal)} recorded spending.`
         :`Plan ready. ${money(p.payNow)} goes to bills now, ${money(p.reserve)} protects future bills, ${money(p.savings)} goes to savings, and ${money(p.safeToSpend)} remains truly safe to spend.`;
   $('commandDexxReadout').textContent=readout;
+  renderWeeklyRunway(p);
   renderPaydayExecution(p);
 }
 function allocationRows(p){const host=$('allocationList');if(!host)return;host.replaceChildren();[['Bills due before next payday',p.payNow,p.shortfall?`${money(p.shortfall)} still unfunded`:`${p.dueNowBills.length} covered`],['Bills reserve — this check',p.reserve,p.reserveShortfall?`${money(p.reserveShortfall)} still needed`:`${p.upcomingBills.length} future bill${p.upcomingBills.length===1?'':'s'} protected`],['Move to savings',p.savings,`Target: ${money(p.desiredSavings)}${p.savingsGoalTarget?` · ${p.savingsGoalTarget.name}`:''}`],['Extra debt payment',p.debtPayment,p.desiredDebt?`Goal: ${money(p.desiredDebt)}${p.targetDebt?` · Target ${p.targetDebt.name}`:''}`:'Optional after priorities'],['Spent this cycle',p.expenseTotal,`${p.currentExpenses.length} expense${p.currentExpenses.length===1?'':'s'} recorded`],['TRUE safe to spend',p.safeToSpend,`Through ${dateText(p.nextPay,{month:'short',day:'numeric'})}`]].forEach(([label,amount,note])=>{const row=document.createElement('div');row.className='allocation-row';row.innerHTML=`<div><strong>${label}</strong><small>${note}</small></div><b>${money(amount)}</b>`;host.append(row)})}
