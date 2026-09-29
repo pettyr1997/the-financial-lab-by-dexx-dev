@@ -1,24 +1,33 @@
-# Financial Lab v4.1.18.1 — Health Score Clarity
+# Financial Lab v4.1.19 — Dexx Money Journey
 
-Polish patch built directly on v4.1.18 Lab Readiness Intelligence. No financial-data schema changes and no payday math changes. The locked Oct 2 reconciliation test remains intact.
+Built directly on v4.1.18.1. This release turns the Progressive Unlock idea into a visible step-by-step money journey on the Laboratory home screen. No financial-data schema changes and no payday math changes.
 
 ## What changed
 
-- Unknown debt no longer renders as `0/20` in the Financial Health Score. It displays `—/20` until the user adds debt accounts or explicitly confirms they have no debt.
-- Keeps the debt explanation visible so Dexx tells the user exactly how to complete that signal.
-- Rewords the baseline notice from ambiguous “setup signals” language to **health signals** language.
-- In the current test state, the baseline notice should read **3 of 5 health signals are ready** and explain that debt and full savings information are still needed.
-- Lab Readiness remains a separate 6-area setup measure, so users can understand why `4 of 6 areas complete` and `3 of 5 health signals ready` are different measurements.
-- The provisional 68/100 baseline is preserved; this patch only makes unknown information visually honest and the wording clearer.
+- Adds **Dexx Money Journey** directly under the Lab Briefing.
+- Shows seven connected stages: Essential Setup → Payday Plan → Paycheck Lands → Reconcile Actual Check → Protect the Money → Live TRUE Safe-to-Spend Runway → Next Paycheck Cycle.
+- Each stage is derived from real Financial Lab state rather than a decorative checklist.
+- Completed stages show COMPLETE, the active stage is highlighted, and future stages stay visibly locked until their dependency is real.
+- Before a future payday, the journey repeats the blocked-payday design language with a disabled **PAYCHECK LANDS [DATE]** button.
+- On payday, the landing stage becomes actionable and routes the user to Payday Execution / Reconciliation.
+- After the actual deposit is entered, the journey advances to reconciliation before any protection is funded.
+- After activation/funding, the journey advances to the live TRUE Safe-to-Spend runway.
+- At the next-payday boundary, the journey advances to starting the next paycheck cycle.
+
+## Current Sep 29 / Oct 2 test expectation
+
+- Step 1 Essential setup — COMPLETE.
+- Step 2 Payday plan — COMPLETE.
+- Step 3 Paycheck lands — locked and labeled OCT 2.
+- Steps 4–7 remain locked/upcoming.
+- Current-step panel says Paycheck lands.
+- Main journey button is disabled and says **PAYCHECK LANDS OCT 2**.
+- Existing $700 planned paycheck, $170 planned protected, and $530 planned TRUE Safe-to-Spend remain unchanged.
 
 ## Preserved behavior
 
-- $0 available today.
-- $700 planned paycheck for Oct 2.
-- $170 planned protected.
-- $530 planned TRUE Safe-to-Spend.
-- Debt remains skipped/unknown, not zero.
-- Savings setup remains recommended.
-- PAYCHECK LANDS OCT 2 stays locked before payday.
-- v4.1.16 reconciliation still waits for the real paycheck.
-- Bill Calendar, Forecast Engine, Reserve Memory, Weekly Runway, Pace Coach, Reports, Guided Setup, Lab Readiness, and history remain unchanged.
+- Guided Lab Setup and unknown ≠ zero rules.
+- Lab Readiness and provisional Health Score logic.
+- v4.1.16 actual-paycheck reconciliation.
+- Payday Landing Guard and scheduled-vs-funded separation.
+- Bill Calendar, Forecast Engine, Reserve Memory, Weekly Runway, Pace Coach, Reports, history, and recovery tools.

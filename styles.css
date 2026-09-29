@@ -1115,4 +1115,38 @@ body.front-door-active .app-shell *{
 .lab-readiness-card>button{width:100%;min-height:44px}
 @media(max-width:380px){.lab-readiness-top{flex-direction:column}.lab-readiness-top>b{max-width:none;text-align:left}}
 
-/* Financial Lab 4.1.18.1 — Health Score Clarity: display/wording-only polish; no schema changes. */
+/* Financial Lab 4.1.19 — Health Score Clarity: display/wording-only polish; no schema changes. */
+
+
+/* Financial Lab 4.1.19 — Dexx Money Journey / Progressive Unlock */
+.money-journey-card{border-color:rgba(97,255,29,.42);background:linear-gradient(180deg,rgba(97,255,29,.035),rgba(7,16,11,.96))}
+.money-journey-card .section-head b{color:var(--green)}
+.money-journey-card>h2{margin:12px 0 5px;font-size:1.25rem}
+.money-journey-card>.manager-copy{margin-top:0}
+.money-journey-list{display:grid;gap:9px;margin:16px 0}
+.money-journey-step{display:grid;grid-template-columns:38px minmax(0,1fr) auto;gap:11px;align-items:center;padding:12px;border:1px solid var(--line);border-radius:14px;background:#07100b}
+.money-journey-marker{display:grid;place-items:center;width:36px;height:36px;border-radius:50%;border:1px solid rgba(255,255,255,.12);background:#101713;color:var(--muted);font-size:.85rem;font-weight:900}
+.money-journey-step>div:nth-child(2){min-width:0}
+.money-journey-step span,.money-journey-step strong,.money-journey-step small{display:block}
+.money-journey-step span{font-size:.54rem;font-weight:900;letter-spacing:.11em;color:var(--muted);margin-bottom:3px}
+.money-journey-step strong{font-size:.83rem;color:#fff;line-height:1.25}
+.money-journey-step small{margin-top:4px;color:var(--muted);font-size:.68rem;line-height:1.38}
+.money-journey-step>b{max-width:92px;text-align:right;font-size:.57rem;letter-spacing:.06em;color:var(--muted);overflow-wrap:anywhere}
+.money-journey-step.done{border-color:rgba(97,255,29,.26)}
+.money-journey-step.done .money-journey-marker{background:rgba(97,255,29,.15);border-color:rgba(97,255,29,.34);color:var(--green)}
+.money-journey-step.done>b{color:var(--green)}
+.money-journey-step.current{border-color:rgba(97,255,29,.58);background:rgba(97,255,29,.075);box-shadow:0 0 0 1px rgba(97,255,29,.06) inset}
+.money-journey-step.current .money-journey-marker{background:var(--green);border-color:var(--green);color:#031006}
+.money-journey-step.current>b{color:var(--green)}
+.money-journey-step.locked{opacity:.72}
+.money-journey-next{display:grid;gap:4px;margin:4px 0 12px;padding:13px;border:1px solid rgba(97,255,29,.28);border-radius:14px;background:#09140d}
+.money-journey-next span{font-size:.58rem;font-weight:900;letter-spacing:.11em;color:var(--green)}
+.money-journey-next strong{font-size:.95rem;color:#fff}
+.money-journey-next p{margin:0;color:var(--muted);font-size:.72rem;line-height:1.45}
+.money-journey-card>button{width:100%;min-height:48px}
+.money-journey-card>button:disabled{background:#121814;color:#89918c;border:1px solid #303833;opacity:1;cursor:not-allowed}
+@media(max-width:420px){
+  .money-journey-step{grid-template-columns:34px minmax(0,1fr);align-items:start}
+  .money-journey-marker{width:32px;height:32px}
+  .money-journey-step>b{grid-column:2;max-width:none;text-align:left;margin-top:2px}
+}
