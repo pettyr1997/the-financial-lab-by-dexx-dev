@@ -1114,3 +1114,5 @@ body.front-door-active .app-shell *{
 .lab-readiness-missing strong{font-size:.75rem;color:#fff;line-height:1.35}
 .lab-readiness-card>button{width:100%;min-height:44px}
 @media(max-width:380px){.lab-readiness-top{flex-direction:column}.lab-readiness-top>b{max-width:none;text-align:left}}
+
+/* Financial Lab 4.1.18.1 — Health Score Clarity: display/wording-only polish; no schema changes. */

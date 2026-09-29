@@ -1,35 +1,24 @@
-# Financial Lab v4.1.18 — Lab Readiness Intelligence
+# Financial Lab v4.1.18.1 — Health Score Clarity
 
-Builds directly on v4.1.17 Guided Lab Setup and preserves the locked Oct 2 payday/reconciliation test. No existing financial-data schema is replaced; current bills, approved plans, Reserve Memory, expenses, history, setup skip states, and payday state remain intact.
+Polish patch built directly on v4.1.18 Lab Readiness Intelligence. No financial-data schema changes and no payday math changes. The locked Oct 2 reconciliation test remains intact.
 
 ## What changed
 
-- Adds a compact **Lab Readiness** card to the Laboratory home screen.
-- Shows how many of the six setup areas are actually complete and points to the next useful setup action.
-- Adds **Plan Accuracy** messaging to the Lab Briefing so TRUE Safe-to-Spend is not presented with false certainty when bills, debt, or savings information is missing.
-- Makes the Financial Health Score **provisional** until Money Today, Income/Payday, Bills, Debt Status, and Savings setup are known.
-- Historical activity can still contribute to the score, but it can no longer silently convert skipped/unknown information into known information.
-- Debt skipped is still unknown. Confirmed debt-free is treated as known and displays correctly in Guided Setup.
-- Dexx Action Center now prioritizes missing Bills, Debt Status, and Savings setup before ordinary optimization recommendations.
-- Keeps Guided Setup optional after the two essentials: users can still enter the Lab and finish recommended information later.
+- Unknown debt no longer renders as `0/20` in the Financial Health Score. It displays `—/20` until the user adds debt accounts or explicitly confirms they have no debt.
+- Keeps the debt explanation visible so Dexx tells the user exactly how to complete that signal.
+- Rewords the baseline notice from ambiguous “setup signals” language to **health signals** language.
+- In the current test state, the baseline notice should read **3 of 5 health signals are ready** and explain that debt and full savings information are still needed.
+- Lab Readiness remains a separate 6-area setup measure, so users can understand why `4 of 6 areas complete` and `3 of 5 health signals ready` are different measurements.
+- The provisional 68/100 baseline is preserved; this patch only makes unknown information visually honest and the wording clearer.
 
-## Expected current test state
+## Preserved behavior
 
-With the existing test data shown during v4.1.17:
-
-- Money available today: $0.00 — ready
-- Expected paycheck: $700 on Oct 2 — ready
-- Recurring bills: 2 saved — ready
-- Debt: skipped / unknown
-- Savings: not entered
-- Spending history: 2 expenses — ready
-
-The Laboratory should therefore show **4 of 6 areas complete (67%)**, recommend continuing setup with **Debt** next, and label plan accuracy as **Partial**. The Financial Health Score may still display the existing numeric baseline, but it must be labeled **Provisional / Baseline** rather than implying the financial picture is complete.
-
-## Important preserved behavior
-
-- The $700 Oct 2 paycheck remains planned, not available today.
-- The $170 protection and $530 TRUE Safe-to-Spend remain scheduled until payday.
-- Payday Execution Mode remains blocked before Oct 2.
-- v4.1.16 amount reconciliation remains waiting for the real payday.
-- Bill Calendar, Forecast Engine, Reserve Memory, Weekly Runway, Pace Coach, Reports, debt/savings managers, and history remain available.
+- $0 available today.
+- $700 planned paycheck for Oct 2.
+- $170 planned protected.
+- $530 planned TRUE Safe-to-Spend.
+- Debt remains skipped/unknown, not zero.
+- Savings setup remains recommended.
+- PAYCHECK LANDS OCT 2 stays locked before payday.
+- v4.1.16 reconciliation still waits for the real paycheck.
+- Bill Calendar, Forecast Engine, Reserve Memory, Weekly Runway, Pace Coach, Reports, Guided Setup, Lab Readiness, and history remain unchanged.

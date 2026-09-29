@@ -592,7 +592,7 @@ function financialMemorySnapshot(){
   }catch(_){}
   return {
     schema:'financial-lab-backup',
-    version:'4.1.18',
+    version:'4.1.18.1',
     exportedAt:new Date().toISOString(),
     storageKey:STORAGE_KEY,
     data:parsed||data
@@ -808,7 +808,8 @@ function renderHealthScore(c){
   $('healthProtection').textContent=`${h.protection}/20`;
   $('healthSpending').textContent=`${h.spending}/20`;
   $('healthSavings').textContent=`${h.savings}/20`;
-  $('healthDebt').textContent=`${h.debt}/20`;
+  const readiness=guidedSetupState();
+  $('healthDebt').textContent=readiness.areas.debt?`${h.debt}/20`:'—/20';
   $('healthConsistency').textContent=`${h.consistency}/20`;
   $('healthProtectionWhy').textContent=h.protectionWhy;
   $('healthSpendingWhy').textContent=h.spendingWhy;
@@ -824,7 +825,11 @@ function renderHealthScore(c){
   }else{
     notice?.classList.remove('complete');
     $('healthBaselineLabel').textContent='BASELINE INCOMPLETE';
-    $('healthBaselineText').textContent=`${h.completeness}/5 setup signals complete. Finish setup before treating this as your true score.`;
+    const missingHealth=[];
+    if(!readiness.areas.debt)missingHealth.push('debt');
+    if(!readiness.areas.savings)missingHealth.push('full savings');
+    const readyHealthSignals=5-missingHealth.length;
+    $('healthBaselineText').textContent=`${readyHealthSignals} of 5 health signals are ready. ${missingHealth.length?`${missingHealth.join(' and ')} information ${missingHealth.length===1?'is':'are'} still needed before Dexx treats this as your complete score.`:'Finish setup before treating this as your complete score.'}`;
     $('healthScoreSummary').textContent='This is a provisional baseline, not a complete Financial Health Score yet.';
   }
   $('healthDexxExplanation').textContent=healthExplanation(h);
