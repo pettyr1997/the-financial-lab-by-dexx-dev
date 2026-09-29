@@ -947,7 +947,7 @@ body.front-door-active .app-shell *{
 @media(max-width:420px){.execution-head{display:block}.execution-head b{display:block;text-align:left;margin-top:6px}.execution-task{grid-template-columns:28px minmax(0,1fr)}.execution-task>b,.execution-task button,.execution-task>em{grid-column:2;text-align:left;justify-self:start}.execution-task button{margin-top:2px}}
 
 
-/* 4.1.10.1 — Weekly Runway + Cycle-Date Expense Guard */
+/* 4.1.11 — Weekly Runway + Cycle-Date Expense Guard */
 .weekly-runway{margin:15px 0;border:1px solid rgba(97,255,29,.3);border-radius:15px;background:linear-gradient(180deg,rgba(97,255,29,.04),#07100b);padding:14px}
 .weekly-runway[hidden]{display:none!important}
 .runway-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:11px}
@@ -965,3 +965,17 @@ body.front-door-active .app-shell *{
 .weekly-runway>p{margin:0;color:#dce5df;font-size:.7rem;line-height:1.45}
 @media(max-width:520px){.runway-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:390px){.runway-head{display:block}.runway-head b{display:block;text-align:left;margin-top:6px}}
+
+/* 4.1.11 — Runway Pace Coach */
+.runway-coach{margin:12px 0 10px;border:1px solid rgba(97,255,29,.26);border-radius:13px;background:rgba(97,255,29,.035);padding:12px}
+.runway-coach-head{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.runway-coach-head span{color:var(--green);font-size:.58rem;font-weight:900;letter-spacing:.09em}
+.runway-coach-head b{color:var(--green);font-size:.62rem;text-align:right}
+.runway-coach-head b[data-tone="watch"]{color:#ffb446}.runway-coach-head b[data-tone="danger"]{color:#ff5c5c}
+.runway-coach>p{margin:8px 0 10px;color:#e8efea;font-size:.66rem;line-height:1.45}
+.runway-coach-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.runway-coach-grid article{border:1px solid #25332c;border-radius:10px;background:#080d0b;padding:10px;min-width:0}
+.runway-coach-grid span{display:block;color:var(--muted);font-size:.52rem;font-weight:900;letter-spacing:.08em}
+.runway-coach-grid strong{display:block;font-size:.82rem;margin-top:4px;overflow-wrap:anywhere}
+.runway-coach-grid small{display:block;color:var(--muted);font-size:.56rem;line-height:1.3;margin-top:3px}
+@media(max-width:390px){.runway-coach-head{display:block}.runway-coach-head b{display:block;text-align:left;margin-top:5px}}

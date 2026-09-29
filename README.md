@@ -1,27 +1,33 @@
-# Financial Lab 4.1.10.1 — Cycle-Date Expense Guard
+# Financial Lab 4.1.11 — Runway Pace Coach
 
-Builds on 4.1.10 without changing the existing Financial Lab financial-data schema.
+Builds on 4.1.10.1 without changing the existing Financial Lab financial-data schema.
 
-## Fixed — expenses now belong to the correct paycheck cycle
+## Added — Dexx Runway Pace Coach
 
-Financial Lab now uses the expense date as a hard guard before flexible spending can reduce a paycheck's TRUE Safe-to-Spend.
+Weekly Runway now does more than show the remaining balance. Dexx compares actual flexible spending with where the user is in the paycheck cycle and explains whether the week is ahead of pace, on pace, or moving too fast.
 
-- A future paycheck is no longer reduced by an expense dated before that paycheck arrives.
-- An expense can bind to the active paycheck cycle only when its date falls inside that cycle.
-- Previously mis-bound expenses are ignored by the wrong cycle even if an older saved `cycleId` points there.
-- Editing an expense date re-evaluates which cycle owns it instead of blindly keeping the old cycle assignment.
-- Pending/unbound expenses attach only when their date actually belongs to the paycheck cycle being built.
-- The next payday is treated as the start of the next cycle, preventing one expense from belonging to two adjacent weekly cycles.
+- **Calendar Pace** shows how much of the cycle's flexible budget could reasonably be used by the current paycheck day.
+- **Pace Gap** shows the dollar cushion under the calendar pace or the amount spending is running over it.
+- Coach states include **Ready**, **Ahead of pace**, **On pace**, **Watch spending**, **Spending too fast**, **Limit reached**, and **Cycle complete**.
+- The coach gives a plain-language action message based on the current pace and remaining TRUE Safe-to-Spend.
+- Daily Runway continues to recalculate from the money and days remaining.
 
-## Reference test
+## Payday-day pacing fix
 
-For an approved **Oct 2 → Oct 9** paycheck with **$530.00 TRUE Safe-to-Spend**:
+Pace is now day-based instead of treating the beginning of payday as 0% of the cycle. For a weekly Oct 2 → Oct 9 cycle, Oct 2 is day 1 of 7 and the calendar pace is about 14% rather than 0%. This avoids labeling normal payday spending as too fast simply because it happened on the first day.
 
-- A **$10 expense dated Sep 29** must leave the Oct 2 cycle at **$530.00 / $0.00 spent**.
-- A **$10 expense dated Oct 2** must change the Oct 2 cycle to **$520.00 / $10.00 spent**.
-- Protected money remains unchanged.
-- Weekly Runway must read the same cycle-filtered spending total as Payday Command Center.
+The next payday remains exclusive to the current cycle and belongs to the next paycheck cycle, matching the 4.1.10.1 expense-date guard.
+
+## Reference behavior
+
+For an approved Oct 2 → Oct 9 cycle with $530 TRUE Safe-to-Spend:
+
+- Before Oct 2: Pace Coach is **Ready**, spending pace has not started, and pre-cycle expenses do not count.
+- Oct 2: calendar pace is about **14%** (day 1 of 7).
+- Oct 5: calendar pace is about **57%** (day 4 of 7).
+- Oct 8: calendar pace is **100%** (day 7 of 7).
+- Oct 9: the old runway is complete; the next paycheck cycle should take over.
 
 ## Preserved
 
-4.1.10 Weekly Runway, Payday Command Center, Payday Execution Mode, Reserve Memory, savings contributions, recurring bills, Bill Calendar, Forecast Engine, Payday Continuity/Guard, reports, recovery controls, approved-paycheck rollback, and existing saved financial data remain preserved.
+4.1.10.1 Cycle-Date Expense Guard, Payday Command Center, Payday Execution Mode, Reserve Memory, savings contributions, recurring bills, Bill Calendar, Forecast Engine, Payday Continuity/Guard, reports, recovery controls, approved-paycheck rollback, and existing saved financial data remain preserved.

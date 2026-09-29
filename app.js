@@ -592,7 +592,7 @@ function financialMemorySnapshot(){
   }catch(_){}
   return {
     schema:'financial-lab-backup',
-    version:'4.1.10.1',
+    version:'4.1.11',
     exportedAt:new Date().toISOString(),
     storageKey:STORAGE_KEY,
     data:parsed||data
@@ -1470,26 +1470,56 @@ function weeklyRunwayState(c,now=new Date()){
   if(!plan)return null;
   const payDate=dateAtNoon(plan.payDate||data.payDate),nextPay=dateAtNoon(plan.nextPayday||data.nextPayday);
   if(!payDate||!nextPay)return null;
-  const today=dateAtNoon(now),cycleMs=Math.max(86400000,nextPay-payDate);
-  const cycleDays=Math.max(1,Math.round(cycleMs/86400000));
+  const today=dateAtNoon(now),dayMs=86400000,cycleMs=Math.max(dayMs,nextPay-payDate);
+  const cycleDays=Math.max(1,Math.round(cycleMs/dayMs));
   const beforeCycle=today<payDate,afterCycle=today>=nextPay;
   const effectiveDay=beforeCycle?payDate:(afterCycle?nextPay:today);
-  const daysLeft=afterCycle?0:Math.max(1,Math.ceil((nextPay-effectiveDay)/86400000));
+  const daysLeft=afterCycle?0:Math.max(1,Math.ceil((nextPay-effectiveDay)/dayMs));
   const startingSafe=Math.max(0,Number(plan.safeToSpend||0)+Number(plan.spent||0));
   const spent=Math.max(0,Number(c.expenseTotal||0));
   const safe=Math.max(0,Number(c.safeToSpend||0));
   const daily=daysLeft>0?safe/daysLeft:0;
   const usedRatio=startingSafe>0?spent/startingSafe:0;
-  const elapsedRatio=beforeCycle?0:afterCycle?1:Math.max(0,Math.min(1,(today-payDate)/cycleMs));
-  const paceDelta=usedRatio-elapsedRatio;
+
+  // 4.1.11 Pace Coach uses whole paycheck days instead of clock time.
+  // On payday, day 1 of a 7-day cycle means roughly 1/7 of flexible money
+  // can be used without being labeled "too fast." The next payday remains
+  // exclusive and belongs to the next paycheck cycle.
+  const elapsedDays=beforeCycle?0:afterCycle?cycleDays:Math.max(1,Math.min(cycleDays,Math.floor((today-payDate)/dayMs)+1));
+  const expectedUsedRatio=cycleDays>0?elapsedDays/cycleDays:0;
+  const expectedSpent=startingSafe*expectedUsedRatio;
+  const paceGap=expectedSpent-spent;
+  const paceDelta=usedRatio-expectedUsedRatio;
+
   let status='On pace',tone='good';
   if(beforeCycle){status='Ready';tone='good'}
+  else if(afterCycle){status='Cycle complete';tone='good'}
   else if(safe<=0&&startingSafe>0){status='Limit reached';tone='danger'}
-  else if(paceDelta>.20){status='Watch pace';tone='danger'}
-  else if(paceDelta>.10){status='Watch pace';tone='watch'}
-  else if(usedRatio+0.12<elapsedRatio){status='Ahead';tone='good'}
+  else if(paceDelta>.20){status='Spending too fast';tone='danger'}
+  else if(paceDelta>.10){status='Watch spending';tone='watch'}
+  else if(paceDelta<-.10){status='Ahead of pace';tone='good'}
+
+  let coachMessage='Your pace coach is ready.';
+  if(beforeCycle){
+    coachMessage=`Your cycle starts ${dateText(payDate,{month:'short',day:'numeric'})}. Spending before that date will not affect this runway.`;
+  }else if(afterCycle){
+    coachMessage=`This runway ended ${dateText(nextPay,{month:'short',day:'numeric'})}. Start the next paycheck cycle to reset the pace coach.`;
+  }else if(startingSafe<=0){
+    coachMessage='Build flexible Safe-to-Spend into the plan to activate pace coaching.';
+  }else if(status==='Limit reached'){
+    coachMessage=`You have used the full ${money(startingSafe)} flexible budget for this cycle. Keep new flexible spending at $0 until the next payday.`;
+  }else if(status==='Spending too fast'){
+    coachMessage=`You are ${money(Math.abs(paceGap))} over the calendar pace. Slow flexible spending so the remaining ${money(safe)} can last through ${dateText(nextPay,{month:'short',day:'numeric'})}.`;
+  }else if(status==='Watch spending'){
+    coachMessage=`You are ${money(Math.abs(paceGap))} ahead of the calendar spending pace. Keep the next purchases light; your current daily runway is ${money(daily)}.`;
+  }else if(status==='Ahead of pace'){
+    coachMessage=`You are ${money(Math.max(0,paceGap))} under the calendar pace. That cushion gives the remaining ${money(safe)} more room to last until payday.`;
+  }else{
+    coachMessage=`Your spending is close to the calendar pace. Keep flexible spending around ${money(daily)} per remaining day to stay on track.`;
+  }
+
   const pacePct=Math.max(0,Math.min(100,usedRatio*100));
-  return {payDate,nextPay,today,cycleDays,beforeCycle,afterCycle,daysLeft,startingSafe,spent,safe,daily,usedRatio,elapsedRatio,status,tone,pacePct};
+  return {payDate,nextPay,today,cycleDays,beforeCycle,afterCycle,daysLeft,startingSafe,spent,safe,daily,usedRatio,elapsedDays,expectedUsedRatio,expectedSpent,paceGap,status,tone,coachMessage,pacePct};
 }
 function renderWeeklyRunway(c){
   const panel=$('weeklyRunway');if(!panel)return;
@@ -1502,6 +1532,17 @@ function renderWeeklyRunway(c){
   $('runwayDaily').textContent=money(r.daily);
   $('runwayPace').textContent=r.startingSafe>0?`${Math.round(r.usedRatio*100)}% used`:'No flex budget';
   $('runwayMeter').style.width=`${r.pacePct}%`;
+
+  const coachBadge=$('runwayCoachBadge'),coachMessage=$('runwayCoachMessage');
+  if(coachBadge){coachBadge.textContent=r.status;coachBadge.dataset.tone=r.tone}
+  if(coachMessage)coachMessage.textContent=r.coachMessage;
+  if($('runwayExpectedPace'))$('runwayExpectedPace').textContent=r.beforeCycle?'0% used':`${Math.round(r.expectedUsedRatio*100)}% used`;
+  if($('runwayExpectedNote'))$('runwayExpectedNote').textContent=r.beforeCycle?'Pace starts on check date':r.afterCycle?'Full cycle completed':`Calendar pace through day ${r.elapsedDays} of ${r.cycleDays}`;
+  if($('runwayPaceGap'))$('runwayPaceGap').textContent=r.beforeCycle?'$0.00':money(Math.abs(r.paceGap));
+  if($('runwayPaceGapNote')){
+    $('runwayPaceGapNote').textContent=r.beforeCycle?'No pace gap before payday':r.afterCycle?'Final difference from calendar pace':Math.abs(r.paceGap)<0.005?'Right on the pace budget':r.paceGap>=0?'Under the pace budget':'Over the pace budget';
+  }
+
   if(r.beforeCycle){
     const until=Math.max(0,Math.ceil((r.payDate-r.today)/86400000));
     $('runwayDaysNote').textContent=`Cycle starts ${dateText(r.payDate,{month:'short',day:'numeric'})}`;
@@ -1517,7 +1558,7 @@ function renderWeeklyRunway(c){
     $('runwayDaysNote').textContent=`Until ${dateText(r.nextPay,{month:'short',day:'numeric'})}`;
     $('runwayDailyNote').textContent='Average safe amount per day';
     $('runwayPaceNote').textContent=`${money(r.spent)} of ${money(r.startingSafe)} flexible money used`;
-    const paceText=r.status==='Ahead'?'You are using flexible money slower than the calendar pace.':r.status==='Watch pace'?'Spending is moving faster than the calendar pace.':'Your spending is tracking with the paycheck cycle.';
+    const paceText=r.status==='Ahead of pace'?'You are using flexible money slower than the calendar pace.':r.status==='Spending too fast'||r.status==='Watch spending'?'Spending is moving faster than the calendar pace.':'Your spending is tracking with the paycheck cycle.';
     $('runwayReadout').textContent=`${money(r.safe)} remains for ${r.daysLeft} day${r.daysLeft===1?'':'s'} — about ${money(r.daily)} per day if spread evenly. ${paceText}`;
   }
 }
