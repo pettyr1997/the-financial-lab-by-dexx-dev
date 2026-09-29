@@ -1,26 +1,26 @@
-# Financial Lab 4.1.12 — Live Pace Action Guide
+# Financial Lab 4.1.13 — Laboratory Briefing
 
-Builds on 4.1.11 without changing the existing Financial Lab financial-data schema.
+Builds on 4.1.12 without changing the existing Financial Lab financial-data schema.
 
-## Added — Live Pace Action
+## New — Lab Briefing
 
-Dexx Pace Coach now turns the calendar comparison into a concrete same-day action. The new **LIVE PACE ACTION** panel shows how much room remains before flexible spending reaches the current day’s calendar pace.
+The Laboratory home screen now opens with a money-status briefing that separates **money available today** from **money planned for an upcoming paycheck**.
 
-- Before payday: clearly says the live target starts on the check date.
-- During the cycle and under pace: shows the dollar amount that can still be used before reaching today’s calendar pace.
-- Over pace: shows **$0.00** and tells the user how far spending is over today’s pace.
-- At the flexible limit: shows **$0.00** and tells the user to hold new flexible spending.
-- After the cycle: prompts the user to start the next paycheck cycle.
-- The guide explicitly says this is a pacing target, **not extra money** beyond TRUE Safe-to-Spend.
+For a future approved paycheck, the briefing shows:
+- Available today from the current available balance.
+- The upcoming paycheck and check date.
+- The amount protected by the approved plan.
+- Planned TRUE Safe-to-Spend for the future cycle.
+- A Dexx Next Move explaining that the live runway begins only when payday arrives.
 
-## Fixed — Watch-spending wording
+When the paycheck cycle is live, the same briefing changes automatically to show current TRUE Safe-to-Spend, spending this cycle, protected money, and a next move informed by the Weekly Runway / Pace Coach.
 
-4.1.11 correctly detected faster-than-calendar spending, but the Watch Spending coach sentence could say the user was “ahead” of pace. 4.1.12 now correctly says the user is **over** the calendar spending pace.
+When a cycle ends, it directs the user to start the next paycheck while preserving the rest of Financial Lab.
 
-## Example
+## Why this release matters
 
-For an Oct 2 → Oct 9 cycle with $530 TRUE Safe-to-Spend, Oct 2 calendar pace is about $75.71. If $20 has been spent in the cycle, LIVE PACE ACTION shows about **$55.71** of room before reaching that day’s pace. If $90 has been spent, it shows **$0.00** and explains that spending is about $14.29 over pace.
+A planned paycheck must never look like cash that is already available. 4.1.13 makes that distinction visible immediately on the Laboratory dashboard.
 
 ## Preserved
 
-4.1.11 Pace Coach, 4.1.10.1 Cycle-Date Expense Guard, Payday Command Center, Payday Execution Mode, Reserve Memory, savings contributions, recurring bills, Bill Calendar, Forecast Engine, Payday Continuity/Guard, reports, recovery controls, approved-paycheck rollback, and existing saved financial data remain preserved.
+Payday Command Center, Payday Execution Mode, Weekly Runway, Live Pace Action Guide, Reserve Memory, Bill Calendar, Forecast Engine, reports, recurring bills, debts, savings goals, expenses, approved history, and existing saved data remain intact.

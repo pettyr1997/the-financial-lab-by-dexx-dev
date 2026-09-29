@@ -989,3 +989,24 @@ body.front-door-active .app-shell *{
 .runway-action-guide[data-tone="watch"]>strong{color:#ffb446}
 .runway-action-guide[data-tone="danger"]{border-color:rgba(255,92,92,.38)}
 .runway-action-guide[data-tone="danger"]>strong{color:#ff5c5c}
+
+
+/* 4.1.13 — Laboratory Briefing / Money Status */
+.lab-briefing-card{border-color:rgba(97,255,29,.48);background:linear-gradient(180deg,rgba(97,255,29,.055),#07100b)}
+.lab-briefing-card .section-head b{color:var(--green)}
+.lab-briefing-card h2{font-size:1.05rem;line-height:1.25;margin:4px 0 6px}
+.lab-briefing-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin:14px 0}
+.lab-briefing-grid article{border:1px solid #25332c;border-radius:12px;background:#080d0b;padding:11px;min-width:0}
+.lab-briefing-grid span{display:block;color:var(--muted);font-size:.54rem;font-weight:900;letter-spacing:.08em}
+.lab-briefing-grid strong{display:block;color:#fff;font-size:.9rem;margin-top:5px;overflow-wrap:anywhere}
+.lab-briefing-grid article:first-child strong,.lab-briefing-grid article:last-child strong{color:var(--green)}
+.lab-briefing-grid small{display:block;color:var(--muted);font-size:.57rem;line-height:1.35;margin-top:4px}
+.lab-next-move{border:1px solid rgba(97,255,29,.26);border-radius:12px;background:rgba(97,255,29,.035);padding:12px;margin:10px 0}
+.lab-next-move span{display:block;color:var(--green);font-size:.56rem;font-weight:900;letter-spacing:.09em}
+.lab-next-move strong{display:block;font-size:.84rem;margin-top:5px}
+.lab-next-move p{color:#dce5df;font-size:.65rem;line-height:1.45;margin:5px 0 0}
+.lab-briefing-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.lab-briefing-actions button{min-height:46px;border:1px solid #39443e;border-radius:10px;background:#0a0f0d;color:#fff;font-size:.64rem;font-weight:900;padding:9px}
+.lab-briefing-actions .primary{background:var(--green);border-color:var(--green);color:#071006}
+@media(max-width:560px){.lab-briefing-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:360px){.lab-briefing-actions{grid-template-columns:1fr}}
