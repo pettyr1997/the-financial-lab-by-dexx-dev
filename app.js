@@ -592,7 +592,7 @@ function financialMemorySnapshot(){
   }catch(_){}
   return {
     schema:'financial-lab-backup',
-    version:'4.1.19',
+    version:'4.1.20',
     exportedAt:new Date().toISOString(),
     storageKey:STORAGE_KEY,
     data:parsed||data
@@ -1098,6 +1098,78 @@ function forecastObservation(f){
   if(f.room<0)return `Your saved bills and savings target are ${money(Math.abs(f.room))} above estimated paycheck income over the next 30 days. Review dates, savings rate, or upcoming obligations early.`;
   return `${money(f.billTotal)} in bills is scheduled over the next 30 days. After the estimated savings target, about ${money(f.room)} remains before flexible spending, debt payments, and untracked costs.`;
 }
+function moneyDatesBridgeState(c){
+  const journey=moneyJourneyState(c);
+  const plan=journey.plan;
+  const today=dateAtNoon(new Date());
+  const payDate=journey.payDate;
+  const nextPay=journey.nextPay;
+  const horizon=new Date(today.getTime()+60*86400000);
+  const nextBill=billOccurrences(today,horizon).filter(b=>!b.paid).sort((a,b)=>a.date.localeCompare(b.date))[0]||null;
+  const reserveDetails=Array.isArray(plan?.reserveDetails)?plan.reserveDetails.filter(x=>Number(x.currentCheckReserve||0)>0):[];
+  const reserveTotal=reserveDetails.reduce((sum,x)=>sum+Number(x.currentCheckReserve||0),0);
+  let status='Journey connected',gate='Build payday plan',gateNote='Approve a plan to connect payday dates to the calendar.';
+  let impactTitle='Build the next plan';
+  let impactText='Once a payday plan is approved, Dexx will show which date is blocking the next step and which future bills are driving protection.';
+
+  if(!journey.readiness.requiredReady){
+    status='Setup first';gate='Essential setup';gateNote='Money today plus income/payday must be confirmed first.';
+    impactTitle='Calendar intelligence is waiting for setup';
+    impactText='Complete the two essential setup steps so Dexx can connect real payday dates to bills and future steps.';
+  }else if(plan&&journey.beforePayday){
+    status='Current gate';gate=`Paycheck lands ${dateText(payDate,{month:'short',day:'numeric'})}`;gateNote='Planned money stays blocked until this date.';
+    impactTitle=`${money(Number(plan.paycheck)||0)} is planned — not available yet`;
+    impactText=`When the paycheck lands, enter the actual deposit before ${money(Number(plan.protected)||0)} of planned protection and the ${money(Number(plan.safeToSpend)||0)} runway can activate.`;
+  }else if(plan&&journey.paydayReady&&!journey.preview){
+    status='Ready now';gate='Enter actual paycheck';gateNote='Payday has arrived. Reconcile the real deposit before funding.';
+    impactTitle='The payday gate is open';
+    impactText='Enter what actually landed. Dexx will compare it with the planned check and recalculate protection before anything is funded.';
+  }else if(plan&&journey.preview){
+    status='Review now';gate='Review reconciliation';gateNote='Actual deposit entered. Review the recalculated plan.';
+    impactTitle='Actual paycheck is entered';
+    impactText='Review the variance, protection, and TRUE Safe-to-Spend before activating the paycheck cycle.';
+  }else if(plan&&journey.liveRunway){
+    status='Live cycle';gate=`Runway through ${dateText(nextPay,{month:'short',day:'numeric'})}`;gateNote='Protection is funded and the spending runway is active.';
+    impactTitle='Your live runway is connected to the calendar';
+    impactText=`Dexx is tracking spending against the active cycle through ${dateText(nextPay,{month:'short',day:'numeric'})}.`;
+  }else if(plan&&journey.cycleEnded){
+    status='Next cycle';gate='Start next paycheck';gateNote='This cycle reached its next-payday boundary.';
+    impactTitle='This cycle is ready to roll forward';
+    impactText='Review the finished cycle, then start the next paycheck so the calendar and Money Journey can advance together.';
+  }
+
+  if(reserveDetails.length){
+    const first=reserveDetails[0];
+    const extra=reserveDetails.length>1?` plus ${reserveDetails.length-1} other future bill${reserveDetails.length===2?'':'s'}`:'';
+    impactText+=` This plan reserves ${money(reserveTotal)} this check toward ${first.name} due ${dateText(first.date,{month:'short',day:'numeric'})}${extra}.`;
+  }
+
+  return {journey,status,gate,gateNote,impactTitle,impactText,nextBill,payDate,nextPay};
+}
+function renderMoneyDatesBridge(c){
+  if(!$('moneyDateBridge'))return;
+  const b=moneyDatesBridgeState(c);
+  const set=(id,value)=>{if($(id))$(id).textContent=value};
+  set('moneyDateBridgeStatus',b.status);
+  set('moneyDateGate',b.gate);
+  set('moneyDateGateNote',b.gateNote);
+  if(b.nextBill){
+    set('moneyDateNextBill',`${dateText(b.nextBill.date,{month:'short',day:'numeric'})} · ${money(Number(b.nextBill.amount)||0)}`);
+    set('moneyDateNextBillNote',`${b.nextBill.name}${b.nextBill.autopay?' · autopay':''}`);
+  }else{
+    set('moneyDateNextBill','None in 60 days');set('moneyDateNextBillNote','Add recurring bills to connect upcoming obligations.');
+  }
+  if(b.nextPay){
+    set('moneyDateNextPayday',dateText(b.nextPay,{month:'short',day:'numeric'}));
+    set('moneyDateNextPaydayNote',b.journey.funded?'Next cycle boundary':'Following payday after this planned check');
+  }else if(b.payDate){
+    set('moneyDateNextPayday',dateText(b.payDate,{month:'short',day:'numeric'}));set('moneyDateNextPaydayNote','Current planned payday');
+  }else{
+    set('moneyDateNextPayday','Not set');set('moneyDateNextPaydayNote','Add your pay schedule in setup.');
+  }
+  set('moneyDateImpactTitle',b.impactTitle);set('moneyDateImpactText',b.impactText);
+}
+
 function renderCalendar(c){
   const grid=$('billCalendarGrid');if(!grid)return;
   const today=dateAtNoon(new Date());
@@ -1106,6 +1178,8 @@ function renderCalendar(c){
   const monthEnd=new Date(calendarCursor.getFullYear(),calendarCursor.getMonth()+1,0,12);
   const monthBills=billOccurrences(monthStart,monthEnd);
   const monthPaydays=forecastPaydays(monthStart,monthEnd);
+  const bridge=moneyDatesBridgeState(c);
+  const gateDate=bridge.journey.beforePayday&&bridge.payDate?iso(bridge.payDate):bridge.journey.liveRunway&&bridge.nextPay?iso(bridge.nextPay):'';
   const billMap=new Map(),paySet=new Set(monthPaydays);
   monthBills.forEach(b=>{const arr=billMap.get(b.date)||[];arr.push(b);billMap.set(b.date,arr)});
   $('calendarMonthLabel').textContent=monthStart.toLocaleDateString('en-US',{month:'long',year:'numeric'});
@@ -1115,21 +1189,23 @@ function renderCalendar(c){
     const d=new Date(monthStart.getFullYear(),monthStart.getMonth(),day,12),key=iso(d),bills=billMap.get(key)||[];
     const cell=document.createElement('article');cell.className='calendar-day';
     if(key===iso(today))cell.classList.add('today');
+    if(gateDate&&key===gateDate)cell.classList.add('journey-gate');
     const due=bills.reduce((s,b)=>s+Number(b.amount||0),0),paid=bills.length&&bills.every(b=>b.paid);
     cell.innerHTML=`<div class="calendar-day-top"><strong>${day}</strong>${paySet.has(key)?'<i class="payday-dot" title="Estimated payday"></i>':''}</div>${bills.length?`<span class="calendar-due ${paid?'paid':''}">${paid?'Paid':calendarMoney(due)}</span><small>${bills.length} bill${bills.length===1?'':'s'}</small>`:'<span class="calendar-empty">·</span>'}`;
     grid.append(cell)
   }
+  renderMoneyDatesBridge(c);
   const f=forecastWindow(30);
   $('forecastBills30').textContent=money(f.billTotal);$('forecastIncome30').textContent=money(f.estimatedIncome);$('forecastSavings30').textContent=money(f.savingsTarget);$('forecastRoom30').textContent=money(f.room);$('forecastRoom30').dataset.tone=f.room<0?'watch':'good';$('forecastObservation').textContent=forecastObservation(f);
   if($('reportForecastBills'))$('reportForecastBills').textContent=money(f.billTotal);if($('reportForecastIncome'))$('reportForecastIncome').textContent=money(f.estimatedIncome);
   const upcoming=$('calendarUpcoming');upcoming.replaceChildren();
   const horizon=new Date(today.getTime()+45*86400000),events=[];
-  billOccurrences(today,horizon).forEach(b=>events.push({date:b.date,type:b.paid?'paid':'bill',label:b.name,amount:Number(b.amount)||0,detail:b.paid?'Paid':`${b.priority}${b.autopay?' · autopay':''}`}));
-  forecastPaydays(today,horizon).forEach(date=>events.push({date,type:'payday',label:'Estimated payday',amount:Number(data.paycheck)||0,detail:data.profile?.incomePattern==='variable'?'Latest check used as estimate':'Based on saved pay schedule'}));
+  billOccurrences(today,horizon).forEach(b=>{const reserveHit=Array.isArray(data.approvedPlan?.reserveDetails)&&data.approvedPlan.reserveDetails.some(x=>(x.parentId||'')===(b.parentId||b.id)&&x.date===b.date&&Number(x.currentCheckReserve||0)>0);events.push({date:b.date,type:b.paid?'paid':'bill',label:b.name,amount:Number(b.amount)||0,detail:b.paid?'Paid':`${b.priority}${b.autopay?' · autopay':''}${reserveHit?' · protected by current plan':''}`,tag:reserveHit?'PROTECTED':''})});
+  forecastPaydays(today,horizon).forEach(date=>{const isGate=bridge.journey.beforePayday&&bridge.payDate&&date===iso(bridge.payDate);const isNext=bridge.nextPay&&date===iso(bridge.nextPay);events.push({date,type:'payday',label:isGate?'Planned payday · current gate':isNext?'Next payday':'Estimated payday',amount:Number(data.paycheck)||0,detail:isGate?'Planned money stays blocked until the paycheck lands':isNext?'Next cycle boundary':data.profile?.incomePattern==='variable'?'Latest check used as estimate':'Based on saved pay schedule',tag:isGate?'CURRENT GATE':isNext?'NEXT CYCLE':''})});
   events.sort((a,b)=>a.date.localeCompare(b.date)||(a.type==='payday'?-1:1));
   $('calendarUpcomingCount').textContent=`${events.length} event${events.length===1?'':'s'}`;
   if(!events.length){upcoming.innerHTML='<div class="empty-copy">Add recurring bills or your pay schedule to build the calendar.</div>';return}
-  events.slice(0,18).forEach(e=>{const row=document.createElement('article');row.className=`calendar-event ${e.type}`;row.innerHTML=`<div><strong>${dateText(e.date,{weekday:'short',month:'short',day:'numeric'})}</strong><span>${e.label}</span><small>${e.detail}</small></div><b>${e.type==='payday'?(e.amount?`+${money(e.amount)}`:'Payday'):money(e.amount)}</b>`;upcoming.append(row)})
+  events.slice(0,18).forEach(e=>{const row=document.createElement('article');row.className=`calendar-event ${e.type}${e.tag==='CURRENT GATE'?' journey-gate-event':''}${e.tag==='PROTECTED'?' protected-event':''}`;row.innerHTML=`<div><strong>${dateText(e.date,{weekday:'short',month:'short',day:'numeric'})}${e.tag?` <em>${e.tag}</em>`:''}</strong><span>${e.label}</span><small>${e.detail}</small></div><b>${e.type==='payday'?(e.amount?`+${money(e.amount)}`:'Payday'):money(e.amount)}</b>`;upcoming.append(row)})
 }
 
 function renderReports(c){
